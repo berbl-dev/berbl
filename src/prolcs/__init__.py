@@ -167,7 +167,7 @@ def matching_matrix(ind: List, X: np.ndarray):
     :returns: matching matrix (N × K)
     """
     # TODO Can we maybe vectorize this?
-    return np.vstack(list(map(lambda m: m.match(X), ind))).T
+    return np.hstack(list(map(lambda m: m.match(X), ind)))
 
 
 def individual(ranges: np.ndarray, k: int):
