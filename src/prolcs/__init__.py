@@ -176,7 +176,7 @@ def individual(ranges: np.ndarray, k: int):
     is the number of classifiers, the matching functions specify their
     localization).
     """
-    return [RadialMatch(ranges) for i in range(k)]
+    return [RadialMatch.random(ranges) for i in range(k)]
 
 
 def deterministic_tournament(inds: List[np.ndarray], fits: List[float],
