@@ -129,7 +129,7 @@ def ga(X: np.ndarray,
     """
     N, D_X = X.shape
 
-    Phi = np.array(list(map(phi, X)))
+    Phi = phi(X)
 
     # [PDF p. 221, 3rd paragraph]
     # TODO Hardcoded 100 here …
