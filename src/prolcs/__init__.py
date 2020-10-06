@@ -426,10 +426,10 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
     # transpose before multiplying elementwise with G.
     R_ = np.zeros((K, N))
     for k in range(K):
-        R_[k] = np.exp(D_Y / 2 * (ss.digamma(a_tau[k]) - np.log(
-            b_tau[k]))) - 0.5 * (a_tau[k] / b_tau[k] * np.sum(
-                (Y - X @ W[k].T)**2, 1) + D_Y * np.sum(X *
-                                                       (X @ Lambda_1[k]), 1))
+        R_[k] = np.exp(D_Y / 2 * (ss.digamma(a_tau[k]) - np.log(b_tau[k]))
+                       - 0.5
+                       * (a_tau[k] / b_tau[k] * np.sum((Y - X @ W[k].T)**2, 1)
+                          + D_Y * np.sum(X * (X @ Lambda_1[k]), 1)))
     R = R_.T * G
     R = R / np.sum(R, 1)[:, np.newaxis]
     R = np.nan_to_num(R, 0)
