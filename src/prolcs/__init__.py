@@ -14,9 +14,9 @@ B_TAU = 10**-4
 DELTA_S_L_K_Q = 10**-4
 DELTA_S_L_M_Q = 10**-2
 DELTA_S_KLRG = 10**-8
-EXP_MIN = -745  # TODO Fix binary search to find a proper value for this
-# TODO Find proper value for this (another binary search)
-LN_MAX = np.log(2 ^ 53)
+# We use the default dtype everywhere (as of 2020-10-06, it's float64).
+EXP_MIN = np.log(np.finfo(None).tiny)
+LN_MAX = np.log(np.finfo(None).max)
 """
 How NumPy interprets some things.
 
