@@ -615,14 +615,14 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
     # want to do when we multiply two row vectors anyways (i.e. a^T a).
     L_k_2_q = -0.5 * r_k @ (E_tau_tau_k * np.sum(
         (Y - X @ W_k.T)**2, 1) + D_Y * np.sum(X * (X @ Lambda_k_1), 1))
-    L_k_3_q = -np.log(ss.gamma(A_ALPHA)) + A_ALPHA * np.log(B_ALPHA) + np.log(
-        ss.gamma(a_alpha_k)
+    L_k_3_q = -ss.gammaln(A_ALPHA) + A_ALPHA * np.log(B_ALPHA) + ss.gammaln(
+        a_alpha_k
     ) - a_alpha_k * np.log(b_alpha_k) + D_X * D_Y / 2 + D_Y / 2 * np.log(
         np.linalg.det(Lambda_k_1))
-    L_k_4_q = D_Y * (-np.log(ss.gamma(A_TAU)) + A_TAU * np.log(B_TAU) +
+    L_k_4_q = D_Y * (-ss.gammaln(A_TAU) + A_TAU * np.log(B_TAU) +
                      (A_TAU - a_tau_k) * ss.digamma(a_tau_k)
                      - A_TAU * np.log(b_tau_k) - B_TAU * E_tau_tau_k
-                     + np.log(ss.gamma(a_tau_k)) + a_tau_k)
+                     + ss.gammaln(a_tau_k) + a_tau_k)
     return L_k_1_q + L_k_2_q + L_k_3_q + L_k_4_q
 
 
@@ -649,11 +649,10 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     assert a_beta.shape == (K, )
     assert b_beta.shape == (K, )
 
-    L_M1q = K * (-np.log(ss.gamma(A_BETA) + A_BETA * np.log(B_BETA)))
+    L_M1q = K * (-ss.gammaln(A_BETA) + A_BETA * np.log(B_BETA))
     for k in range(K):
         # NOTE this is just the negated form of the update two lines prior?
-        L_M1q = L_M1q + np.log(
-            ss.gamma(a_beta[k]) - a_beta[k] * np.log(b_beta[k]))
+        L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
 
     L_M2q = np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
     L_M3q = 0.5 * np.log(np.linalg.det(Lambda_V_1)) + D_V * K / 2
