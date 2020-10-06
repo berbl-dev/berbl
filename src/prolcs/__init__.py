@@ -601,19 +601,18 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
     :param b_tau_k: classifier noise precision parameter
     :param a_alpha_k: weight vector prior parameter
     :param b_alpha_k: weight vector prior parameter
-    :param r_k: responsibility vector (NumPy row vector)
+    :param r_k: responsibility vector (NumPy row or column vector, we reshape to
+        (-1) anyways)
 
-    :returns: mixing component L_M(q) of variational bound
+    :returns: classifier component L_k(q) of variational bound
     """
     D_Y, D_X = W_k.shape
     E_tau_tau_k = a_tau_k / b_tau_k
     L_k_1_q = D_Y / 2 * (ss.digamma(a_tau_k) - np.log(b_tau_k)
                          - np.log(2 * np.pi)) * np.sum(r_k)
-    # Since r_k is a NumPy row vector already, no transpose necessary (unlike
-    # [PDF p. 245]); also, no reshape(-1, 1) (i.e. making it a col vector) of
-    # the second argument to @ necessary since NumPy seems to understand what we
-    # want to do when we multiply two row vectors anyways (i.e. a^T a).
-    L_k_2_q = -0.5 * r_k @ (E_tau_tau_k * np.sum(
+    # We reshape r_k to a NumPy row vector since NumPy seems to understand what
+    # we want to do when we multiply two row vectors (i.e. a^T a).
+    L_k_2_q = (-0.5 * r_k).reshape((-1)) @ (E_tau_tau_k * np.sum(
         (Y - X @ W_k.T)**2, 1) + D_Y * np.sum(X * (X @ Lambda_k_1), 1))
     L_k_3_q = -ss.gammaln(A_ALPHA) + A_ALPHA * np.log(B_ALPHA) + ss.gammaln(
         a_alpha_k
