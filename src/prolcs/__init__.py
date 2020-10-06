@@ -392,10 +392,7 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     G = Phi @ V
 
     # Limit all elements of G such that EXP_MIN <= g_nk <= LN_MAX - np.log(K).
-    lower = np.repeat(EXP_MIN, G.size).reshape(G.shape)
-    upper = np.repeat(LN_MAX - np.log(K), G.size).reshape(G.shape)
-    G = np.maximum(lower, G)
-    G = np.minimum(upper, G)
+    G = np.clip(G, EXP_MIN, LN_MAX - np.log(K))
 
     G = np.exp(G) * M
     G = G / np.sum(G, 1)[:, np.newaxis]
