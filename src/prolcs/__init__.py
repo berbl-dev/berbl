@@ -273,8 +273,8 @@ def train_classifier(m_k, X, Y):
     """
     N, D_X = X.shape
     N, D_Y = Y.shape
-    X_k = X * np.sqrt(m_k)[:, np.newaxis]
-    Y_k = Y * np.sqrt(m_k)[:, np.newaxis]
+    X_k = X * np.sqrt(m_k)
+    Y_k = Y * np.sqrt(m_k)
     a_alpha_k = A_ALPHA
     b_alpha_k = B_ALPHA
     a_tau_k = A_TAU
