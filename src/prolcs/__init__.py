@@ -188,7 +188,7 @@ def deterministic_tournament(inds: List[np.ndarray], fits: List[float],
     selection”.
     """
     assert len(inds) == len(fits)
-    tournament = np.random.sample(range(len(inds)))
+    tournament = np.random.choice(range(len(inds)), size=size)
     return max(tournament, key=lambda i: fits[i])
 
 
