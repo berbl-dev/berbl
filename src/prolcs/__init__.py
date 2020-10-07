@@ -662,6 +662,7 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
         # NOTE this is just the negated form of the update two lines prior?
         L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
 
+    # Kullback-Leibler divergence [PDF p. 246]
     L_M2q = np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
-    L_M3q = 0.5 * np.log(np.linalg.det(Lambda_V_1)) + D_V * K / 2
+    L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
     return L_M1q + L_M2q + L_M3q
