@@ -462,7 +462,13 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     # this expression.
     E_beta_beta = a_beta / b_beta
     G = mixing(M, Phi, V)
-    R = responsibilities(X, Y, G, W, Lambda_1, a_tau, b_tau)
+    R = responsibilities(X=X,
+                         Y=Y,
+                         G=G,
+                         W=W,
+                         Lambda_1=Lambda_1,
+                         a_tau=a_tau,
+                         b_tau=b_tau)
     KLRG = np.inf
     delta_KLRG = DELTA_S_KLRG + 1
     while delta_KLRG > DELTA_S_KLRG:
@@ -470,8 +476,10 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         # only had one run so far, where this happened, though).
         E = Phi.T @ (G - R) + V * E_beta_beta
         e = E.T.reshape((-1))
-        H = hessian(Phi, G, a_beta, b_beta)
+        H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
         delta_v = -np.linalg.inv(H) @ e
+        # “D_V × K matrix with jk'th element given by ((k - 1) K + j)'th element
+        # of v.” (Probably means “delta_v”.)
         delta_V = delta_v.reshape((K, D_V)).T
         V = V + delta_V
         G = mixing(M, Phi, V)
@@ -485,7 +493,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         KLRG_prev = KLRG
         KLRG = np.sum(R * np.nan_to_num(np.log(G / R), 0))
         delta_KLRG = np.abs(KLRG_prev - KLRG)
-    H = hessian(Phi, G, a_beta, b_beta)
+    H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
     Lambda_V_1 = np.linalg.inv(H)
     return V, Lambda_V_1
 
@@ -580,7 +588,13 @@ def var_bound(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     assert a_beta.shape == (K, )
 
     G = mixing(M, Phi, V)
-    R = responsibilities(X, Y, G, W, Lambda_1, a_tau, b_tau)
+    R = responsibilities(X=X,
+                         Y=Y,
+                         G=G,
+                         W=W,
+                         Lambda_1=Lambda_1,
+                         a_tau=a_tau,
+                         b_tau=b_tau)
     L_K_q = 0
     for k in range(K):
         L_K_q = L_K_q + var_cl_bound(X=X,
