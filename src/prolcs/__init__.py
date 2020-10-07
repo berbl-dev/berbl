@@ -583,9 +583,15 @@ def var_bound(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     R = responsibilities(X, Y, G, W, Lambda_1, a_tau, b_tau)
     L_K_q = 0
     for k in range(K):
-        R_k = R[:, [k]]
-        L_K_q = L_K_q + var_cl_bound(X, Y, W[k], Lambda_1[k], a_tau[k],
-                                     b_tau[k], a_alpha[k], b_alpha[k], R[k])
+        L_K_q = L_K_q + var_cl_bound(X=X,
+                                     Y=Y,
+                                     W_k=W[k],
+                                     Lambda_k_1=Lambda_1[k],
+                                     a_tau_k=a_tau[k],
+                                     b_tau_k=b_tau[k],
+                                     a_alpha_k=a_alpha[k],
+                                     b_alpha_k=b_alpha[k],
+                                     r_k=R[:, [k]])
     L_M_q = var_mix_bound(G, R, V, Lambda_V_1, a_beta, b_beta)
     return L_K_q + L_M_q
 
