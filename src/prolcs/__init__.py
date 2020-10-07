@@ -546,13 +546,19 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
 
     a_beta = np.zeros(K)
     b_beta = np.zeros(K)
+    Lambda_V_1_diag = np.diag(Lambda_V_1)
     for k in range(K):
         v_k = V[:, [k]]
         l = k * D_V
         u = (k + 1) * D_V
-        Lambda_V_1_kk = Lambda_V_1[l:u:1, l:u:1]
+        # Not that efficient, I think (but very close to [PDF p. 244]).
+        # Lambda_V_1_kk = Lambda_V_1[l:u:1, l:u:1]
+        # a_beta[k] = A_BETA + D_V / 2
+        # b_beta[k] = B_BETA + 0.5 * (np.trace(Lambda_V_1_kk) + v_k.T @ v_k)
+        # More efficient.
         a_beta[k] = A_BETA + D_V / 2
-        b_beta[k] = B_BETA + 0.5 * (np.trace(Lambda_V_1_kk) + v_k.T @ v_k)
+        b_beta[k] = B_BETA + 0.5 * (np.sum(Lambda_V_1_diag[l:u:1])
+                                    + v_k.T @ v_k)
 
     return a_beta, b_beta
 
