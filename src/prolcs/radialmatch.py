@@ -26,7 +26,7 @@ class RadialMatch():
         assert mu.shape[0] == lambd_2.shape[1]
         self.mu = mu
         self.lambd_2 = lambd_2
-        if ranges:
+        if ranges is not None:
             assert ranges.shape == (mu.shape[0], 2)
             self.ranges = ranges
         else:
@@ -67,11 +67,10 @@ class RadialMatch():
                 # l)``.
                 # TODO This was chosen to be similar to [PDF p. 228] but isn't
                 # probably
-                scale=0.1 * np.sum(self.ranges * np.array([-1, 1]), 1),
-                size=self.mu.shape),
+                scale=0.1 * np.sum(self.ranges * np.array([-1, 1]), 1)),
             # clip to each dimension's range
-            self.ranges[:, [0]],
-            self.ranges[:, [1]])
+            self.ranges[:, [0]].reshape((-1)),
+            self.ranges[:, [1]].reshape((-1)))
         self.lambd_2 = np.random.normal(
             loc=self.lambd_2,
             # For each dimension, we set the normal's scale to ``0.05 * (u -
@@ -80,6 +79,7 @@ class RadialMatch():
             # p. 228])
             scale=0.05 * np.sum(self.ranges * np.array([-1, 1]), 1),
             size=self.lambd_2.shape)
+        return self
 
     def match(self, X: np.ndarray):
         """

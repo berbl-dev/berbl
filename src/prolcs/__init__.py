@@ -152,11 +152,13 @@ def ga(X: np.ndarray,
             if np.random.random() < cross_prob:
                 c1, c2 = crossover(c1, c2)
             if np.random.random() < muta_prob:
-                c1, c2 = c1.mutate(), c2.mutate()
-            P_.append([c1, c2])
+                c1, c2 = mutate(c1), mutate(c2)
+            P_.append(c1)
+            P_.append(c2)
 
         P = P_
-    pass
+    # TODO Maybe return weights and stuff as well (so recompute unnecessary)
+    return P, p_M_D
 
 
 def matching_matrix(ind: List, X: np.ndarray):
@@ -190,28 +192,32 @@ def deterministic_tournament(inds: List[np.ndarray], fits: List[float],
     return max(tournament, key=lambda i: fits[i])
 
 
-def crossover(MM_a: Tuple[int, List], MM_b: Tuple[int, List]):
+def mutate(MM: List):
+    return list(map(lambda i: i.mutate(), MM))
+
+def crossover(M_a: List, M_b: List):
     """
     [PDF p. 250]
 
-    :param M_a: model structure (number of classifiers and their localization,
-        i.e. M_a = (K, {m_k}))
+    :param M_a: a model structure (a simple Python list; originally the number
+        of classifiers and their localization but the length of a Python list is
+        easily obtainable)
     :param M_b: another model structure
 
     :returns: two model structures resulting from crossover of inputs
     """
-    K_a, M_a = MM_a
-    K_b, M_b = MM_b
+    K_a = len(M_a)
+    K_b = len(M_b)
     M_a_ = M_a + M_b
     K_b_ = np.random.randint(low=1, high=K_a + K_b)
     M_b_ = []
     for k in range(K_b_):
-        m_k = np.random.sample(M_a_)
+        m_k = np.random.choice(M_a_)
         M_b_.append(m_k)
         M_a_.remove(m_k)
-    MM_a, MM_b = (K_a + K_b - K_b_, M_a_), (K_b_, M_b_)
-    assert len(M_a_) + len(M_b_) == len(M_a) + len(M_b)
-    return MM_a, MM_b
+    assert K_a + K_b - K_b_ == len(M_a_)
+    assert K_b_ == len(M_b_)
+    return M_a_, M_b_
 
 
 def model_probability(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
