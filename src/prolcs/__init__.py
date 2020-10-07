@@ -475,7 +475,13 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         delta_V = delta_v.reshape((K, D_V)).T
         V = V + delta_V
         G = mixing(M, Phi, V)
-        R = responsibilities(X, Y, G, W, Lambda_1, a_beta, b_beta)
+        R = responsibilities(X=X,
+                             Y=Y,
+                             G=G,
+                             W=W,
+                             Lambda_1=Lambda_1,
+                             a_tau=a_tau,
+                             b_tau=b_tau)
         KLRG_prev = KLRG
         KLRG = np.sum(R * np.nan_to_num(np.log(G / R), 0))
         delta_KLRG = np.abs(KLRG_prev - KLRG)
