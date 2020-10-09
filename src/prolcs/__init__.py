@@ -35,6 +35,17 @@ col_vector = [[1], [2], [3]]
 """
 
 
+
+def phi_standard(X: np.ndarray):
+    """
+    The mixing feature extractor usually employed by LCSs, i.e. ``phi(x) = 1``
+    for each sample ``x``.
+    """
+    N, D_X = X.shape
+    return np.ones((N, 1))
+
+
+
 def predictive_density(M, Phi, W, Lambda_1, a_tau, b_tau, V):
     """
     [PDF p. 223], i.e. (7.106).
@@ -79,15 +90,6 @@ def predictive_density(M, Phi, W, Lambda_1, a_tau, b_tau, V):
         return p_
 
     return p
-
-
-def phi_standard(X: np.ndarray):
-    """
-    The mixing feature extractor usually employed by LCSs, i.e. ``phi(x) = 1``
-    for each sample ``x``.
-    """
-    N, D_X = X.shape
-    return np.ones((N, 1))
 
 
 def ga(X: np.ndarray,
@@ -137,11 +139,15 @@ def ga(X: np.ndarray,
     Ks = np.random.randint(low=1, high=100, size=pop_size)
     ranges = np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
     P = [individual(ranges, k) for k in Ks]
+    # TODO Parametrize number of elitists
+    elitist_index = None
     for i in range(iter):
         Ms = map(lambda ind: matching_matrix(ind, X), P)
         # Compute fitness for each individual (i.e. model probabilities).
         p_M_D = list(map(lambda M: model_probability(M, X, Y, Phi), Ms))
         P_: List[np.ndarray] = []
+        elitist_index = np.argmax(p_M_D)
+        P_: List[np.ndarray] = [P[elitist_index]]
         while len(P_) < pop_size:
             i1, i2 = deterministic_tournament(
                 P, p_M_D,
