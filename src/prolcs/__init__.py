@@ -143,9 +143,10 @@ def ga(X: np.ndarray,
     elitist_index = None
     for i in range(iter):
         Ms = map(lambda ind: matching_matrix(ind, X), P)
-        # Compute fitness for each individual (i.e. model probabilities).
-        p_M_D = list(map(lambda M: model_probability(M, X, Y, Phi), Ms))
-        P_: List[np.ndarray] = []
+        # Compute fitness for each individual (i.e. model probabilities). (Also: Get params.)
+        p_M_D_and_params = list(
+            map(lambda M: model_probability(M, X, Y, Phi), Ms))
+        p_M_D, params = tuple(zip(*p_M_D_and_params))
         elitist_index = np.argmax(p_M_D)
         P_: List[np.ndarray] = [P[elitist_index]]
         while len(P_) < pop_size:
@@ -163,8 +164,8 @@ def ga(X: np.ndarray,
             P_.append(c2)
 
         P = P_
-    # TODO Maybe return weights and stuff as well (so recompute unnecessary)
-    return P, p_M_D
+
+    return P, p_M_D, params, phi, elitist_index
 
 
 def matching_matrix(ind: List, X: np.ndarray):
@@ -271,7 +272,15 @@ def model_probability(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                     Lambda_V_1=Lambda_V_1,
                     a_beta=a_beta,
                     b_beta=b_beta)
-    return L_q + np.log(np.math.factorial(K))
+
+    params = {
+        "W": W,
+        "Lambda_1": Lambda_1,
+        "a_tau": a_tau,
+        "b_tau": b_tau,
+        "V": V
+    }
+    return L_q + np.log(np.math.factorial(K)), params
 
 
 def train_classifier(m_k, X, Y):
