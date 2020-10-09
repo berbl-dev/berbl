@@ -45,6 +45,64 @@ def phi_standard(X: np.ndarray):
     return np.ones((N, 1))
 
 
+def predict(X, mstruct, params, phi):
+    """
+    [PDF p. 224]
+
+    The mean and variance of the predictive density described by the parameters.
+
+    “As the mixture of Student’s t distributions might be multimodal, there
+    exists no clear definition for the 95% confidence intervals, but a mixture
+    density-related study that deals with this problem can be found in [118].
+    Here, we take the variance as a sufficient indicator of the prediction’s
+    confidence.” [PDF p. 224]
+
+    :param X: input matrix (N × D_X)
+    :param params: model parameters as returned by `ga`
+    :param phi: mixing feature extractor, see `ga`
+
+    :returns: mean output matrix (N × D_Y), variance of output matrix
+    """
+    # TODO
+
+
+def predict1(x, mstruct, W, Lambda_1, a_tau, b_tau, V, phi):
+    """
+    [PDF p. 224]
+
+    The mean and variance of the predictive density described by the parameters.
+
+    “As the mixture of Student’s t distributions might be multimodal, there
+    exists no clear definition for the 95% confidence intervals, but a mixture
+    density-related study that deals with this problem can be found in [118].
+    Here, we take the variance as a sufficient indicator of the prediction’s
+    confidence.” [PDF p. 224]
+
+    :param X: input vector (D_X)
+    :param params: model parameters as returned by `ga`
+    :param phi: mixing feature extractor, see `ga`
+
+    :returns: mean output matrix (D_Y), variance of output (D_Y)
+    """
+    x_ = np.array([x])
+    M = matching_matrix(mstruct, x_)
+    N, K = M.shape
+    Phi = phi(x_)
+    G = mixing(M, Phi, V)  # (N=1) × K
+    g = G[0]
+    D_Y, D_X = W[0].shape
+
+    y = (g * W) @ x
+
+    var = np.zeros(D_Y)
+    # TODO Can this be vectorized?
+    for j in range(D_Y):
+        for k in range(K):
+            var[j] += g[k] * (2 * b_tau[k] / (a_tau[k] - 1) *
+                              (1 + x @ Lambda_1[k] @ x) +
+                              (W[k][j] @ x)**2) - y[j]**2
+    return y, var
+
 
 def predictive_density(M, Phi, W, Lambda_1, a_tau, b_tau, V):
     """
