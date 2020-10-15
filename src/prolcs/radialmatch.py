@@ -98,6 +98,8 @@ class RadialMatch():
         # We have to clip this so we don't return 0 here (0 should never be
         # returned because every match function matches everywhere at least a
         # little bit).
+        x_min = np.log(np.finfo(None).tiny)
+        x_max = np.log(np.finfo(None).max)
         x = np.clip(-0.5 * np.sum(delta.T * (self.lambd_2 @ delta.T), 0),
-                    np.log(np.finfo(None).tiny), np.log(np.finfo(None).max))
+                    x_min, x_max)
         return np.exp(x)[:, np.newaxis]
