@@ -16,6 +16,7 @@ def generate(n: int = 300, rng: Generator = None):
         rng = np.random.default_rng()
 
     X = np.random.random((n, 1))
+
     ms = [
         # We invert the sigma parameters because our RadialMatch expects squared
         # inverse covariance matrices.
@@ -24,8 +25,8 @@ def generate(n: int = 300, rng: Generator = None):
         RadialMatch(mu=np.array([0.8]), lambd_2=np.array([[(1 / 0.05)**2]])),
     ]
     M = matching_matrix(ms, X)
-    # After matching, prepend 1 to each sample
-    X_ = np.vstack([np.ones(n), X.reshape((n))]).T
+    Phi = phi_standard(X)
+
     W = [
         np.array([0.05, 0.5]),
         np.array([2, -4]),
@@ -38,9 +39,11 @@ def generate(n: int = 300, rng: Generator = None):
     ]
     V = np.array([0.5, 1.0, 0.4]).reshape(1, 3)
 
-    Phi = phi_standard(X_)
     G = mixing(M, Phi, V)
 
+    # After matching, augment samples by prepending 1 to enable non-zero
+    # intercepts.
+    X_ = np.vstack([np.ones(n), X.reshape((n))]).T
     Y = np.zeros(X.shape)
     for n in range(len(X)):
         y = 0
@@ -50,6 +53,8 @@ def generate(n: int = 300, rng: Generator = None):
                                   scale=Lambda_1[k])
         Y[n] = y
 
+    # We return the non-augmented samples (because our algorithm augments them
+    # itself).
     return X, Y
 
 
