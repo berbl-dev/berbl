@@ -30,7 +30,8 @@ class RadialMatch():
             assert ranges.shape == (mu.shape[0], 2)
             self.ranges = ranges
         else:
-            self.ranges = np.repeat([-np.inf, np.inf], len(mu))
+            self.ranges = np.repeat([-np.inf, np.inf], len(mu)).reshape(
+                (mu.shape[0], 2))
 
     @classmethod
     def random(cls, ranges: np.ndarray):
