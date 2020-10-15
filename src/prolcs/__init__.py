@@ -378,7 +378,8 @@ def model_probability(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         "b_tau": b_tau,
         "V": V
     }
-    return L_q + np.log(np.math.factorial(K)), params
+    ln_p_M = -np.log(np.math.factorial(K))  # (7.3), i.e. p_M \propto 1/K
+    return L_q + ln_p_M, params
 
 
 def train_classifier(m_k, X, Y):
