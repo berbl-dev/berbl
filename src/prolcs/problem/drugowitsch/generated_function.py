@@ -65,7 +65,6 @@ if __name__ == "__main__":
     seed = 1
 
     X, Y = generate(1000, rng=np.random.default_rng(seed))
-    # plt.plot(X[:,[1]].reshape(-1), Y.reshape((-1)), "r+")
     plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
 
     # TODO We might need Drugowitsch's problem-dependent Binomial initialization
@@ -86,20 +85,6 @@ if __name__ == "__main__":
                                      V,
                                      phi=phi)
 
-    # Sort X (and Y with it) for proper error area in graph.
-    # X_test_ = X_test
-    # Y_test_ = Y_test
-    # XY_test = np.hstack([X_test, Y_test])
-    # XY_test = XY_test[np.lexsort(np.flip(XY_test, axis=1).T)]
-    # X_test = XY_test[:, [0, 1]]
-    # Y_test = XY_test[:, [2]]
-
-    # data2 = pd.DataFrame(np.hstack((X_test[:, [1]], Y_test)),
-    #                      columns=["X", "Y"])
-    # ax = sns.lineplot(x="X", y="Y", data=data2)
-    # ax.fill_between(x=X_test[:, [1]].reshape((-1)),
-    #                 y1=(Y_test - var).reshape((-1)),
-    #                 y2=(Y_test + var).reshape((-1)))
     plt.errorbar(X_test.reshape((-1)),
                  Y_test.reshape((-1)),
                  var.reshape((-1)),
