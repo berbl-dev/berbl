@@ -210,19 +210,29 @@ def ga(X: np.ndarray,
     P = [individual(ranges, k) for k in Ks]
     # TODO Parametrize number of elitists
     elitist_index = None
+    elitist = []
+    p_M_D_elitist = -np.inf
+    params_elitist = None
     for i in range(iter):
         Ms = map(lambda ind: matching_matrix(ind, X), P)
         # Compute fitness for each individual (i.e. model probabilities). (Also: Get params.)
         p_M_D_and_params = list(
             map(lambda M: model_probability(M, X, Y, Phi), Ms))
         p_M_D, params = tuple(zip(*p_M_D_and_params))
+        p_M_D, params = list(p_M_D), list(params)
         elitist_index = np.argmax(p_M_D)
-        P_: List[np.ndarray] = [P[elitist_index]]
+        if p_M_D[elitist_index] > p_M_D_elitist:
+            elitist = P[elitist_index]
+            p_M_D_elitist = p_M_D[elitist_index]
+            params_elitist = params[elitist_index]
+            # del p_M_D[elitist_index]
+            # del P[elitist_index]
+            # del params[elitist_index]
+        P_: List[np.ndarray] = []
         while len(P_) < pop_size:
             i1, i2 = deterministic_tournament(
-                P, p_M_D,
-                size=tnmt_size), deterministic_tournament(P,
-                                                          p_M_D,
+                p_M_D,
+                size=tnmt_size), deterministic_tournament(p_M_D,
                                                           size=tnmt_size)
             c1, c2 = P[i1], P[i2]
             if rng.random() < cross_prob:
@@ -233,6 +243,8 @@ def ga(X: np.ndarray,
             P_.append(c2)
 
         P = P_
+    return phi, elitist, p_M_D_elitist, params_elitist
+
 
     return P, p_M_D, params, phi, elitist_index
 
@@ -257,14 +269,16 @@ def individual(ranges: np.ndarray, k: int):
     return [RadialMatch.random(ranges) for i in range(k)]
 
 
-def deterministic_tournament(inds: List[np.ndarray], fits: List[float],
-                             size: int):
+def deterministic_tournament(fits: List[float], size: int):
     """
     I can only guess, what [PDF p. 249] means by “deterministic tournament
     selection”.
+
+    :param fits: List of fitness values
+
+    :returns: Index of fitness value of selected individual
     """
-    assert len(inds) == len(fits)
-    tournament = rng.choice(range(len(inds)), size=size)
+    tournament = rng.choice(range(len(fits)), size=size)
     return max(tournament, key=lambda i: fits[i])
 
 
@@ -307,6 +321,9 @@ def model_probability(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                       Phi: np.ndarray):
     """
     [PDF p. 235]
+
+    Note that this deviates from [PDF p. 235] in that we return `L(q) - ln K!`
+    instead of `L(q) + ln K!` because the latter is not consistent with (7.3).
 
     :param M: matching matrix (N × K)
     :param X: input matrix (N × D_X)
