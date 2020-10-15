@@ -4,6 +4,11 @@ import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
 from .radialmatch import RadialMatch
 
+# Underflows may occur at many places, e.g. if X contains values very close to
+# 0.
+# TODO Are underflows problematic?
+np.seterr(all="raise", under="ignore")
+
 # hyper parameters, Table 8.1 (PDF p. 233)
 A_ALPHA = 10**-2
 B_ALPHA = 10**-4
@@ -474,8 +479,11 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     G = np.clip(G, EXP_MIN, LN_MAX - np.log(K))
 
     G = np.exp(G) * M
-    G = G / np.sum(G, 1)[:, np.newaxis]
-    G = np.nan_to_num(G, 1 / K)
+    # The sum can be 0 meaning we do 0/0 (== NaN) but we ignore it because it is
+    # fixed one line later (this is how Drugowitsch does it).
+    with np.errstate(invalid="ignore"):
+        G = G / np.sum(G, 1)[:, np.newaxis]
+    G = np.nan_to_num(G, nan=1 / K)
     return G
 
 
@@ -500,15 +508,18 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
 
     # We first create the transpose of R because indexing is easier. We then
     # transpose before multiplying elementwise with G.
-    R_ = np.zeros((K, N))
+    R_T = np.zeros((K, N))
     for k in range(K):
-        R_[k] = np.exp(D_Y / 2 * (ss.digamma(a_tau[k]) - np.log(b_tau[k]))
-                       - 0.5
-                       * (a_tau[k] / b_tau[k] * np.sum((Y - X @ W[k].T)**2, 1)
-                          + D_Y * np.sum(X * (X @ Lambda_1[k]), 1)))
-    R = R_.T * G
-    R = R / np.sum(R, 1)[:, np.newaxis]
-    R = np.nan_to_num(R, 0)
+        R_T[k] = np.exp(D_Y / 2 * (ss.digamma(a_tau[k]) - np.log(b_tau[k]))
+                        - 0.5
+                        * (a_tau[k] / b_tau[k] * np.sum((Y - X @ W[k].T)**2, 1)
+                           + D_Y * np.sum(X * (X @ Lambda_1[k]), 1)))
+    R = R_T.T * G
+    # The sum can be 0 meaning we do 0/0 (== NaN) but we ignore it because it is
+    # fixed one line later (this is how Drugowitsch does it).
+    with np.errstate(invalid="ignore"):
+        R = R / np.sum(R, 1)[:, np.newaxis]
+    R = np.nan_to_num(R, nan=0)
     return R
 
 
@@ -570,7 +581,15 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                              a_tau=a_tau,
                              b_tau=b_tau)
         KLRG_prev = KLRG
-        KLRG = np.sum(R * np.nan_to_num(np.log(G / R), 0))
+        # responsibilities performs a `nan_to_num(…, nan=0)`, so we might divide by
+        # 0 here. The intended behaviour is to silently get a NaN that can then
+        # be replaced by 0 again (this is how Drugowitsch does it [PDF p. 213]).
+        # TODO This should actually result in a `divide` error (and not an
+        # `invalid`).
+        with np.errstate(divide="ignore"):
+            KLRG = np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
+        # Just to make sure that we don't accidentally get an inf here …
+        assert np.isfinite(KLRG)
         delta_KLRG = np.abs(KLRG_prev - KLRG)
     H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
     Lambda_V_1 = np.linalg.inv(H)
@@ -761,7 +780,11 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
         # NOTE this is just the negated form of the update two lines prior?
         L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
 
-    # Kullback-Leibler divergence [PDF p. 246]
-    L_M2q = np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
+    # L_M2q is the Kullback-Leibler divergence [PDF p. 246].
+    # responsibilities performs a `nan_to_num(…, nan=0)`, so we might divide by
+    # 0 here. The intended behaviour is to silently get a NaN that can then
+    # be replaced by 0 again (this is how Drugowitsch does it [PDF p. 213]).
+    with np.errstate(divide="ignore"):
+        L_M2q = np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
     L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
     return L_M1q + L_M2q + L_M3q
