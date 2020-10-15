@@ -333,12 +333,17 @@ def model_probability(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     :returns: approximate model probability L(q) + ln p(M)
     """
     N, K = M.shape
-    W = [0] * K
-    Lambda_1 = [0] * K
-    a_tau = [0] * K
-    b_tau = [0] * K
-    a_alpha = [0] * K
-    b_alpha = [0] * K
+
+    # Augment X by a bias term. [PDF p. 113] assumes that input is always
+    # augmented with a single constant element. We simply enforce that here.
+    X = np.hstack([np.ones((N, 1)), X])
+
+    W = [None] * K
+    Lambda_1 = [None] * K
+    a_tau = [None] * K
+    b_tau = [None] * K
+    a_alpha = [None] * K
+    b_alpha = [None] * K
     for k in range(K):
         W[k], Lambda_1[k], a_tau[k], b_tau[k], a_alpha[k], b_alpha[
             k] = train_classifier(M[:, [k]], X, Y)
