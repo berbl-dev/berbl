@@ -4,7 +4,7 @@ from prolcs import *
 import numpy as np  # type: ignore
 
 
-def generate(n: int = 300):
+def generate(n: int = 300, rng: Generator = None):
     """
     [PDF p. 260]
 
@@ -12,6 +12,9 @@ def generate(n: int = 300):
 
     :returns: input and output matrices X (N × 1) and Y (N × 1)
     """
+    if rng == None:
+        rng = np.random.default_rng()
+
     X = np.random.random((n, 1))
     ms = [
         # We invert the sigma parameters because our RadialMatch expects squared

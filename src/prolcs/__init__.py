@@ -39,6 +39,9 @@ col_vector = [[1], [2], [3]]
 * FixNaN(A, b): ``np.nan_to_num(a, nan=b)``
 """
 
+rng = np.random.default_rng(0)
+
+
 
 
 def phi_standard(X: np.ndarray):
@@ -197,9 +200,12 @@ def ga(X: np.ndarray,
     Phi = phi(X)
 
     # [PDF p. 221, 3rd paragraph]
+    # TODO Extract initialization
     # TODO Hardcoded 100 here …
+    # Ks = rng.integers(low=1, high=10, size=pop_size)
     # TODO Drugowitsch samples Ks from problem-dependent Binomial distribution
-    Ks = np.random.randint(low=1, high=100, size=pop_size)
+    # Ks = np.clip(rng.binomial(8, 0.5, size=pop_size - 1), 1, 100)
+    Ks = np.clip(rng.binomial(8, 0.5, size=pop_size), 1, 100)
     ranges = np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
     P = [individual(ranges, k) for k in Ks]
     # TODO Parametrize number of elitists
@@ -219,9 +225,9 @@ def ga(X: np.ndarray,
                                                           p_M_D,
                                                           size=tnmt_size)
             c1, c2 = P[i1], P[i2]
-            if np.random.random() < cross_prob:
+            if rng.random() < cross_prob:
                 c1, c2 = crossover(c1, c2)
-            if np.random.random() < muta_prob:
+            if rng.random() < muta_prob:
                 c1, c2 = mutate(c1), mutate(c2)
             P_.append(c1)
             P_.append(c2)
@@ -258,12 +264,13 @@ def deterministic_tournament(inds: List[np.ndarray], fits: List[float],
     selection”.
     """
     assert len(inds) == len(fits)
-    tournament = np.random.choice(range(len(inds)), size=size)
+    tournament = rng.choice(range(len(inds)), size=size)
     return max(tournament, key=lambda i: fits[i])
 
 
 def mutate(MM: List):
     return list(map(lambda i: i.mutate(), MM))
+
 
 def crossover(M_a: List, M_b: List):
     """
@@ -279,14 +286,20 @@ def crossover(M_a: List, M_b: List):
     K_a = len(M_a)
     K_b = len(M_b)
     M_a_ = M_a + M_b
-    K_b_ = np.random.randint(low=1, high=K_a + K_b)
+    # TODO Is this correct: This is how Drugowitsch does it but this way we get
+    # many small individuals (higher probability of creating small individuals
+    # due to selecting 9 ∈ [0, 10] being equal to selecting 1 ∈ [0, 10]).
+    K_b_ = rng.integers(low=1, high=K_a + K_b)
+    # This way we might be able to maintain current individual sizes on average.
+    # K_b_ = int(np.clip(np.random.normal(loc=K_a), a_min=1, a_max=K_a + K_b))
     M_b_ = []
     for k in range(K_b_):
-        m_k = np.random.choice(M_a_)
-        M_b_.append(m_k)
-        M_a_.remove(m_k)
+        i = rng.integers(low=0, high=len(M_a_))
+        M_b_.append(M_a_[i])
+        del M_a_[i]
     assert K_a + K_b - K_b_ == len(M_a_)
     assert K_b_ == len(M_b_)
+    assert K_a + K_b == len(M_b_) + len(M_a_)
     return M_a_, M_b_
 
 
@@ -402,6 +415,8 @@ def train_classifier(m_k, X, Y):
     return W_k, Lambda_k_1, a_tau_k, b_tau_k, a_alpha_k, b_alpha_k
 
 
+# TODO Drugowitsch also gives this a_alpha and b_alpha although they are not
+# used. Maybe investigate more in-depth whether that is a mistake?
 def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                  W: List[np.ndarray], Lambda_1: List[np.ndarray],
                  a_tau: np.ndarray, b_tau: np.ndarray):
@@ -425,7 +440,7 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     N, D_Y = Y.shape
     N, D_V = Phi.shape
 
-    V = np.random.normal(loc=0, scale=A_BETA / B_BETA, size=(D_V, K))
+    V = rng.normal(loc=0, scale=A_BETA / B_BETA, size=(D_V, K))
     a_beta = np.repeat(A_BETA, K)
     b_beta = np.repeat(B_BETA, K)
     L_M_q = -np.inf
@@ -562,8 +577,6 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     KLRG = np.inf
     delta_KLRG = DELTA_S_KLRG + 1
     while delta_KLRG > DELTA_S_KLRG:
-        # NOTE This sometimes seems to not converge in a timely manner (I've
-        # only had one run so far, where this happened, though).
         E = Phi.T @ (G - R) + V * E_beta_beta
         e = E.T.reshape((-1))
         H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
