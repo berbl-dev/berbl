@@ -92,23 +92,24 @@ def predict1(x, mstruct, W, Lambda_1, a_tau, b_tau, V, phi):
 
     :returns: mean output matrix (D_Y), variance of output (D_Y)
     """
-    x_ = np.array([x])
-    M = matching_matrix(mstruct, x_)
+    X = x.reshape((1, -1))
+    M = matching_matrix(mstruct, X)
     N, K = M.shape
-    Phi = phi(x_)
+    Phi = phi(X)
     G = mixing(M, Phi, V)  # (N=1) × K
     g = G[0]
     D_Y, D_X = W[0].shape
 
-    y = (g * W) @ x
+    x_ = np.append(1, x)
+    y = (g * W) @ x_
 
     var = np.zeros(D_Y)
     # TODO Can this be vectorized?
     for j in range(D_Y):
         for k in range(K):
             var[j] += g[k] * (2 * b_tau[k] / (a_tau[k] - 1) *
-                              (1 + x @ Lambda_1[k] @ x) +
-                              (W[k][j] @ x)**2) - y[j]**2
+                              (1 + x_ @ Lambda_1[k] @ x_) +
+                              (W[k][j] @ x_)**2) - y[j]**2
     return y, var
 
 
