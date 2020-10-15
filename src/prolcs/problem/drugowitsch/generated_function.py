@@ -59,12 +59,51 @@ def generate(n: int = 300, rng: Generator = None):
 
 
 if __name__ == "__main__":
-    import seaborn as sns
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    X, Y = generate(1000)
-    data = pd.DataFrame(np.hstack([X, Y]), columns=["X", "Y"])
+    seed = 1
 
-    sns.relplot(x="X", y="Y", data=data)
+    X, Y = generate(1000, rng=np.random.default_rng(seed))
+    # plt.plot(X[:,[1]].reshape(-1), Y.reshape((-1)), "r+")
+    plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
+
+    # TODO We might need Drugowitsch's problem-dependent Binomial initialization
+    # for comparability
+    phi, elitist, p_M_D_elitist, params_elitist = ga(X, Y, iter=2)
+    W, Lambda_1, a_tau, b_tau, V = get_params(params_elitist)
+
+    X_test, Y_test_true = generate(1000, rng=np.random.default_rng(seed + 1))
+
+    Y_test, var = np.zeros(Y_test_true.shape), np.zeros(Y_test_true.shape)
+    for i in range(len(X_test)):
+        Y_test[i], var[i] = predict1(X_test[i],
+                                     elitist,
+                                     W,
+                                     Lambda_1,
+                                     a_tau,
+                                     b_tau,
+                                     V,
+                                     phi=phi)
+
+    # Sort X (and Y with it) for proper error area in graph.
+    # X_test_ = X_test
+    # Y_test_ = Y_test
+    # XY_test = np.hstack([X_test, Y_test])
+    # XY_test = XY_test[np.lexsort(np.flip(XY_test, axis=1).T)]
+    # X_test = XY_test[:, [0, 1]]
+    # Y_test = XY_test[:, [2]]
+
+    # data2 = pd.DataFrame(np.hstack((X_test[:, [1]], Y_test)),
+    #                      columns=["X", "Y"])
+    # ax = sns.lineplot(x="X", y="Y", data=data2)
+    # ax.fill_between(x=X_test[:, [1]].reshape((-1)),
+    #                 y1=(Y_test - var).reshape((-1)),
+    #                 y2=(Y_test + var).reshape((-1)))
+    plt.errorbar(X_test.reshape((-1)),
+                 Y_test.reshape((-1)),
+                 var.reshape((-1)),
+                 color="navy",
+                 ecolor="gray")
+
     plt.show()
