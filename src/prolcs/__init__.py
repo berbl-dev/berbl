@@ -372,10 +372,8 @@ def train_classifier(m_k, X, Y):
     N, D_Y = Y.shape
     X_k = X * np.sqrt(m_k)
     Y_k = Y * np.sqrt(m_k)
-    a_alpha_k = A_ALPHA
-    b_alpha_k = B_ALPHA
-    a_tau_k = A_TAU
-    b_tau_k = B_TAU
+    a_alpha_k, b_alpha_k = A_ALPHA, B_ALPHA
+    a_tau_k, b_tau_k = A_TAU, B_TAU
     L_k_q = -np.inf
     delta_L_k_q = DELTA_S_L_K_Q + 1
     # This is constant; Drugowitsch nevertheless puts it into the while loop
