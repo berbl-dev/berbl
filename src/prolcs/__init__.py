@@ -382,7 +382,7 @@ def train_classifier(m_k, X, Y):
     # 237].
     while delta_L_k_q > DELTA_S_L_K_Q:
         E_alpha_alpha_k = a_alpha_k / b_alpha_k
-        Lambda_k = np.diag([E_alpha_alpha_k] * X_k.shape[1]) + X_k.T @ X_k
+        Lambda_k = np.diag([E_alpha_alpha_k] * D_X) + X_k.T @ X_k
         Lambda_k_1 = np.linalg.inv(Lambda_k)
         W_k = Y_k.T @ X_k @ Lambda_k_1
         a_tau_k = A_TAU + 0.5 * np.sum(m_k)
