@@ -378,8 +378,10 @@ def train_classifier(m_k, X, Y):
     b_tau_k = B_TAU
     L_k_q = -np.inf
     delta_L_k_q = DELTA_S_L_K_Q + 1
-    # TODO Drugowitsch reaches convergence usually after 3-4 iterations [PDF p.
-    # 237].
+    # This is constant; Drugowitsch nevertheless puts it into the while loop
+    # (probably for readability).
+    a_alpha_k = A_ALPHA + D_X * D_Y / 2
+    # Drugowitsch reaches convergence usually after 3-4 iterations [PDF p. 237].
     while delta_L_k_q > DELTA_S_L_K_Q:
         E_alpha_alpha_k = a_alpha_k / b_alpha_k
         Lambda_k = np.diag([E_alpha_alpha_k] * D_X) + X_k.T @ X_k
@@ -389,9 +391,7 @@ def train_classifier(m_k, X, Y):
         b_tau_k = B_TAU + 1 / (2 * D_Y) * (np.sum(Y_k * Y_k)
                                            - np.sum(W_k * (W_k @ Lambda_k)))
         E_tau_tau_k = a_tau_k / b_tau_k
-        # TODO This seems spooky because it's constant albeit being in the while
-        # loop (if it's OK, it should be factored out).
-        a_alpha_k = A_ALPHA + D_X * D_Y / 2
+        # D_Y factor in front of trace due to sum over D_Y elements (7.100).
         b_alpha_k = B_ALPHA + 0.5 * (E_tau_tau_k * np.sum(W_k * W_k)
                                      + D_Y * np.trace(Lambda_k_1))
         L_k_q_prev = L_k_q
