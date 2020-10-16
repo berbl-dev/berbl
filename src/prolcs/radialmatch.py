@@ -33,6 +33,9 @@ class RadialMatch():
             self.ranges = np.repeat([-np.inf, np.inf], len(mu)).reshape(
                 (mu.shape[0], 2))
 
+    def __repr__(self):
+        return f"RadialMatch({self.mu}, {self.lambd_2}, {self.ranges})"
+
     @classmethod
     def random(cls, ranges: np.ndarray):
         """
