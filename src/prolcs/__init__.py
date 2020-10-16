@@ -310,6 +310,7 @@ def crossover(M_a: List, M_b: List):
     K_a = len(M_a)
     K_b = len(M_b)
     M_a_ = M_a + M_b
+    rng.shuffle(M_a_)
     # TODO Is this correct: This is how Drugowitsch does it but this way we get
     # many small individuals (higher probability of creating small individuals
     # due to selecting 9 ∈ [0, 10] being equal to selecting 1 ∈ [0, 10]).
