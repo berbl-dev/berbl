@@ -101,7 +101,15 @@ def predict1(x, mstruct, W, Lambda_1, a_tau, b_tau, V, phi):
     D_Y, D_X = W[0].shape
 
     x_ = np.append(1, x)
-    y = (g * W) @ x_
+
+    W = np.array(W)
+
+    # (\sum_k g_k(x) W_k) x, (7.108)
+    # TODO This can probably be vectorized
+    gW = 0
+    for k in range(len(W)):
+        gW += g[k] * W[k]
+    y = gW @ x_
 
     var = np.zeros(D_Y)
     # TODO Can this be vectorized?
@@ -144,8 +152,8 @@ def predictive_density(M, Phi, W, Lambda_1, a_tau, b_tau, V):
             for k in range(K):
                 prod = 1
                 for j in range(D_Y):
-                    # Drugowitsch's w_kj is a row vector of W[k] [PDF p. 195] with
-                    # W[k] being (D_Y × D_X)
+                    # Drugowitsch's w_kj is a row vector of W[k] [PDF p. 195]
+                    # with W[k] being (D_Y × D_X)
                     mu = W[k][j] @ x
                     lambd = (1 + x @ (Lambda_1[k] @ x))**(
                         -1) * a_tau[k] / b_tau[k]
