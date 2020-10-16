@@ -309,7 +309,9 @@ def crossover(M_a: List, M_b: List):
     """
     K_a = len(M_a)
     K_b = len(M_b)
-    M_a_ = M_a + M_b
+    # We deepcopy because we have to get proper copies of the matching
+    # functions.
+    M_a_ = deepcopy(M_a) + deepcopy(M_b)
     rng.shuffle(M_a_)
     # TODO Is this correct: This is how Drugowitsch does it but this way we get
     # many small individuals (higher probability of creating small individuals
