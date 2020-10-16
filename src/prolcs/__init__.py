@@ -3,6 +3,7 @@ import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
 from .radialmatch import RadialMatch
+from copy import deepcopy
 
 # Underflows may occur at many places, e.g. if X contains values very close to
 # 0.
@@ -219,10 +220,13 @@ def ga(X: np.ndarray,
     P = [individual(ranges, k) for k in Ks]
     # TODO Parametrize number of elitists
     elitist_index = None
-    elitist = []
+    elitist = None
     p_M_D_elitist = -np.inf
     params_elitist = None
     for i in range(iter):
+        sys.stdout.write(f"\rStarting iteration {i+1}/{iter}, "
+                         f"best solution of size {len(elitist) if elitist is not None else '?'} "
+                         f"at p_M(D) = {p_M_D_elitist}\t")
         Ms = map(lambda ind: matching_matrix(ind, X), P)
         # Compute fitness for each individual (i.e. model probabilities). (Also: Get params.)
         p_M_D_and_params = list(
@@ -231,12 +235,9 @@ def ga(X: np.ndarray,
         p_M_D, params = list(p_M_D), list(params)
         elitist_index = np.argmax(p_M_D)
         if p_M_D[elitist_index] > p_M_D_elitist:
-            elitist = P[elitist_index]
+            elitist = deepcopy(P[elitist_index])
             p_M_D_elitist = p_M_D[elitist_index]
-            params_elitist = params[elitist_index]
-            # del p_M_D[elitist_index]
-            # del P[elitist_index]
-            # del params[elitist_index]
+            params_elitist = deepcopy(params[elitist_index])
         P_: List[np.ndarray] = []
         while len(P_) < pop_size:
             i1, i2 = deterministic_tournament(
