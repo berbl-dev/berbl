@@ -126,3 +126,13 @@ class RadialMatch():
         m = np.clip(-0.5 * np.sum(delta.T * (self.lambd_2 @ delta.T), 0),
                     m_min, m_max)
         return np.exp(m)[:, np.newaxis]
+
+    def plot(self, ax, **kwargs):
+        if self.mu.shape == (1, ):
+            X = np.arange(0, 1, 0.01)[:, np.newaxis]
+            M = self.match(X)
+            ax.plot(X, M, **kwargs)
+            ax.axvline(self.mu, color=kwargs["color"])
+        else:
+            raise Exception(
+                "Can only plot one-dimensional RadialMatch objects")
