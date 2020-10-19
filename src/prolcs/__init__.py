@@ -168,6 +168,28 @@ def predictive_density(M, Phi, W, Lambda_1, a_tau, b_tau, V):
     return p
 
 
+def plot_pop(P):
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as mcolors
+    fig, ax = plt.subplots()
+    colors = list(mcolors.CSS4_COLORS.values())
+    i = 0
+    for ind in P:
+        for cl in ind:
+            cl.plot(ax, color=colors[i])
+        i += 1
+
+    plt.show()
+
+
+def pop_stats(P):
+    sizes = np.array(list(map(len, P)))
+    max_size = np.max(sizes)
+    size_hist, _ = np.histogram(sizes, bins=max(max_size - 1, 1))
+
+    return size_hist
+
+
 def ga(X: np.ndarray,
        Y: np.ndarray,
        phi: Callable[[np.ndarray], np.ndarray] = phi_standard,
