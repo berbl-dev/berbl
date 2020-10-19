@@ -89,6 +89,7 @@ if __name__ == "__main__":
                  Y_test.reshape((-1)),
                  var.reshape((-1)),
                  color="navy",
-                 ecolor="gray")
+                 ecolor="gray",
+                 fmt="v")
 
     plt.show()
