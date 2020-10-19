@@ -71,7 +71,7 @@ class RadialMatch():
                 # l)``.
                 # TODO This was chosen to be similar to [PDF p. 228] but isn't
                 # probably
-                scale=0.1 * np.sum(self.ranges * np.array([-1, 1]), 1)),
+                scale=0.01 * np.sum(self.ranges * np.array([-1, 1]), 1)),
             # clip to each dimension's range
             self.ranges[:, [0]].reshape((-1)),
             self.ranges[:, [1]].reshape((-1)))
@@ -81,7 +81,7 @@ class RadialMatch():
             # l)``.
             # TODO This was chosen relatively arbitrary (but motivated by [PDF
             # p. 228])
-            scale=0.05 * np.sum(self.ranges * np.array([-1, 1]), 1),
+            scale=0.005 * np.sum(self.ranges * np.array([-1, 1]), 1),
             size=self.lambd_2.shape)
         return self
 
