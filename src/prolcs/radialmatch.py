@@ -100,9 +100,17 @@ class RadialMatch():
         delta = X - mu_
         # We have to clip this so we don't return 0 here (0 should never be
         # returned because every match function matches everywhere at least a
-        # little bit).
-        x_min = np.log(np.finfo(None).tiny)
-        x_max = np.log(np.finfo(None).max)
-        x = np.clip(-0.5 * np.sum(delta.T * (self.lambd_2 @ delta.T), 0),
-                    x_min, x_max)
-        return np.exp(x)[:, np.newaxis]
+        # little bit). Also, we clip from above such that this never returns a
+        # value larger than 1 (it's a probability, after all).
+        m_min = np.log(np.finfo(None).tiny)
+        # TODO The maximum negative number might be different than simply the
+        # negation of the minimum positive number.
+        m_max = -np.finfo(None).tiny
+        # NOTE The negative sign in front of 0.5 is not in Drugowitsch's (8.10)
+        # [PDF p. 256].  However it can be found e.g. in (Butz et al.,
+        # Kernel-based, ellipsoidal conditions in the real-valued XCS classifier
+        # system, 2005) and seems reasonable: With delta -> 0, we want to have m
+        # -> 1 and without the negative sign, it may be that m > 1.
+        m = np.clip(-0.5 * np.sum(delta.T * (self.lambd_2 @ delta.T), 0),
+                    m_min, m_max)
+        return np.exp(m)[:, np.newaxis]
