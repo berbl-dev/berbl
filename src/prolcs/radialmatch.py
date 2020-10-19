@@ -39,9 +39,14 @@ class RadialMatch():
         return f"RadialMatch({self.mu}, {self.lambd_2}, {self.ranges})"
 
     @classmethod
-    def random(cls,
-               ranges: np.ndarray,
-               rng: np.random.Generator = np.random.default_rng()):
+    def random(
+        cls,
+        ranges: np.ndarray,
+        lambd_2_gen: Callable[
+            [np.ndarray],
+            np.ndarray] = lambda r: np.repeat(100, r.shape[0]**2).reshape(
+                (r.shape[0], r.shape[0])),
+        rng: np.random.Generator = np.random.default_rng()):
         """
         Based on [PDF p. 256] but slightly different:
 
@@ -53,18 +58,24 @@ class RadialMatch():
         This is basically what (Butz, 2005, “Kernel-based, ellipsoidal
         conditions in the real-valued XCS classifier system”) but with soft
         boundaries (i.e. every classifier matches everywhere, even if only
-        slightly), that is, without a threshold parameter. We evolve
-        ``lambd_2**2`` directly.
+        slightly), that is, without a threshold parameter. Also, we evolve
+        ``(sigma**-1)**2`` directly.
 
-        :param ranges: The value ranges of the problem considered
+        :param ranges: The value ranges for each dimension of the problem
+            considered (a matrix of shape ``(mu.shape[0], 2)``).
+        :param lambd_2_gen: Generator for deriving values for lambd_2 for each
+            dimension from ``ranges``. The default is to simply use a value of
+            ``100`` for each dimension (which is pretty arbitrary).
         """
         D_X, _ = ranges.shape
         assert _ == 2
         return RadialMatch(
-            mu=rng.random(size=D_X),
-            # Drugowitsch restricts ``lambd_2**2`` values to ``[10**(-50), 1)``, I
-            # don't think we need that?
-            lambd_2=rng.random(size=(D_X, D_X)),
+            mu=rng.uniform(low=ranges[:, [0]].reshape((-1)),
+                           high=ranges[:, [1]].reshape((-1)),
+                           size=D_X),
+            # NOTE rng.uniform(…, size=(D_X, D_X)) does not work in general. Has
+            # to be problem and especially ranges-dependent.
+            lambd_2=lambd_2_gen(ranges),
             ranges=ranges,
             rng=rng)
 
@@ -72,8 +83,6 @@ class RadialMatch():
         self.mu = np.clip(
             self.rng.normal(
                 loc=self.mu,
-                # For each dimension, we set the normal's scale to ``0.1 * (u -
-                # l)``.
                 # TODO This was chosen to be similar to [PDF p. 228] but isn't
                 # probably
                 scale=0.01 * np.sum(self.ranges * np.array([-1, 1]), 1)),
@@ -82,8 +91,6 @@ class RadialMatch():
             self.ranges[:, [1]].reshape((-1)))
         self.lambd_2 = self.rng.normal(
             loc=self.lambd_2,
-            # For each dimension, we set the normal's scale to ``0.05 * (u -
-            # l)``.
             # TODO This was chosen relatively arbitrary (but motivated by [PDF
             # p. 228])
             scale=0.005 * np.sum(self.ranges * np.array([-1, 1]), 1),
