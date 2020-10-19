@@ -217,7 +217,7 @@ def ga(X: np.ndarray,
     # Ks = np.clip(rng.binomial(8, 0.5, size=pop_size - 1), 1, 100)
     Ks = np.clip(rng.binomial(8, 0.5, size=pop_size), 1, 100)
     ranges = np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
-    P = [individual(ranges, k) for k in Ks]
+    P = [individual(ranges, k, rng=rng) for k in Ks]
     # TODO Parametrize number of elitists
     elitist_index = None
     elitist = None
@@ -270,13 +270,13 @@ def matching_matrix(ind: List, X: np.ndarray):
     return np.hstack(list(map(lambda m: m.match(X), ind)))
 
 
-def individual(ranges: np.ndarray, k: int):
+def individual(ranges: np.ndarray, k: int, rng: np.random.Generator):
     """
     Individuals are simply lists of matching functions (the length of the list
     is the number of classifiers, the matching functions specify their
     localization).
     """
-    return [RadialMatch.random(ranges) for i in range(k)]
+    return [RadialMatch.random(ranges, rng=rng) for i in range(k)]
 
 
 def deterministic_tournament(fits: List[float], size: int):

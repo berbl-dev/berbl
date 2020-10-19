@@ -7,7 +7,8 @@ class RadialMatch():
     def __init__(self,
                  mu: np.ndarray,
                  lambd_2: np.ndarray,
-                 ranges: np.ndarray = None):
+                 ranges: np.ndarray = None,
+                 rng: np.random.Generator = np.random.default_rng()):
         """
         Note: The covariance matrix has to be positive definite (cf. e.g.
         `Wikipedia
@@ -26,6 +27,7 @@ class RadialMatch():
         assert mu.shape[0] == lambd_2.shape[1]
         self.mu = mu
         self.lambd_2 = lambd_2
+        self.rng = rng
         if ranges is not None:
             assert ranges.shape == (mu.shape[0], 2)
             self.ranges = ranges
@@ -37,7 +39,9 @@ class RadialMatch():
         return f"RadialMatch({self.mu}, {self.lambd_2}, {self.ranges})"
 
     @classmethod
-    def random(cls, ranges: np.ndarray):
+    def random(cls,
+               ranges: np.ndarray,
+               rng: np.random.Generator = np.random.default_rng()):
         """
         Based on [PDF p. 256] but slightly different:
 
@@ -57,15 +61,16 @@ class RadialMatch():
         D_X, _ = ranges.shape
         assert _ == 2
         return RadialMatch(
-            ranges=ranges,
-            mu=np.random.random(size=D_X),
+            mu=rng.random(size=D_X),
             # Drugowitsch restricts ``lambd_2**2`` values to ``[10**(-50), 1)``, I
             # don't think we need that?
-            lambd_2=np.random.random(size=(D_X, D_X)))
+            lambd_2=rng.random(size=(D_X, D_X)),
+            ranges=ranges,
+            rng=rng)
 
     def mutate(self):
         self.mu = np.clip(
-            np.random.normal(
+            self.rng.normal(
                 loc=self.mu,
                 # For each dimension, we set the normal's scale to ``0.1 * (u -
                 # l)``.
@@ -75,7 +80,7 @@ class RadialMatch():
             # clip to each dimension's range
             self.ranges[:, [0]].reshape((-1)),
             self.ranges[:, [1]].reshape((-1)))
-        self.lambd_2 = np.random.normal(
+        self.lambd_2 = self.rng.normal(
             loc=self.lambd_2,
             # For each dimension, we set the normal's scale to ``0.05 * (u -
             # l)``.
