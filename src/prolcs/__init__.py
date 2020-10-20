@@ -46,14 +46,39 @@ Population = List[Individual]
 rng = np.random.default_rng(0)
 
 
+def get_params(params):
+    """
+    Extracts parameter values from a parameter dictionary.
+    """
+    W = params["W"]
+    Lambda_1 = params["Lambda_1"]
+    a_tau = params["a_tau"]
+    b_tau = params["b_tau"]
+    V = params["V"]
+    return W, Lambda_1, a_tau, b_tau, V
+
+
 def get_ranges(X: np.ndarray):
-     return np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
+    """
+    Computes the value range for each dimension.
+
+    :param X: input data as an ``(N, D_X)`` matrix
+
+    :returns: a ``(D_X, 2)`` matrix where each row consists the minimum and
+        maximum in the respective dimension
+    """
+    return np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
 
 
 def phi_standard(X: np.ndarray):
     """
     The mixing feature extractor usually employed by LCSs, i.e. ``phi(x) = 1``
     for each sample ``x``.
+
+    :param X: input data as an ``(N, D_X)`` matrix
+
+    :returns: a ``(D_X, 2)`` matrix where each row consists the minimum and
+        maximum in the respective dimension
     """
     N, D_X = X.shape
     return np.ones((N, 1))
@@ -229,9 +254,10 @@ def ga(X: np.ndarray,
     :param iter: iterations to run the GA
     :param pop_size: population size
     :param avg_ind_size: average individual size to use for initialization (done
-        by drawing individual sizes uniformly from ``[1, avg_ind_size * 2]``)
-    :param init: custom function for data-dependent init,
-        receives ``X`` and ``Y`` as arguments
+        by drawing individual sizes uniformly from ``[1, avg_ind_size * 2]``),
+        gets overridden by init
+    :param init: custom function for data-dependent init, receives ``X`` and
+        ``Y`` as arguments, overrides ``avg_ind_size`` and ``pop_size``
     :param tnmt_size: tournament size
     :param cross_prob: crossover probability
     :param muta_prob: mutation probability
