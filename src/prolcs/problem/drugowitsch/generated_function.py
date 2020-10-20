@@ -74,7 +74,7 @@ if __name__ == "__main__":
     # Drugowitsch samples individual sizes from a certain problem-dependent
     # Binomial distribution.
     def init(X, Y):
-        Ks = np.clip(rng.binomial(8, 0.5, size=pop_size), 1, 100)
+        Ks = np.clip(rng.binomial(8, 0.5, size=20), 1, 100)
         ranges = get_ranges(X)
         return [individual(ranges, k, rng=rng) for k in Ks]
 
