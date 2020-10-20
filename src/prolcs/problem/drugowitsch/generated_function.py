@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     seed = 1
 
-    X, Y = generate(1000, rng=np.random.default_rng(seed))
+    X, Y = generate(rng=np.random.default_rng(seed))
     plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
 
 
