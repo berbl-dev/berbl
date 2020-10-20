@@ -75,7 +75,7 @@ if __name__ == "__main__":
         ranges = get_ranges(X)
         return [individual(ranges, k, rng=rng) for k in Ks]
 
-    phi, elitist, p_M_D_elitist, params_elitist = ga(X, Y, iter=50, init=init)
+    phi, elitist, p_M_D_elitist, params_elitist = ga(X, Y, iter=250, init=init)
     W, Lambda_1, a_tau, b_tau, V = get_params(params_elitist)
     print(elitist)
 
