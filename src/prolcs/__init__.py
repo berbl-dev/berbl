@@ -693,10 +693,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         # responsibilities performs a ``nan_to_num(…, nan=0)``, so we might
         # divide by 0 here. The intended behaviour is to silently get a NaN that
         # can then be replaced by 0 again (this is how Drugowitsch does it [PDF
-        # p. 213]).
-        # TODO This should actually result in a ``divide`` error (and not an
-        # ``invalid``).
-        with np.errstate(divide="ignore"):
+        # p. 213]). Sometimes, there is an “invalid value encountered in
+        # true_divide” error thrown here as well, thus the invalid="ignore".
+        with np.errstate(divide="ignore", invalid="ignore"):
             KLRG = np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
         # Just to make sure that we don't accidentally get an inf here …
         assert np.isfinite(KLRG)
