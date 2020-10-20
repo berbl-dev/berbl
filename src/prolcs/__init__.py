@@ -531,7 +531,9 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     N, D_Y = Y.shape
     N, D_V = Phi.shape
 
-    V = rng.normal(loc=0, scale=A_BETA / B_BETA, size=(D_V, K))
+    # Drugowitsch gives variance as argument to normal, but NumPy wants standard
+    # deviation, thus we ``sqrt``.
+    V = rng.normal(loc=0, scale=np.sqrt(A_BETA / B_BETA), size=(D_V, K))
     a_beta = np.repeat(A_BETA, K)
     b_beta = np.repeat(B_BETA, K)
     L_M_q = -np.inf

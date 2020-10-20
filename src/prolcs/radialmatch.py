@@ -44,6 +44,7 @@ class RadialMatch():
         ranges: np.ndarray,
         lambd_2_gen: Callable[
             [np.ndarray],
+            # TODO Extract this
             np.ndarray] = lambda r: np.repeat(100, r.shape[0]**2).reshape(
                 (r.shape[0], r.shape[0])),
         rng: np.random.Generator = np.random.default_rng()):
@@ -84,7 +85,9 @@ class RadialMatch():
             self.rng.normal(
                 loc=self.mu,
                 # TODO This was chosen to be similar to [PDF p. 228] but isn't
-                # probably
+                # probably.
+                # TODO Drugowitsch gives variance, but NumPy wants standard
+                # deviation.
                 scale=0.01 * np.sum(self.ranges * np.array([-1, 1]), 1)),
             # clip to each dimension's range
             self.ranges[:, [0]].reshape((-1)),
@@ -93,6 +96,8 @@ class RadialMatch():
             loc=self.lambd_2,
             # TODO This was chosen relatively arbitrary (but motivated by [PDF
             # p. 228])
+            # TODO Drugowitsch gives variance, but NumPy wants standard
+            # deviation.
             scale=0.005 * np.sum(self.ranges * np.array([-1, 1]), 1),
             size=self.lambd_2.shape)
         return self

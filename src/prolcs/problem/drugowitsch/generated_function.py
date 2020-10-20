@@ -49,7 +49,10 @@ def generate(n: int = 300, rng: np.random.Generator = np.random.default_rng()):
         for k in range(len(ms)):
             # sample the three classifiers
             y += rng.normal(loc=G[n][k] * (W[k] @ X_[n]),
-                                  scale=Lambda_1[k])
+                                  # Drugowitsch gives variance as argument to
+                                  # normal, but NumPy wants standard deviation,
+                                  # thus we ``sqrt``.
+                                  scale=np.sqrt(Lambda_1[k])
         Y[n] = y
 
     # We return the non-augmented samples (because our algorithm augments them
