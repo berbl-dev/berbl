@@ -5,7 +5,7 @@ import scipy.stats as sstats  # type: ignore
 from .radialmatch import RadialMatch
 from copy import deepcopy
 
-# Underflows may occur at many places, e.g. if X contains values very close to
+# Underflows may occur in many places, e.g. if X contains values very close to
 # 0.
 # TODO Are underflows problematic?
 np.seterr(all="raise", under="ignore")
@@ -40,9 +40,14 @@ col_vector = [[1], [2], [3]]
 * FixNaN(A, b): ``np.nan_to_num(a, nan=b)``
 """
 
+Individual = RadialMatch
+Population = List[Individual]
+
 rng = np.random.default_rng(0)
 
 
+def get_ranges(X: np.ndarray):
+     return np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
 
 
 def phi_standard(X: np.ndarray):
@@ -195,6 +200,8 @@ def ga(X: np.ndarray,
        phi: Callable[[np.ndarray], np.ndarray] = phi_standard,
        iter: int = 250,
        pop_size: int = 20,
+       avg_ind_size: int = 10,
+       init: Callable[[np.ndarray, np.ndarray], Population] = None,
        tnmt_size: int = 5,
        cross_prob: float = 0.4,
        muta_prob: float = 0.4):
@@ -221,6 +228,10 @@ def ga(X: np.ndarray,
         sample).
     :param iter: iterations to run the GA
     :param pop_size: population size
+    :param avg_ind_size: average individual size to use for initialization (done
+        by drawing individual sizes uniformly from ``[1, avg_ind_size * 2]``)
+    :param init: custom function for data-dependent init,
+        receives ``X`` and ``Y`` as arguments
     :param tnmt_size: tournament size
     :param cross_prob: crossover probability
     :param muta_prob: mutation probability
@@ -231,15 +242,13 @@ def ga(X: np.ndarray,
 
     Phi = phi(X)
 
-    # [PDF p. 221, 3rd paragraph]
-    # TODO Extract initialization
-    # TODO Hardcoded 100 here …
-    # Ks = rng.integers(low=1, high=10, size=pop_size)
-    # TODO Drugowitsch samples Ks from problem-dependent Binomial distribution
-    # Ks = np.clip(rng.binomial(8, 0.5, size=pop_size - 1), 1, 100)
-    Ks = np.clip(rng.binomial(8, 0.5, size=pop_size), 1, 100)
-    ranges = np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
-    P = [individual(ranges, k, rng=rng) for k in Ks]
+    if init is None:
+        Ks = rng.integers(low=1, high=2 * avg_ind_size, size=pop_size)
+        ranges = get_ranges(X)
+        P = [individual(ranges, k, rng=rng) for k in Ks]
+    else:
+        P = init(X, Y)
+
     # TODO Parametrize number of elitists
     elitist_index = None
     elitist = None
@@ -357,8 +366,8 @@ def model_probability(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     """
     [PDF p. 235]
 
-    Note that this deviates from [PDF p. 235] in that we return `L(q) - ln K!`
-    instead of `L(q) + ln K!` because the latter is not consistent with (7.3).
+    Note that this deviates from [PDF p. 235] in that we return ``L(q) - ln K!``
+    instead of ``L(q) + ln K!`` because the latter is not consistent with (7.3).
 
     :param M: matching matrix (N × K)
     :param X: input matrix (N × D_X)
@@ -550,6 +559,7 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     G = np.clip(G, EXP_MIN, LN_MAX - np.log(K))
 
     G = np.exp(G) * M
+
     # The sum can be 0 meaning we do 0/0 (== NaN) but we ignore it because it is
     # fixed one line later (this is how Drugowitsch does it).
     with np.errstate(invalid="ignore"):
@@ -650,11 +660,12 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                              a_tau=a_tau,
                              b_tau=b_tau)
         KLRG_prev = KLRG
-        # responsibilities performs a `nan_to_num(…, nan=0)`, so we might divide by
-        # 0 here. The intended behaviour is to silently get a NaN that can then
-        # be replaced by 0 again (this is how Drugowitsch does it [PDF p. 213]).
-        # TODO This should actually result in a `divide` error (and not an
-        # `invalid`).
+        # responsibilities performs a ``nan_to_num(…, nan=0)``, so we might
+        # divide by 0 here. The intended behaviour is to silently get a NaN that
+        # can then be replaced by 0 again (this is how Drugowitsch does it [PDF
+        # p. 213]).
+        # TODO This should actually result in a ``divide`` error (and not an
+        # ``invalid``).
         with np.errstate(divide="ignore"):
             KLRG = np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
         # Just to make sure that we don't accidentally get an inf here …
@@ -850,9 +861,10 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
         L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
 
     # L_M2q is the Kullback-Leibler divergence [PDF p. 246].
-    # responsibilities performs a `nan_to_num(…, nan=0)`, so we might divide by
-    # 0 here. The intended behaviour is to silently get a NaN that can then
-    # be replaced by 0 again (this is how Drugowitsch does it [PDF p. 213]).
+    # ``responsibilities`` performs a ``nan_to_num(…, nan=0)``, so we might
+    # divide by 0 here. The intended behaviour is to silently get a NaN that can
+    # then be replaced by 0 again (this is how Drugowitsch does it [PDF p.
+    # 213]).
     with np.errstate(divide="ignore"):
         L_M2q = np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
     L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2

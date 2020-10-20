@@ -1,8 +1,17 @@
+# TODO Why is variance increasing that much on the right side?!
 from prolcs.radialmatch1d import RadialMatch1D
 from prolcs.radialmatch import RadialMatch
 from prolcs import *
 import numpy as np  # type: ignore
 
+# The individual used in function generation.
+ms = [
+    # We invert the sigma parameters because our RadialMatch expects squared
+    # inverse covariance matrices.
+    RadialMatch(mu=np.array([0.2]), lambd_2=np.array([[(1 / 0.05)**2]])),
+    RadialMatch(mu=np.array([0.5]), lambd_2=np.array([[(1 / 0.01)**2]])),
+    RadialMatch(mu=np.array([0.8]), lambd_2=np.array([[(1 / 0.05)**2]])),
+]
 
 def generate(n: int = 300, rng: Generator = None):
     """
@@ -17,13 +26,6 @@ def generate(n: int = 300, rng: Generator = None):
 
     X = np.random.random((n, 1))
 
-    ms = [
-        # We invert the sigma parameters because our RadialMatch expects squared
-        # inverse covariance matrices.
-        RadialMatch(mu=np.array([0.2]), lambd_2=np.array([[(1 / 0.05)**2]])),
-        RadialMatch(mu=np.array([0.5]), lambd_2=np.array([[(1 / 0.01)**2]])),
-        RadialMatch(mu=np.array([0.8]), lambd_2=np.array([[(1 / 0.05)**2]])),
-    ]
     M = matching_matrix(ms, X)
     Phi = phi_standard(X)
 
@@ -67,10 +69,18 @@ if __name__ == "__main__":
     X, Y = generate(1000, rng=np.random.default_rng(seed))
     plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
 
-    # TODO We might need Drugowitsch's problem-dependent Binomial initialization
-    # for comparability
-    phi, elitist, p_M_D_elitist, params_elitist = ga(X, Y, iter=2)
+
+    # [PDF p. 221, 3rd paragraph]
+    # Drugowitsch samples individual sizes from a certain problem-dependent
+    # Binomial distribution.
+    def init(X, Y):
+        Ks = np.clip(rng.binomial(8, 0.5, size=pop_size), 1, 100)
+        ranges = get_ranges(X)
+        return [individual(ranges, k, rng=rng) for k in Ks]
+
+    phi, elitist, p_M_D_elitist, params_elitist = ga(X, Y, iter=50, init=init)
     W, Lambda_1, a_tau, b_tau, V = get_params(params_elitist)
+    print(elitist)
 
     X_test, Y_test_true = generate(1000, rng=np.random.default_rng(seed + 1))
 
