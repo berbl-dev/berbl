@@ -13,6 +13,7 @@ ms = [
     RadialMatch(mu=np.array([0.8]), lambd_2=np.array([[(1 / 0.05)**2]])),
 ]
 
+
 def generate(n: int = 300, rng: np.random.Generator = np.random.default_rng()):
     """
     [PDF p. 260]
@@ -48,11 +49,7 @@ def generate(n: int = 300, rng: np.random.Generator = np.random.default_rng()):
         y = 0
         for k in range(len(ms)):
             # sample the three classifiers
-            y += rng.normal(loc=G[n][k] * (W[k] @ X_[n]),
-                                  # Drugowitsch gives variance as argument to
-                                  # normal, but NumPy wants standard deviation,
-                                  # thus we ``sqrt``.
-                                  scale=np.sqrt(Lambda_1[k])
+            y += rng.normal(loc=G[n][k] * (W[k] @ X_[n]), scale=Lambda_1[k])
         Y[n] = y
 
     # We return the non-augmented samples (because our algorithm augments them
@@ -68,7 +65,6 @@ if __name__ == "__main__":
 
     X, Y = generate(rng=np.random.default_rng(seed))
     plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
-
 
     # [PDF p. 221, 3rd paragraph]
     # Drugowitsch samples individual sizes from a certain problem-dependent
