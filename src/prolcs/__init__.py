@@ -5,6 +5,8 @@ import scipy.stats as sstats  # type: ignore
 from .radialmatch import RadialMatch
 from copy import deepcopy
 
+import sys
+
 # Underflows may occur in many places, e.g. if X contains values very close to
 # 0.
 # TODO Are underflows problematic?
@@ -281,9 +283,10 @@ def ga(X: np.ndarray,
     p_M_D_elitist = -np.inf
     params_elitist = None
     for i in range(iter):
-        sys.stdout.write(f"\rStarting iteration {i+1}/{iter}, "
-                         f"best solution of size {len(elitist) if elitist is not None else '?'} "
-                         f"at p_M(D) = {p_M_D_elitist}\t")
+        sys.stdout.write(
+            f"\rStarting iteration {i+1}/{iter}, "
+            f"best solution of size {len(elitist) if elitist is not None else '?'} "
+            f"at p_M(D) = {p_M_D_elitist}\t")
         Ms = map(lambda ind: matching_matrix(ind, X), P)
         # Compute fitness for each individual (i.e. model probabilities). (Also: Get params.)
         p_M_D_and_params = list(
@@ -310,10 +313,11 @@ def ga(X: np.ndarray,
             P_.append(c2)
 
         P = P_
+        print("")
+        print(pop_stats(P))
     return phi, elitist, p_M_D_elitist, params_elitist
 
 
-    return P, p_M_D, params, phi, elitist_index
 
 
 def matching_matrix(ind: List, X: np.ndarray):
