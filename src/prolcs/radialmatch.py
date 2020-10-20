@@ -134,7 +134,9 @@ class RadialMatch():
 
     def plot(self, ax, **kwargs):
         if self.mu.shape == (1, ):
-            X = np.arange(0, 1, 0.01)[:, np.newaxis]
+            l = self.ranges[:,[0]].reshape(1)
+            h = self.ranges[:,[1]].reshape(1)
+            X = np.arange(l, h, 0.01)[:, np.newaxis]
             M = self.match(X)
             ax.plot(X, M, **kwargs)
             ax.axvline(self.mu, color=kwargs["color"])
