@@ -48,7 +48,7 @@ def generate(n: int = 300, rng: np.random.Generator = np.random.default_rng()):
         y = 0
         for k in range(len(ms)):
             # sample the three classifiers
-            y += np.random.normal(loc=G[n][k] * (W[k] @ X_[n]),
+            y += rng.normal(loc=G[n][k] * (W[k] @ X_[n]),
                                   scale=Lambda_1[k])
         Y[n] = y
 
