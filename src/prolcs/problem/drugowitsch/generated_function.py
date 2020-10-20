@@ -13,7 +13,7 @@ ms = [
     RadialMatch(mu=np.array([0.8]), lambd_2=np.array([[(1 / 0.05)**2]])),
 ]
 
-def generate(n: int = 300, rng: Generator = None):
+def generate(n: int = 300, rng: np.random.Generator = np.random.default_rng()):
     """
     [PDF p. 260]
 
@@ -21,10 +21,7 @@ def generate(n: int = 300, rng: Generator = None):
 
     :returns: input and output matrices X (N × 1) and Y (N × 1)
     """
-    if rng == None:
-        rng = np.random.default_rng()
-
-    X = np.random.random((n, 1))
+    X = rng.random((n, 1))
 
     M = matching_matrix(ms, X)
     Phi = phi_standard(X)
