@@ -66,13 +66,24 @@ if __name__ == "__main__":
     X, Y = generate(rng=np.random.default_rng(seed))
     plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
 
+    ranges = (0, 1)
+
+
+    def individual(k: int, rng: np.random.Generator):
+        """
+        Individuals are simply lists of matching functions (the length of the list
+        is the number of classifiers, the matching functions specify their
+        localization).
+        """
+        return [RadialMatch1D.random(ranges, rng=rng) for i in range(k)]
+
     # [PDF p. 221, 3rd paragraph]
     # Drugowitsch samples individual sizes from a certain problem-dependent
     # Binomial distribution.
     def init(X, Y):
         Ks = np.clip(rng.binomial(8, 0.5, size=20), 1, 100)
         ranges = get_ranges(X)
-        return [individual(ranges, k, rng=rng) for k in Ks]
+        return [individual(k, rng=rng) for k in Ks]
 
     phi, elitist, p_M_D_elitist, params_elitist = ga(X, Y, iter=250, init=init)
     W, Lambda_1, a_tau, b_tau, V = get_params(params_elitist)
