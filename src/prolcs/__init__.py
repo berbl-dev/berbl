@@ -7,6 +7,8 @@ from copy import deepcopy
 
 import sys
 
+LOGGING = "mlflow"
+
 # Underflows may occur in many places, e.g. if X contains values very close to
 # 0.
 # TODO Are underflows problematic?
@@ -222,6 +224,12 @@ def pop_stats(P):
     return size_hist
 
 
+def log_(name, value, step):
+    if LOGGING == "mlflow":
+        from mlflow import log_metric
+        log_metric(name, value, step)
+
+
 def ga(X: np.ndarray,
        Y: np.ndarray,
        phi: Callable[[np.ndarray], np.ndarray] = phi_standard,
@@ -315,6 +323,7 @@ def ga(X: np.ndarray,
         P = P_
         print("")
         print(pop_stats(P))
+        log_("fitness", p_M_D_elitist, step=i)
     return phi, elitist, p_M_D_elitist, params_elitist
 
 
