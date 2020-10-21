@@ -59,13 +59,15 @@ stdenv.mkDerivation rec {
   buildInputs = [
     (python3.withPackages (ps:
       with ps; [
+        # TODO azure-storage-blob is only required because otherwise mlflow
+        # doesn't find it at runtime (whereas ipython does, actually?!).
+        azure-storage-blob
         click
         hypothesis
         matplotlib
         mlflowPatched
         numpy
         pandas
-        # sacred
         scipy
         scikitlearn
         seaborn
