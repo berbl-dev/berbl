@@ -71,18 +71,15 @@ if __name__ == "__main__":
     with mlflow.start_run() as run:
         mlflow.log_param("seed", seed)
 
-
         X, Y = generate(rng=np.random.default_rng(seed))
-        plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
 
         ranges = (0, 1)
 
-
         def individual(k: int, rng: np.random.Generator):
             """
-            Individuals are simply lists of matching functions (the length of the list
-            is the number of classifiers, the matching functions specify their
-            localization).
+            Individuals are simply lists of matching functions (the length of
+            the list is the number of classifiers, the matching functions
+            specify their localization).
             """
             return [RadialMatch1D.random(ranges, rng=rng) for i in range(k)]
 
@@ -94,29 +91,35 @@ if __name__ == "__main__":
             ranges = get_ranges(X)
             return [individual(k, rng=rng) for k in Ks]
 
-        phi, elitist, p_M_D_elitist, params_elitist = ga(X, Y, iter=250, init=init)
+        phi, elitist, p_M_D_elitist, params_elitist = ga(X,
+                                                         Y,
+                                                         iter=250,
+                                                         init=init)
         W, Lambda_1, a_tau, b_tau, V = get_params(params_elitist)
         print(elitist)
 
     if LOGGING == "off":
-        X_test, Y_test_true = generate(1000, rng=np.random.default_rng(seed + 1))
+        plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
+
+        X_test, Y_test_true = generate(1000,
+                                       rng=np.random.default_rng(seed + 1))
 
         Y_test, var = np.zeros(Y_test_true.shape), np.zeros(Y_test_true.shape)
         for i in range(len(X_test)):
             Y_test[i], var[i] = predict1(X_test[i],
-                                        elitist,
-                                        W,
-                                        Lambda_1,
-                                        a_tau,
-                                        b_tau,
-                                        V,
-                                        phi=phi)
+                                         elitist,
+                                         W,
+                                         Lambda_1,
+                                         a_tau,
+                                         b_tau,
+                                         V,
+                                         phi=phi)
 
         plt.errorbar(X_test.reshape((-1)),
-                    Y_test.reshape((-1)),
-                    var.reshape((-1)),
-                    color="navy",
-                    ecolor="gray",
-                    fmt="v")
+                     Y_test.reshape((-1)),
+                     var.reshape((-1)),
+                     color="navy",
+                     ecolor="gray",
+                     fmt="v")
 
         plt.show()
