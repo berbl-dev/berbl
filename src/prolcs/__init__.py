@@ -219,9 +219,18 @@ def plot_pop(P):
 def pop_stats(P):
     sizes = np.array(list(map(len, P)))
     max_size = np.max(sizes)
-    size_hist, _ = np.histogram(sizes, bins=max(max_size - 1, 1))
+    size_hist, bins = np.histogram(sizes, bins=max(max_size - 1, 1))
 
-    return size_hist
+    bins = list(zip(bins, bins[1:]))
+    return list(zip(bins, size_hist))
+
+
+def cl_count(P):
+    return np.sum(np.array(list(map(len, P))))
+
+
+def avg_ind_size(P):
+    return np.mean(np.array(list(map(len, P))))
 
 
 def log_(name, value, step):
@@ -235,7 +244,7 @@ def ga(X: np.ndarray,
        phi: Callable[[np.ndarray], np.ndarray] = phi_standard,
        iter: int = 250,
        pop_size: int = 20,
-       avg_ind_size: int = 10,
+       init_avg_ind_size: int = 10,
        init: Callable[[np.ndarray, np.ndarray], Population] = None,
        tnmt_size: int = 5,
        cross_prob: float = 0.4,
@@ -263,11 +272,11 @@ def ga(X: np.ndarray,
         sample).
     :param iter: iterations to run the GA
     :param pop_size: population size
-    :param avg_ind_size: average individual size to use for initialization (done
-        by drawing individual sizes uniformly from ``[1, avg_ind_size * 2]``),
-        gets overridden by init
+    :param init_avg_ind_size: average individual size to use for initialization (done
+        by drawing individual sizes uniformly from ``[1, init_avg_ind_size *
+        2]``), gets overridden by init
     :param init: custom function for data-dependent init, receives ``X`` and
-        ``Y`` as arguments, overrides ``avg_ind_size`` and ``pop_size``
+        ``Y`` as arguments, overrides ``init_avg_ind_size`` and ``pop_size``
     :param tnmt_size: tournament size
     :param cross_prob: crossover probability
     :param muta_prob: mutation probability
@@ -279,7 +288,7 @@ def ga(X: np.ndarray,
     Phi = phi(X)
 
     if init is None:
-        Ks = rng.integers(low=1, high=2 * avg_ind_size, size=pop_size)
+        Ks = rng.integers(low=1, high=2 * init_avg_ind_size, size=pop_size)
         ranges = get_ranges(X)
         P = [individual(ranges, k, rng=rng) for k in Ks]
     else:
@@ -324,6 +333,8 @@ def ga(X: np.ndarray,
         print("")
         print(pop_stats(P))
         log_("fitness", p_M_D_elitist, step=i)
+        log_("cl_count", cl_count(P), step=i)
+        log_("avg_ind_size", avg_ind_size(P), step=i)
     return phi, elitist, p_M_D_elitist, params_elitist
 
 
