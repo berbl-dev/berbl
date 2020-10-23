@@ -724,9 +724,15 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         # p. 213]). Sometimes, there is an “invalid value encountered in
         # true_divide” error thrown here as well, thus the invalid="ignore".
         with np.errstate(divide="ignore", invalid="ignore"):
-            KLRG = np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
+            # Drugowitsch doesn't add the `-` although it should be there,
+            # strictly speaking.
+            KLRG = - np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
         # Just to make sure that we don't accidentally get an inf here …
         assert np.isfinite(KLRG)
+        # This fixes(?) some numerical problems.
+        if KLRG < 0 and np.isclose(KLRG, 0):
+            KLRG = 0
+        assert KLRG >= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
         delta_KLRG = np.abs(KLRG_prev - KLRG)
     H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
     Lambda_V_1 = np.linalg.inv(H)
@@ -923,6 +929,12 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     # then be replaced by 0 again (this is how Drugowitsch does it [PDF p.
     # 213]).
     with np.errstate(divide="ignore"):
-        L_M2q = np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
+        # Drugowitsch doesn't add the `-` although it should be there, strictly
+        # speaking.
+        L_M2q = - np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
+    # This fixes(?) some numerical problems.
+    if L_M2q < 0 and np.isclose(L_M2q, 0):
+        L_M2q = 0
+    assert L_M2q >= 0, f"Kullback-Leibler divergence less than zero: {L_M2q}"
     L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
     return L_M1q + L_M2q + L_M3q
