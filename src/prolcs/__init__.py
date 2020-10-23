@@ -561,6 +561,11 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     L_M_q = -np.inf
     delta_L_M_q = DELTA_S_L_M_Q + 1
     while delta_L_M_q > DELTA_S_L_M_Q:
+        # NOTE This is not monotonous due to the Laplace approximation used [PDF
+        # p. 202, 160]. Also: “This desirable monotonicity property is unlikely
+        # to arise with other types of approximation methods, such as the
+        # Laplace approximation.” (Bayesian parameter estimation via variational
+        # methods (Jaakkola, Jordan), p. 10)
         V, Lambda_V_1 = train_mix_weights(M=M,
                                           X=X,
                                           Y=Y,
@@ -696,6 +701,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         E = Phi.T @ (G - R) + V * E_beta_beta
         e = E.T.reshape((-1))
         H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
+        # Preference of `-` and `@` is OK here, we checked. `delta_v` is always
+        # positive, because the whole thing “is concave and has a unique
+        # maximum” (and thus the Hessian is negative everywhere) [PDF p. 180].
         delta_v = -np.linalg.inv(H) @ e
         # “D_V × K matrix with jk'th element given by ((k - 1) K + j)'th element
         # of v.” (Probably means “delta_v”.)
