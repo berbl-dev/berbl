@@ -327,7 +327,7 @@ def ga(X: np.ndarray,
                 p_M_D,
                 size=tnmt_size), deterministic_tournament(p_M_D,
                                                           size=tnmt_size)
-            c1, c2 = P[i1], P[i2]
+            c1, c2 = deepcopy(P[i1]), deepcopy(P[i2])
             if rng.random() < cross_prob:
                 c1, c2 = crossover(c1, c2)
             if rng.random() < muta_prob:
