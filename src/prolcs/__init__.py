@@ -11,11 +11,17 @@ LOGGING = "mlflow"
 
 # Underflows may occur in many places, e.g. if X contains values very close to
 # 0.
-# TODO Are underflows problematic?
+# TODO Are underflows really OK?
 np.seterr(all="raise", under="ignore")
 
-# hyper parameters, Table 8.1 (PDF p. 233)
+# Hyper parameters, Table 8.1 (PDF p. 233).
+"""
+Scale parameter of weight vector variance prior.
+"""
 A_ALPHA = 10**-2
+"""
+Shape parameter of weight vector variance prior.
+"""
 B_ALPHA = 10**-4
 A_BETA = 10**-2
 B_BETA = 10**-4
