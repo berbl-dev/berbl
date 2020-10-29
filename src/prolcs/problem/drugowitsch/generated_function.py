@@ -6,12 +6,11 @@ import numpy as np  # type: ignore
 
 # The individual used in function generation.
 ms = [
-    # We invert the sigma parameters because our RadialMatch expects squared
-    # inverse covariance matrices.
-    RadialMatch(mu=np.array([0.2]), lambd_2=np.array([[(1 / 0.05)**2]])),
-    RadialMatch(mu=np.array([0.5]), lambd_2=np.array([[(1 / 0.01)**2]])),
-    RadialMatch(mu=np.array([0.8]), lambd_2=np.array([[(1 / 0.05)**2]])),
+    RadialMatch1D(mu=0.2, sigma_2=0.05, ranges=(0, 1)),
+    RadialMatch1D(mu=0.5, sigma_2=0.01, ranges=(0, 1)),
+    RadialMatch1D(mu=0.8, sigma_2=0.05, ranges=(0, 1)),
 ]
+
 
 
 def generate(n: int = 300, rng: np.random.Generator = np.random.default_rng()):
