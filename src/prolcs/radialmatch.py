@@ -8,6 +8,8 @@ class RadialMatch():
                  mu: np.ndarray,
                  lambd_2: np.ndarray,
                  ranges: np.ndarray = None,
+                 # TODO Use random_state (see RadialMatch1D where we only supply
+                 # it in mutate and where it's needed)
                  rng: np.random.Generator = np.random.default_rng()):
         """
         Note: The covariance matrix has to be positive definite (cf. e.g.
