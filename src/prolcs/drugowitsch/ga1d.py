@@ -306,4 +306,4 @@ class DrugowitschGA1D(BaseEstimator):
             log_("cl_count", cl_count(self.P_), step=i)
             log_("avg_ind_size", avg_ind_size(self.P_), step=i)
 
-        return phi, elitist, p_M_D_elitist, params_elitist
+        return self.phi, self.elitist_, self.p_M_D_elitist_, self.params_elitist_
