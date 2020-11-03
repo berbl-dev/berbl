@@ -376,8 +376,9 @@ def hessian(Phi: np.ndarray, G: np.ndarray, a_beta: np.ndarray,
             uk = (k + 1) * D_V
             lj = j * D_V
             uj = (j + 1) * D_V
-            H[lk:uk:1, lj:uj:1] = -Phi.T @ (Phi * (G[:, [k]] * G[:, [j]]))
-            H[lj:uj:1, lk:uk:1] = -Phi.T @ (Phi * (G[:, [k]] * G[:, [j]]))
+            H_kj = -Phi.T @ (Phi * (G[:, [k]] * G[:, [j]]))
+            H[lk:uk:1, lj:uj:1] = H_kj
+            H[lj:uj:1, lk:uk:1] = H_kj
         l = k * D_V
         u = (k + 1) * D_V
         H[l:u:1, l:u:1] = Phi.T @ (
