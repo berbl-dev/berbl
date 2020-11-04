@@ -7,6 +7,7 @@ from prolcs.drugowitsch.ga1d import DrugowitschGA1D
 from prolcs.radialmatch1d import RadialMatch1D
 from prolcs.utils import get_ranges
 from sklearn.utils import check_random_state  # type: ignore
+from sklearn import preprocessing  # type: ignore
 
 # The individual used in function generation.
 ms = [
@@ -78,6 +79,12 @@ if __name__ == "__main__":
 
         X, Y = generate()
 
+        x_scaler = preprocessing.StandardScaler().fit(X)
+        X = x_scaler.transform(X)
+
+        y_scaler = preprocessing.StandardScaler().fit(Y)
+        Y = y_scaler.transform(Y)
+
         ranges = (0, 1)
 
 
@@ -98,8 +105,27 @@ if __name__ == "__main__":
             ranges = get_ranges(X)
             return [individual(k) for k in Ks]
 
-        estimator = DrugowitschGA1D(n_iter=250, init=init, random_state=random_state)
+        estimator = DrugowitschGA1D(n_iter=50, init=init, random_state=random_state)
         estimator = estimator.fit(X, Y)
         # W, Lambda_1, a_tau, b_tau, V = get_params(params_elitist)
         # print(elitist)
 
+        plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
+
+        X_test, Y_test_true = generate(1000, random_state=12345)
+        X_test = x_scaler.transform(X_test)
+        Y_test_true = y_scaler.transform(Y_test_true)
+
+        Y_test, var = np.zeros(Y_test_true.shape), np.zeros(Y_test_true.shape)
+        for i in range(len(X_test)):
+            Y_test[i], var[i] = estimator.predict1(X_test[i])
+
+        plt.errorbar(X_test.reshape((-1)),
+                     Y_test.reshape((-1)),
+                     var.reshape((-1)),
+                     color="navy",
+                     ecolor="gray",
+                     fmt="v")
+
+        plt.savefig(f"Final approximation.pdf")
+        mlflow.log_artifact(f"Final approximation.pdf")
