@@ -5,6 +5,7 @@ from typing import *
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
+from .model import Model
 
 from .hyperparams import HyperParams
 
@@ -14,7 +15,7 @@ from .hyperparams import HyperParams
 # np.seterr(all="raise", under="ignore")
 
 
-def model_probability(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
+def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
                       Phi: np.ndarray, exp_min: float, ln_max: float):
     """
     [PDF p. 235]
@@ -22,14 +23,28 @@ def model_probability(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     Note that this deviates from [PDF p. 235] in that we return ``L(q) - ln K!``
     instead of ``L(q) + ln K!`` because the latter is not consistent with (7.3).
 
+    We also first augment X by a bias term within this function.
+
+    We also compute the matching matrix within this function instead of
+    providing it to it (this way we can return a complete trained model
+    including its matching functions instead of just having access to the
+    matching information for the given input).
+
+    We also return the model itself and not merely its approximate probability.
+    The model contains a field ``p_M_D`` which holds that value.
+
     :param M: matching matrix (N × K)
     :param X: input matrix (N × D_X)
     :param Y: output matrix (N × D_Y)
     :param Phi: mixing feature matrix (N × D_V)
 
-    :returns: approximate model probability L(q) + ln p(M)
+    :returns: model
     """
-    N, K = M.shape
+    N, _ = X.shape
+    K = model.size()
+
+    # Get the matching matrix before we augment X.
+    M = model.matching_matrix(X)
 
     # Augment X by a bias term. [PDF p. 113] assumes that input is always
     # augmented with a single constant element. We simply enforce that here.
@@ -70,15 +85,21 @@ def model_probability(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                     a_beta=a_beta,
                     b_beta=b_beta)
 
-    params = {
-        "W": W,
-        "Lambda_1": Lambda_1,
-        "a_tau": a_tau,
-        "b_tau": b_tau,
-        "V": V
-    }
-    ln_p_M = -np.log(np.math.factorial(K))  # (7.3), i.e. p_M \propto 1/K
-    return L_q + ln_p_M, params
+    ln_p_M = -np.log(float(
+        np.math.factorial(K)))  # (7.3), i.e. p_M \propto 1/K
+    p_M_D = L_q + ln_p_M
+
+    return model.fitted(p_M_D=p_M_D,
+                        W=W,
+                        Lambda_1=Lambda_1,
+                        a_tau=a_tau,
+                        b_tau=b_tau,
+                        a_alpha=a_alpha,
+                        b_alpha=b_alpha,
+                        V=V,
+                        Lambda_V_1=Lambda_V_1,
+                        a_beta=a_beta,
+                        b_beta=b_beta)
 
 
 def train_classifier(m_k, X, Y):

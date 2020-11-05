@@ -8,73 +8,38 @@ import scipy.stats as sstats  # type: ignore
 from sklearn.base import BaseEstimator  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
-from ..common import matching_matrix, phi_standard
+from ..common import phi_standard
 from ..logging import log_
 from ..radialmatch1d import RadialMatch1D
 from ..utils import get_ranges
 from . import *
 from .hyperparams import HyperParams
 
-Individual = RadialMatch1D
+Individual = Model
 Population = List[Individual]
 
 
-def deterministic_tournament(fits: List[float], size: int,
+def deterministic_tournament(models: List[Model], size: int,
                              random_state: np.random.RandomState):
     """
     I can only guess, what [PDF p. 249] means by “deterministic tournament
     selection”.
 
-    :param fits: List of fitness values
+    :param models: List of individuals (models) to select from
 
-    :returns: Index of fitness value of selected individual
+    :returns: A deepcopy of the tournament winner
     """
-    tournament = random_state.choice(range(len(fits)), size=size)
-    return max(tournament, key=lambda i: fits[i])
-
-
-def mutate(MM: List, random_state: np.random.RandomState):
-    return list(map(lambda i: i.mutate(random_state), MM))
-
-
-def crossover(M_a: List, M_b: List, random_state: np.random.RandomState):
-    """
-    [PDF p. 250]
-
-    :param M_a: a model structure (a simple Python list; originally the number
-        of classifiers and their localization but the length of a Python list is
-        easily obtainable)
-    :param M_b: another model structure
-
-    :returns: two model structures resulting from crossover of inputs
-    """
-    K_a = len(M_a)
-    K_b = len(M_b)
-    M_a_ = M_a + M_b
-    random_state.shuffle(M_a_)
-    # TODO Is this correct: This is how Drugowitsch does it but this way we get
-    # many small individuals (higher probability of creating small individuals
-    # due to selecting 9 ∈ [0, 10] being equal to selecting 1 ∈ [0, 10]).
-    K_b_ = random_state.randint(low=1, high=K_a + K_b)
-    # This way we might be able to maintain current individual sizes on average.
-    # K_b_ = int(np.clip(np.random.normal(loc=K_a), a_min=1, a_max=K_a + K_b))
-    M_b_ = []
-    for k in range(K_b_):
-        i = random_state.randint(low=0, high=len(M_a_))
-        M_b_.append(M_a_[i])
-        del M_a_[i]
-    assert K_a + K_b - K_b_ == len(M_a_)
-    assert K_b_ == len(M_b_)
-    assert K_a + K_b == len(M_b_) + len(M_a_)
-    return M_a_, M_b_
+    tournament = random_state.choice(models, size=size)
+    # TODO Think about renaming p_M_D to score
+    return deepcopy(max(tournament, key=lambda model: model.p_M_D))
 
 
 def cl_count(P):
-    return np.sum(np.array(list(map(len, P))))
+    return np.sum(np.array(list(map(lambda m: m.size(), P))))
 
 
 def avg_ind_size(P):
-    return np.mean(np.array(list(map(len, P))))
+    return np.mean(np.array(list(map(lambda m: m.size(), P))))
 
 
 class DrugowitschGA1D(BaseEstimator):
@@ -120,8 +85,8 @@ class DrugowitschGA1D(BaseEstimator):
             initialization (done by drawing individual sizes uniformly from
             ``[1, init_avg_ind_size * 2]``), gets overridden by init
         :param init: Custom function for data-dependent init, receives ``X`` and
-            ``y`` as arguments, overrides ``init_avg_ind_size`` and
-            ``pop_size``.
+            ``y`` as arguments, generating a list of ``Model``s; overrides
+            ``init_avg_ind_size`` and ``pop_size``.
         :param tnmt_size: Tournament size.
         :param cross_prob: Crossover probability.
         :param muta_prob: Mutation probability.
@@ -167,11 +132,8 @@ class DrugowitschGA1D(BaseEstimator):
         self.ln_max = ln_max
         self.logging = logging
 
-        self._P: Population = []
-        self._elitist_index: int = None
-        self._elitist: Individual = None
-        self._p_M_D_elitist: float = -np.inf
-        self._params_elitist = None
+        self.P_: Population = []
+        self.elitist_: Individual = None
 
     def fit(self, X, y, **kwargs):
         self.random_state_ = check_random_state(self.random_state)
@@ -250,6 +212,7 @@ class DrugowitschGA1D(BaseEstimator):
         HyperParams().LOGGING = self.logging
 
         if init is None:
+            raise Exception("Automatic init not supported yet")
             Ks = random_state.randint(low=1,
                                       high=2 * init_avg_ind_size,
                                       size=pop_size)
@@ -261,49 +224,38 @@ class DrugowitschGA1D(BaseEstimator):
             self.P_ = init(X, Y)
 
         # TODO Parametrize number of elitists
-        self.elitist_index_ = None
         self.elitist_ = None
-        self.p_M_D_elitist_ = -np.inf
-        self.params_elitist_ = None
         for i in range(n_iter):
             sys.stdout.write(
                 f"\rStarting iteration {i+1}/{n_iter}, "
                 f"best solution of size "
-                f"{len(self.elitist_) if self.elitist_ is not None else '?'} "
-                f"at p_M(D) = {self.p_M_D_elitist_}\t")
-            Ms = map(lambda ind: matching_matrix(ind, X), self.P_)
-            # Compute fitness for each individual (i.e. model probabilities).
-            # Also: Get params.
-            p_M_D_and_params = list(
+                f"{self.elitist_.size if self.elitist_ is not None else '?'} "
+                f"at p_M(D) = {self.elitist_.p_M_D if self.elitist_ is not None else '?'}\t"
+            )
+
+            # Evaluate population and store elitist.
+            self.P_ = list(
                 map(
-                    lambda M: model_probability(M, X, Y, Phi, self.exp_min,
-                                                self.ln_max), Ms))
-            p_M_D, params = tuple(zip(*p_M_D_and_params))
-            p_M_D, params = list(p_M_D), list(params)
-            self.elitist_index_ = np.argmax(p_M_D)
-            if p_M_D[self.elitist_index_] > self.p_M_D_elitist_:
-                self.elitist_ = deepcopy(self.P_[self.elitist_index_])
-                self.p_M_D_elitist_ = p_M_D[self.elitist_index_]
-                self.params_elitist_ = deepcopy(params[self.elitist_index_])
+                    lambda m: model_probability(m, X, Y, Phi, self.exp_min,
+                                                self.ln_max), self.P_))
+            self.elitist_ = max(self.P_, key=lambda i: i.p_M_D)
+
             P__: List[np.ndarray] = []
             while len(P__) < pop_size:
-                i1, i2 = deterministic_tournament(
-                    p_M_D, size=tnmt_size,
+                c1, c2 = deterministic_tournament(
+                    self.P_, size=tnmt_size,
                     random_state=random_state), deterministic_tournament(
-                        p_M_D, size=tnmt_size, random_state=random_state)
-                c1, c2 = deepcopy(self.P_[i1]), deepcopy(self.P_[i2])
+                        self.P_, size=tnmt_size, random_state=random_state)
                 if random_state.random() < cross_prob:
-                    c1, c2 = crossover(c1, c2, random_state)
+                    c1, c2 = c1.crossover(c2, random_state)
                 if random_state.random() < muta_prob:
-                    c1, c2 = mutate(c1, random_state), mutate(c2, random_state)
+                    c1, c2 = c1.mutate(random_state), c2.mutate(random_state)
                 P__.append(c1)
                 P__.append(c2)
 
             self.P_ = P__
-            # print("")
-            # print(pop_stats(self.P_))
-            log_("fitness", self._p_M_D_elitist, step=i)
+            log_("fitness", self.elitist_.p_M_D, step=i)
             log_("cl_count", cl_count(self.P_), step=i)
             log_("avg_ind_size", avg_ind_size(self.P_), step=i)
 
-        return self.phi, self.elitist_, self.p_M_D_elitist_, self.params_elitist_
+        return self.phi, self.elitist_

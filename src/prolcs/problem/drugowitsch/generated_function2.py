@@ -4,10 +4,11 @@ import numpy as np  # type: ignore
 from prolcs.common import matching_matrix, phi_standard
 from prolcs.drugowitsch import mixing
 from prolcs.drugowitsch.ga1d import DrugowitschGA1D
+from prolcs.drugowitsch.model import Model
 from prolcs.radialmatch1d import RadialMatch1D
 from prolcs.utils import get_ranges
-from sklearn.utils import check_random_state  # type: ignore
 from sklearn import preprocessing  # type: ignore
+from sklearn.utils import check_random_state  # type: ignore
 
 # The individual used in function generation.
 ms = [
@@ -54,7 +55,8 @@ def generate(n: int = 300, random_state: np.random.RandomState = 0):
         y = 0
         for k in range(len(ms)):
             # sample the three classifiers
-            y += random_state.normal(loc=G[n][k] * (W[k] @ X_[n]), scale=Lambda_1[k])
+            y += random_state.normal(loc=G[n][k] * (W[k] @ X_[n]),
+                                     scale=Lambda_1[k])
         Y[n] = y
 
     # We return the non-augmented samples (because our algorithm augments them
@@ -87,7 +89,6 @@ if __name__ == "__main__":
 
         ranges = (0, 1)
 
-
         # TODO Use random_state
         def individual(k: int):
             """
@@ -95,7 +96,10 @@ if __name__ == "__main__":
             the list is the number of classifiers, the matching functions
             specify their localization).
             """
-            return [RadialMatch1D.random(ranges, random_state=random_state) for i in range(k)]
+            return Model([
+                RadialMatch1D.random(ranges, random_state=random_state)
+                for i in range(k)
+            ], phi=phi_standard)
 
         # [PDF p. 221, 3rd paragraph]
         # Drugowitsch samples individual sizes from a certain problem-dependent
