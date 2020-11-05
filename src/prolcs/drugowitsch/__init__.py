@@ -352,17 +352,21 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                              a_tau=a_tau,
                              b_tau=b_tau)
         KLRG_prev = KLRG
-        # responsibilities performs a ``nan_to_num(…, nan=0)``, so we might
-        # divide by 0 here. The intended behaviour is to silently get a NaN that
-        # can then be replaced by 0 again (this is how Drugowitsch does it [PDF
-        # p. 213]). Sometimes, there is an “invalid value encountered in
-        # true_divide” error thrown here as well, thus the invalid="ignore".
+        # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we
+        # might divide by 0 here. The intended behaviour is to silently get a
+        # NaN that can then be replaced by 0 again (this is how Drugowitsch does
+        # it [PDF p.  213]). Drugowitsch expects dividing ``x`` by 0 to result
+        # in NaN, however, in Python this is only true for ``x == 0``; for any
+        # other ``x`` this instead results in ``inf`` (with sign depending on
+        # the sign of x). The two cases also throw different errors (‘invalid
+        # value encountered’ for ``x == 0`` and ‘divide by zero’ otherwise).
+        #
+        # NOTE I don't think the neginf is strictly required but let's be safe.
         with np.errstate(divide="ignore", invalid="ignore"):
             # Drugowitsch doesn't add the `-` although it should be there,
             # strictly speaking.
-            KLRG = -np.sum(R * np.nan_to_num(np.log(G / R), nan=0))
-        # Just to make sure that we don't accidentally get an inf here …
-        assert np.isfinite(KLRG)
+            KLRG = -np.sum(
+                R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
         # This fixes(?) some numerical problems.
         if KLRG < 0 and np.isclose(KLRG, 0):
             KLRG = 0
