@@ -329,15 +329,18 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                          Lambda_1=Lambda_1,
                          a_tau=a_tau,
                          b_tau=b_tau)
+    # TODO Why always make TWO steps instead of checking the true KLRG here? The
+    # delta has to be close to 0 and that is only the case for two steps where
+    # KLRG was not np.inf.
     KLRG = np.inf
     delta_KLRG = HyperParams().DELTA_S_KLRG + 1
     while delta_KLRG > HyperParams().DELTA_S_KLRG:
         E = Phi.T @ (G - R) + V * E_beta_beta
         e = E.T.reshape((-1))
         H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
-        # Preference of `-` and `@` is OK here, we checked. `delta_v` is always
-        # positive, because the whole thing “is concave and has a unique
-        # maximum” (and thus the Hessian is negative everywhere) [PDF p. 180].
+        assert np.all(np.linalg.eigvals(H) > 0
+                      ), "H is not positive definite although it should be"
+        # Preference of `-` and `@` is OK here, we checked.
         delta_v = -np.linalg.inv(H) @ e
         # “D_V × K matrix with jk'th element given by ((k - 1) K + j)'th element
         # of v.” (Probably means “delta_v”.)
