@@ -1,4 +1,3 @@
-# Check all nan_to_num for whether inf has to be added due to x/0 where x != 0
 import sys
 from typing import *
 
@@ -281,8 +280,8 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
                         * (a_tau[k] / b_tau[k] * np.sum((Y - X @ W[k].T)**2, 1)
                            + D_Y * np.sum(X * (X @ Lambda_1[k]), 1)))
     R = R_T.T * G
-    # The sum can be 0 meaning we do 0/0 (== NaN) but we ignore it because it is
-    # fixed one line later (this is how Drugowitsch does it).
+    # The sum can be 0 meaning we do 0/0 (== NaN in Python) but we ignore it
+    # because it is fixed one line later (this is how Drugowitsch does it).
     with np.errstate(invalid="ignore"):
         R = R / np.sum(R, 1)[:, np.newaxis]
     R = np.nan_to_num(R, nan=0)
@@ -372,6 +371,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                 R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
         # This fixes(?) some numerical problems.
         if KLRG < 0 and np.isclose(KLRG, 0):
+            print(
+                "Warning: Kullback-Leibler divergence ever so slightly less than zero, fixing"
+            )
             KLRG = 0
         assert KLRG >= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
         delta_KLRG = np.abs(KLRG_prev - KLRG)
