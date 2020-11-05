@@ -1,5 +1,5 @@
 from functools import wraps
-from time import time
+from time import asctime, localtime, time
 import numpy as np  # type: ignore
 
 
@@ -11,7 +11,7 @@ def logstartstop(f):
     @wraps(f)
     def wrap(*args, **kw):
         ts = time()
-        print(f"Start {f.__name__} at {ts}")
+        print(f"Start {f.__name__} at {asctime(localtime(ts))}")
         r = f(*args, **kw)
         te = time()
         print(f"Stop {f.__name__} after %2.4f s" % (te - ts))

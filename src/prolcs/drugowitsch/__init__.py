@@ -6,6 +6,7 @@ import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
 from .model import Model
 
+from ..utils import logstartstop
 from .hyperparams import HyperParams
 
 # Underflows may occur in many places, e.g. if X contains values very close to
@@ -288,8 +289,7 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
     return R
 
 
-# from ..utils import logstartstop
-# @logstartstop
+@logstartstop
 def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                       Phi: np.ndarray, W: List[np.ndarray],
                       Lambda_1: List[np.ndarray], a_tau: np.ndarray,
@@ -314,8 +314,6 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         D_V × K D_V)
     """
     D_V, K = V.shape
-    # import time
-    # print(f"train_mix_weights, K={K} {time.time()}")
 
     # NOTE Not quite sure why Drugowitsch doesn't use his division operator for
     # this expression.
