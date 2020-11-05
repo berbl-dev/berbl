@@ -238,7 +238,10 @@ class DrugowitschGA1D(BaseEstimator):
                 map(
                     lambda m: model_probability(m, X, Y, Phi, self.exp_min,
                                                 self.ln_max), self.P_))
-            self.elitist_ = max(self.P_, key=lambda i: i.p_M_D)
+            self.elitist_ = max(
+                self.P_ +
+                ([self.elitist_] if self.elitist_ is not None else []),
+                key=lambda i: i.p_M_D)
 
             P__: List[np.ndarray] = []
             while len(P__) < pop_size:
