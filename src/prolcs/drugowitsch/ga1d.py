@@ -259,3 +259,51 @@ class DrugowitschGA1D(BaseEstimator):
             log_("avg_ind_size", avg_ind_size(self.P_), step=i)
 
         return self.phi, self.elitist_
+
+    def predict1_mean_var(self, x):
+        """
+        [PDF p. 224]
+
+        The mean and variance of the predictive density described by the
+        parameters.
+
+        “As the mixture of Student’s t distributions might be multimodal, there
+        exists no clear definition for the 95% confidence intervals, but a
+        mixture density-related study that deals with this problem can be found
+        in [118].  Here, we take the variance as a sufficient indicator of the
+        prediction’s confidence.” [PDF p. 224]
+
+        :param X: input vector (D_X)
+
+        :returns: mean output vector (D_Y), variance of output (D_Y)
+        """
+        model = self.elitist_
+
+        X = x.reshape((1, -1))
+        M = model.matching_matrix(X)
+        N, K = M.shape
+
+        x_ = np.append(1, x)
+
+        Phi = model.phi(X)
+        G = mixing(M, Phi, model.V)  # (N=1) × K
+        g = G[0]
+        D_Y, D_X = model.W[0].shape
+
+        W = np.array(model.W)
+
+        # (\sum_k g_k(x) W_k) x, (7.108)
+        # TODO This can probably be vectorized
+        gW = 0
+        for k in range(len(W)):
+            gW += g[k] * W[k]
+        y = gW @ x_
+
+        var = np.zeros(D_Y)
+        # TODO Can this be vectorized?
+        for j in range(D_Y):
+            for k in range(K):
+                var[j] += g[k] * (2 * model.b_tau[k] / (model.a_tau[k] - 1) *
+                                  (1 + x_ @ model.Lambda_1[k] @ x_) +
+                                  (model.W[k][j] @ x_)**2) - y[j]**2
+        return y, var

@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
         Y_test, var = np.zeros(Y_test_true.shape), np.zeros(Y_test_true.shape)
         for i in range(len(X_test)):
-            Y_test[i], var[i] = estimator.predict1(X_test[i])
+            Y_test[i], var[i] = estimator.predict1_mean_var(X_test[i])
 
         plt.errorbar(X_test.reshape((-1)),
                      Y_test.reshape((-1)),
