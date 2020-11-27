@@ -352,7 +352,12 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         assert np.all(np.linalg.eigvals(H) > 0
                       ), "H is not positive definite although it should be"
         # Preference of `-` and `@` is OK here, we checked.
-        delta_v = -np.linalg.inv(H) @ e
+        # In his own code, Drugowitsch always uses pseudo inverse here.
+        try:
+            delta_v = -np.linalg.inv(H) @ e
+        except np.linalg.LinAlgError:
+            print("Warning: Singular matrix, falling back to pseudo inverse")
+            delta_v = -np.linalg.pinv(H) @ e
         # “D_V × K matrix with jk'th element given by ((k - 1) K + j)'th element
         # of v.” (Probably means “delta_v”.)
         delta_V = delta_v.reshape((K, D_V)).T
@@ -390,7 +395,11 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         assert KLRG >= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
         delta_KLRG = np.abs(KLRG_prev - KLRG)
     H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
-    Lambda_V_1 = np.linalg.inv(H)
+    try:
+        Lambda_V_1 = np.linalg.inv(H)
+    except np.linalg.LinAlgError:
+        print("Warning: Singular matrix, falling back to pseudo inverse")
+        Lambda_V_1 = np.linalg.pinv(H)
     return V, Lambda_V_1
 
 
