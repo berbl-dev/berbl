@@ -123,7 +123,9 @@ def train_classifier(m_k, X, Y):
     # (probably for readability).
     a_alpha_k = HyperParams().A_ALPHA + D_X * D_Y / 2
     # Drugowitsch reaches convergence usually after 3-4 iterations [PDF p. 237].
-    while delta_L_k_q > HyperParams().DELTA_S_L_K_Q:
+    i = 0
+    while delta_L_k_q > HyperParams().DELTA_S_L_K_Q and i < HyperParams().MAX_ITER_CLS:
+        i += 1
         # print(f"train_classifier: {delta_L_k_q} > {DELTA_S_L_K_Q}")
         E_alpha_alpha_k = a_alpha_k / b_alpha_k
         Lambda_k = np.diag([E_alpha_alpha_k] * D_X) + X_k.T @ X_k
@@ -191,7 +193,9 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     b_beta = np.repeat(HyperParams().B_BETA, K)
     L_M_q = -np.inf
     delta_L_M_q = HyperParams().DELTA_S_L_M_Q + 1
-    while delta_L_M_q > HyperParams().DELTA_S_L_M_Q:
+    i = 0
+    while delta_L_M_q > HyperParams().DELTA_S_L_M_Q and i < HyperParams().MAX_ITER_MIXING:
+        i += 1
         # NOTE This is not monotonous due to the Laplace approximation used [PDF
         # p. 202, 160]. Also: “This desirable monotonicity property is unlikely
         # to arise with other types of approximation methods, such as the
@@ -331,7 +335,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     # KLRG was not np.inf.
     KLRG = np.inf
     delta_KLRG = HyperParams().DELTA_S_KLRG + 1
-    while delta_KLRG > HyperParams().DELTA_S_KLRG:
+    i = 0
+    while delta_KLRG > HyperParams().DELTA_S_KLRG and i < HyperParams().MAX_ITER_MIXING:
+        i += 1
         E = Phi.T @ (G - R) + V * E_beta_beta
         e = E.T.reshape((-1))
         H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)

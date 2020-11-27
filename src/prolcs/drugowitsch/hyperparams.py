@@ -21,6 +21,12 @@ class HyperParams():
         "DELTA_S_KLRG": 10**-8,
         "EXP_MIN": np.log(np.finfo(None).tiny),
         "LN_MAX": np.log(np.finfo(None).max),
+        # This is not documented in the book but in the code at
+        # https://github.com/jdrugo/LCSBookCode
+        "MAX_ITER_CLS": 20,
+        # This is not documented in the book but in the code at
+        # https://github.com/jdrugo/LCSBookCode
+        "MAX_ITER_MIXING": 40,
         "LOGGING": "mlflow",
         # We use the deprecated API for sklearn compatibility.
         "random_state": np.random.RandomState()
