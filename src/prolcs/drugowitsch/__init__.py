@@ -581,8 +581,8 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
 
     # TODO Semantics: Check var_bound of LCSBookCode (they only multiply K with
     # the first summand)
-    L_M1q = K * (-ss.gammaln(HyperParams().A_BETA)
-                 + HyperParams().A_BETA * np.log(HyperParams().B_BETA))
+    L_M1q = K * (-ss.gammaln(HParams().A_BETA)
+                 + HParams().A_BETA * np.log(HParams().B_BETA))
     # TODO Performance: LCSBookCode vectorized this
     # TODO Performance: ss.gammaln(a_beta[k]) is constant throughout the loop in the calling
     # function
