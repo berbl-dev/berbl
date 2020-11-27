@@ -229,7 +229,7 @@ class DrugowitschGA1D(BaseEstimator):
             sys.stdout.write(
                 f"\rStarting iteration {i+1}/{n_iter}, "
                 f"best solution of size "
-                f"{self.elitist_.size if self.elitist_ is not None else '?'} "
+                f"{self.elitist_.size() if self.elitist_ is not None else '?'} "
                 f"at p_M(D) = {self.elitist_.p_M_D if self.elitist_ is not None else '?'}\t"
             )
 
