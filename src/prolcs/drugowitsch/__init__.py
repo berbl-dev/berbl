@@ -196,11 +196,11 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     i = 0
     while delta_L_M_q > HyperParams().DELTA_S_L_M_Q and i < HyperParams().MAX_ITER_MIXING:
         i += 1
-        # NOTE This is not monotonous due to the Laplace approximation used [PDF
-        # p. 202, 160]. Also: “This desirable monotonicity property is unlikely
-        # to arise with other types of approximation methods, such as the
-        # Laplace approximation.” (Bayesian parameter estimation via variational
-        # methods (Jaakkola, Jordan), p. 10)
+        # This is not monotonous due to the Laplace approximation used [PDF p.
+        # 202, 160]. Also: “This desirable monotonicity property is unlikely to
+        # arise with other types of approximation methods, such as the Laplace
+        # approximation.” (Bayesian parameter estimation via variational methods
+        # (Jaakkola, Jordan), p. 10)
         V, Lambda_V_1 = train_mix_weights(M=M,
                                           X=X,
                                           Y=Y,
@@ -212,6 +212,7 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                                           V=V,
                                           a_beta=a_beta,
                                           b_beta=b_beta)
+        # TODO LCSBookCode only updates b_beta here as a_beta is constant.
         a_beta, b_beta = train_mix_priors(V, Lambda_V_1)
         G = mixing(M, Phi, V)
         R = responsibilities(X=X,
@@ -228,6 +229,10 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                               Lambda_V_1=Lambda_V_1,
                               a_beta=a_beta,
                               b_beta=b_beta)
+        # LCSBookCode states: “as we are using an approximation, the variational
+        # bound might decrease, so we're not checking and need to take the
+        # abs()”. I guess with approximation he means the use of the Laplace
+        # approximation (which may violate the lower bound nature of L_M_q).
         delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
     return V, Lambda_V_1, a_beta, b_beta
 
@@ -250,7 +255,11 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     G = np.exp(G) * M
 
     # The sum can be 0 meaning we do 0/0 (== NaN) but we ignore it because it is
-    # fixed one line later (this is how Drugowitsch does it).
+    # fixed one line later (this is how Drugowitsch does it). Drugowitsch does,
+    # however, also say that: “Usually, this should never happen as only model
+    # structures are accepted where [(np.sum(G, 1) > 0).all()]. Nonetheless,
+    # this check was added to ensure that even these cases are handled
+    # gracefully.”
     with np.errstate(invalid="ignore"):
         G = G / np.sum(G, 1)[:, np.newaxis]
     G = np.nan_to_num(G, nan=1 / K)
@@ -293,7 +302,6 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
     return R
 
 
-@logstartstop
 def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                       Phi: np.ndarray, W: List[np.ndarray],
                       Lambda_1: List[np.ndarray], a_tau: np.ndarray,
@@ -319,9 +327,8 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     """
     D_V, K = V.shape
 
-    # NOTE Not quite sure why Drugowitsch doesn't use his division operator for
-    # this expression.
     E_beta_beta = a_beta / b_beta
+    # TODO Performance: This can probably be cached (is calculated above)
     G = mixing(M, Phi, V)
     R = responsibilities(X=X,
                          Y=Y,
@@ -330,14 +337,15 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                          Lambda_1=Lambda_1,
                          a_tau=a_tau,
                          b_tau=b_tau)
-    # TODO Why always make TWO steps instead of checking the true KLRG here? The
-    # delta has to be close to 0 and that is only the case for two steps where
-    # KLRG was not np.inf.
+    # TODO Performance: Why always make TWO steps instead of checking the true
+    # KLRG here? The delta has to be close to 0 and that is only the case for
+    # two steps where KLRG was not np.inf.
     KLRG = np.inf
     delta_KLRG = HyperParams().DELTA_S_KLRG + 1
     i = 0
     while delta_KLRG > HyperParams().DELTA_S_KLRG and i < HyperParams().MAX_ITER_MIXING:
         i += 1
+        # Actually, this should probably be named nabla_E.
         E = Phi.T @ (G - R) + V * E_beta_beta
         e = E.T.reshape((-1))
         H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
@@ -436,6 +444,8 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
     a_beta = np.zeros(K)
     b_beta = np.zeros(K)
     Lambda_V_1_diag = np.diag(Lambda_V_1)
+    # TODO Performance: LCSBookCode vectorized this:
+    # b[:,1] = b_b + 0.5 * (sum(V * V, 0) + self.cov_Tr)
     for k in range(K):
         v_k = V[:, [k]]
         l = k * D_V
@@ -445,6 +455,8 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
         # a_beta[k] = A_BETA + D_V / 2
         # b_beta[k] = B_BETA + 0.5 * (np.trace(Lambda_V_1_kk) + v_k.T @ v_k)
         # More efficient.
+        # TODO Performance: a_beta is constant, extract from loop (and probably
+        # from loop in using function as well)
         a_beta[k] = HyperParams().A_BETA + D_V / 2
         b_beta[k] = HyperParams().B_BETA + 0.5 * (
             np.sum(Lambda_V_1_diag[l:u:1]) + v_k.T @ v_k)
@@ -569,8 +581,13 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     assert a_beta.shape == (K, )
     assert b_beta.shape == (K, )
 
+    # TODO Semantics: Check var_bound of LCSBookCode (they only multiply K with
+    # the first summand)
     L_M1q = K * (-ss.gammaln(HyperParams().A_BETA)
                  + HyperParams().A_BETA * np.log(HyperParams().B_BETA))
+    # TODO Performance: LCSBookCode vectorized this
+    # TODO Performance: ss.gammaln(a_beta[k]) is constant throughout the loop in the calling
+    # function
     for k in range(K):
         # NOTE this is just the negated form of the update two lines prior?
         L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
@@ -596,5 +613,6 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     if L_M2q < 0 and np.isclose(L_M2q, 0):
         L_M2q = 0
     assert L_M2q >= 0, f"Kullback-Leibler divergence less than zero: {L_M2q}"
+    # TODO Performance: slogdet can be cached, is computed more than once
     L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
     return L_M1q + L_M2q + L_M3q
