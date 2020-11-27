@@ -13,7 +13,7 @@ from ..logging import log_
 from ..radialmatch1d import RadialMatch1D
 from ..utils import get_ranges
 from . import *
-from .hyperparams import HyperParams
+from .hyperparams import HParams
 
 Individual = Model
 Population = List[Individual]
@@ -198,18 +198,18 @@ class DrugowitschGA1D(BaseEstimator):
         # This might seem ugly (and it certainly is), but this way, we are able
         # to keep the signatures in prolcs.drugowitsch.__init__.py clean and
         # very close to the algorithmic description.
-        HyperParams().A_ALPHA = self.a_alpha
-        HyperParams().B_ALPHA = self.b_alpha
-        HyperParams().A_BETA = self.a_beta
-        HyperParams().B_BETA = self.b_beta
-        HyperParams().A_TAU = self.a_tau
-        HyperParams().B_TAU = self.b_tau
-        HyperParams().DELTA_S_L_K_Q = self.delta_s_l_k_q
-        HyperParams().DELTA_S_L_M_Q = self.delta_s_l_m_q
-        HyperParams().DELTA_S_KLRG = self.delta_s_klrg
-        HyperParams().EXP_MIN = self.exp_min
-        HyperParams().LN_MAX = self.ln_max
-        HyperParams().LOGGING = self.logging
+        HParams().A_ALPHA = self.a_alpha
+        HParams().B_ALPHA = self.b_alpha
+        HParams().A_BETA = self.a_beta
+        HParams().B_BETA = self.b_beta
+        HParams().A_TAU = self.a_tau
+        HParams().B_TAU = self.b_tau
+        HParams().DELTA_S_L_K_Q = self.delta_s_l_k_q
+        HParams().DELTA_S_L_M_Q = self.delta_s_l_m_q
+        HParams().DELTA_S_KLRG = self.delta_s_klrg
+        HParams().EXP_MIN = self.exp_min
+        HParams().LN_MAX = self.ln_max
+        HParams().LOGGING = self.logging
 
         if init is None:
             raise Exception("Automatic init not supported yet")

@@ -7,7 +7,7 @@ import scipy.stats as sstats  # type: ignore
 from .model import Model
 
 from ..utils import logstartstop
-from .hyperparams import HyperParams
+from .hyperparams import HParams
 
 # Underflows may occur in many places, e.g. if X contains values very close to
 # 0.
@@ -115,29 +115,29 @@ def train_classifier(m_k, X, Y):
     N, D_Y = Y.shape
     X_k = X * np.sqrt(m_k)
     Y_k = Y * np.sqrt(m_k)
-    a_alpha_k, b_alpha_k = HyperParams().A_ALPHA, HyperParams().B_ALPHA
-    a_tau_k, b_tau_k = HyperParams().A_TAU, HyperParams().B_TAU
+    a_alpha_k, b_alpha_k = HParams().A_ALPHA, HParams().B_ALPHA
+    a_tau_k, b_tau_k = HParams().A_TAU, HParams().B_TAU
     L_k_q = -np.inf
-    delta_L_k_q = HyperParams().DELTA_S_L_K_Q + 1
+    delta_L_k_q = HParams().DELTA_S_L_K_Q + 1
     # This is constant; Drugowitsch nevertheless puts it into the while loop
     # (probably for readability).
-    a_alpha_k = HyperParams().A_ALPHA + D_X * D_Y / 2
+    a_alpha_k = HParams().A_ALPHA + D_X * D_Y / 2
     # Drugowitsch reaches convergence usually after 3-4 iterations [PDF p. 237].
     i = 0
-    while delta_L_k_q > HyperParams().DELTA_S_L_K_Q and i < HyperParams().MAX_ITER_CLS:
+    while delta_L_k_q > HParams().DELTA_S_L_K_Q and i < HParams().MAX_ITER_CLS:
         i += 1
         # print(f"train_classifier: {delta_L_k_q} > {DELTA_S_L_K_Q}")
         E_alpha_alpha_k = a_alpha_k / b_alpha_k
         Lambda_k = np.diag([E_alpha_alpha_k] * D_X) + X_k.T @ X_k
         Lambda_k_1 = np.linalg.inv(Lambda_k)
         W_k = Y_k.T @ X_k @ Lambda_k_1
-        a_tau_k = HyperParams().A_TAU + 0.5 * np.sum(m_k)
-        b_tau_k = HyperParams().B_TAU + 1 / (2 * D_Y) * (
+        a_tau_k = HParams().A_TAU + 0.5 * np.sum(m_k)
+        b_tau_k = HParams().B_TAU + 1 / (2 * D_Y) * (
             np.sum(Y_k * Y_k) - np.sum(W_k * (W_k @ Lambda_k)))
         E_tau_tau_k = a_tau_k / b_tau_k
         # D_Y factor in front of trace due to sum over D_Y elements (7.100).
-        b_alpha_k = HyperParams().B_ALPHA + 0.5 * (
-            E_tau_tau_k * np.sum(W_k * W_k) + D_Y * np.trace(Lambda_k_1))
+        b_alpha_k = HParams().B_ALPHA + 0.5 * (E_tau_tau_k * np.sum(W_k * W_k)
+                                               + D_Y * np.trace(Lambda_k_1))
         L_k_q_prev = L_k_q
         L_k_q = var_cl_bound(
             X=X,
@@ -185,16 +185,16 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     N, D_Y = Y.shape
     N, D_V = Phi.shape
 
-    V = HyperParams().random_state.normal(loc=0,
-                                          scale=HyperParams().A_BETA
-                                          / HyperParams().B_BETA,
-                                          size=(D_V, K))
-    a_beta = np.repeat(HyperParams().A_BETA, K)
-    b_beta = np.repeat(HyperParams().B_BETA, K)
+    V = HParams().random_state.normal(loc=0,
+                                      scale=HParams().A_BETA
+                                      / HParams().B_BETA,
+                                      size=(D_V, K))
+    a_beta = np.repeat(HParams().A_BETA, K)
+    b_beta = np.repeat(HParams().B_BETA, K)
     L_M_q = -np.inf
-    delta_L_M_q = HyperParams().DELTA_S_L_M_Q + 1
+    delta_L_M_q = HParams().DELTA_S_L_M_Q + 1
     i = 0
-    while delta_L_M_q > HyperParams().DELTA_S_L_M_Q and i < HyperParams().MAX_ITER_MIXING:
+    while delta_L_M_q > HParams().DELTA_S_L_M_Q and i < HParams().MAX_ITER_MIXING:
         i += 1
         # This is not monotonous due to the Laplace approximation used [PDF p.
         # 202, 160]. Also: “This desirable monotonicity property is unlikely to
@@ -250,7 +250,7 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     D_V, K = V.shape
     G = Phi @ V
 
-    G = np.clip(G, HyperParams().EXP_MIN, HyperParams().LN_MAX - np.log(K))
+    G = np.clip(G, HParams().EXP_MIN, HParams().LN_MAX - np.log(K))
 
     G = np.exp(G) * M
 
@@ -341,9 +341,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     # KLRG here? The delta has to be close to 0 and that is only the case for
     # two steps where KLRG was not np.inf.
     KLRG = np.inf
-    delta_KLRG = HyperParams().DELTA_S_KLRG + 1
+    delta_KLRG = HParams().DELTA_S_KLRG + 1
     i = 0
-    while delta_KLRG > HyperParams().DELTA_S_KLRG and i < HyperParams().MAX_ITER_MIXING:
+    while delta_KLRG > HParams().DELTA_S_KLRG and i < HParams().MAX_ITER_MIXING:
         i += 1
         # Actually, this should probably be named nabla_E.
         E = Phi.T @ (G - R) + V * E_beta_beta
@@ -457,9 +457,9 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
         # More efficient.
         # TODO Performance: a_beta is constant, extract from loop (and probably
         # from loop in using function as well)
-        a_beta[k] = HyperParams().A_BETA + D_V / 2
-        b_beta[k] = HyperParams().B_BETA + 0.5 * (
-            np.sum(Lambda_V_1_diag[l:u:1]) + v_k.T @ v_k)
+        a_beta[k] = HParams().A_BETA + D_V / 2
+        b_beta[k] = HParams().B_BETA + 0.5 * (np.sum(Lambda_V_1_diag[l:u:1])
+                                              + v_k.T @ v_k)
 
     return a_beta, b_beta
 
@@ -544,17 +544,15 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
     # we want to do when we multiply two row vectors (i.e. a^T a).
     L_k_2_q = (-0.5 * r_k).reshape((-1)) @ (E_tau_tau_k * np.sum(
         (Y - X @ W_k.T)**2, 1) + D_Y * np.sum(X * (X @ Lambda_k_1), 1))
-    L_k_3_q = -ss.gammaln(HyperParams().A_ALPHA) + HyperParams(
-    ).A_ALPHA * np.log(HyperParams().B_ALPHA) + ss.gammaln(
-        a_alpha_k
-    ) - a_alpha_k * np.log(b_alpha_k) + D_X * D_Y / 2 + D_Y / 2 * np.log(
-        np.linalg.det(Lambda_k_1))
-    L_k_4_q = D_Y * (-ss.gammaln(HyperParams().A_TAU)
-                     + HyperParams().A_TAU * np.log(HyperParams().B_TAU) +
-                     (HyperParams().A_TAU - a_tau_k) * ss.digamma(a_tau_k)
-                     - HyperParams().A_TAU * np.log(b_tau_k)
-                     - HyperParams().B_TAU * E_tau_tau_k + ss.gammaln(a_tau_k)
-                     + a_tau_k)
+    L_k_3_q = -ss.gammaln(HParams().A_ALPHA) + HParams().A_ALPHA * np.log(
+        HParams().B_ALPHA) + ss.gammaln(a_alpha_k) - a_alpha_k * np.log(
+            b_alpha_k) + D_X * D_Y / 2 + D_Y / 2 * np.log(
+                np.linalg.det(Lambda_k_1))
+    L_k_4_q = D_Y * (-ss.gammaln(HParams().A_TAU)
+                     + HParams().A_TAU * np.log(HParams().B_TAU) +
+                     (HParams().A_TAU - a_tau_k) * ss.digamma(a_tau_k)
+                     - HParams().A_TAU * np.log(b_tau_k) - HParams().B_TAU
+                     * E_tau_tau_k + ss.gammaln(a_tau_k) + a_tau_k)
     return L_k_1_q + L_k_2_q + L_k_3_q + L_k_4_q
 
 
