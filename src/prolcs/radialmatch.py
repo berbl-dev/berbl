@@ -1,3 +1,5 @@
+# TODO Check for standard deviation (sigma) vs variance (sigma**2) vs inverse of
+# those
 from typing import *
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
@@ -86,20 +88,25 @@ class RadialMatch():
         self.mu = np.clip(
             self.rng.normal(
                 loc=self.mu,
-                # TODO This was chosen to be similar to [PDF p. 228] but isn't
-                # probably.
-                # TODO Drugowitsch gives variance, but NumPy wants standard
-                # deviation.
+                # This was chosen to be similar to [PDF p. 228], where mutation
+                # is a normal with scale being a tenth of the value range.
                 scale=0.01 * np.sum(self.ranges * np.array([-1, 1]), 1)),
             # clip to each dimension's range
             self.ranges[:, [0]].reshape((-1)),
             self.ranges[:, [1]].reshape((-1)))
+        # TODO Is there a way to do this better for the multi-dim case?
+        # This is just exactly how Drugowitsch does it [PDF p. 228].
+        b_k = - 10 * np.log10(np.sqrt(1 / self.lambd_2))
+        b_k_ = b_k
+        b_k = np.clip(self.rng.normal(
+            loc=b_k,
+            scale=5,
+            size=b_k.shape), 0, 50)
+        lambd_2_ = self.lambd_2
         self.lambd_2 = self.rng.normal(
             loc=self.lambd_2,
             # TODO This was chosen relatively arbitrary (but motivated by [PDF
             # p. 228])
-            # TODO Drugowitsch gives variance, but NumPy wants standard
-            # deviation.
             scale=0.005 * np.sum(self.ranges * np.array([-1, 1]), 1),
             size=self.lambd_2.shape)
         return self
@@ -145,3 +152,12 @@ class RadialMatch():
         else:
             raise Exception(
                 "Can only plot one-dimensional RadialMatch objects")
+
+
+def individual(ranges: np.ndarray, k: int, rng: np.random.Generator):
+    """
+    Individuals are simply lists of matching functions (the length of the list
+    is the number of classifiers, the matching functions specify their
+    localization).
+    """
+    return [RadialMatch.random(ranges, rng=rng) for i in range(k)]
