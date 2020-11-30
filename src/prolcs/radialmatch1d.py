@@ -78,7 +78,7 @@ class RadialMatch1D():
         We vectorize the following (i.e. feed the whole input through at once)::
 
             for n in range(len(X)):
-                M[n] = np.exp(-0.5 * (x - mu) @ lambd_2 @ (x - mu))
+                M[n] = np.exp(-0.5 / sigma_2 * (x - mu)**2)
 
         :param X: input matrix ``(N × D_X)`` with ``D_X == 1``
         :returns: matching vector ``(N)`` of this matching function (i.e. of
@@ -86,14 +86,14 @@ class RadialMatch1D():
         """
         # We have to clip this so we don't return 0 here (0 should never be
         # returned because every match function matches everywhere at least a
-        # little bit). Also, we clip from above such that this never returns a
-        # value larger than 1 (it's a probability, after all).
+        # little bit). Also, we clip from above such that this function never
+        # returns a value larger than 1 (it's a probability, after all), meaning
+        # that m should not be larger than 0.
         m_min = np.log(np.finfo(None).tiny)
         # TODO The maximum negative number might be different than simply the
         # negation of the minimum positive number.
-        m_max = -np.finfo(None).tiny
-        m = np.clip(-1 / (2 * self.sigma_2()) * (X - self.mu())**2, m_min,
-                    m_max)
+        m_max = 0
+        m = np.clip(-0.5 / self.sigma_2() * (X - self.mu())**2, m_min, m_max)
         return np.exp(m)
 
     def plot(self, ax, **kwargs):
