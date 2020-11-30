@@ -1,8 +1,14 @@
+# TODO It sometimes seems to hang somewhere (i.e. not finishing the generation)
 # TODO Why is variance increasing that much on the right side?!
-from prolcs.radialmatch1d import RadialMatch1D
-from prolcs.radialmatch import RadialMatch
-from prolcs import *
 import numpy as np  # type: ignore
+from prolcs.common import matching_matrix, phi_standard
+from prolcs.drugowitsch import mixing
+from prolcs.drugowitsch.ga1d import DrugowitschGA1D
+from prolcs.drugowitsch.model import Model
+from prolcs.radialmatch1d import RadialMatch1D
+from prolcs.utils import get_ranges
+from sklearn import preprocessing  # type: ignore
+from sklearn.utils import check_random_state  # type: ignore
 
 # The individual used in function generation.
 ms = [
@@ -11,9 +17,10 @@ ms = [
     RadialMatch1D(mu=0.8, sigma_2=0.05, ranges=(0, 1)),
 ]
 
+np.seterr(all="warn")
 
 
-def generate(n: int = 300, rng: np.random.Generator = np.random.default_rng()):
+def generate(n: int = 300, random_state: np.random.RandomState = 0):
     """
     [PDF p. 260]
 
@@ -21,7 +28,9 @@ def generate(n: int = 300, rng: np.random.Generator = np.random.default_rng()):
 
     :returns: input and output matrices X (N × 1) and Y (N × 1)
     """
-    X = rng.random((n, 1))
+    random_state = check_random_state(random_state)
+
+    X = random_state.random((n, 1))
 
     M = matching_matrix(ms, X)
     Phi = phi_standard(X)
@@ -48,7 +57,8 @@ def generate(n: int = 300, rng: np.random.Generator = np.random.default_rng()):
         y = 0
         for k in range(len(ms)):
             # sample the three classifiers
-            y += rng.normal(loc=G[n][k] * (W[k] @ X_[n]), scale=Lambda_1[k])
+            y += random_state.normal(loc=G[n][k] * (W[k] @ X_[n]),
+                                     scale=Lambda_1[k])
         Y[n] = y
 
     # We return the non-augmented samples (because our algorithm augments them
@@ -64,61 +74,69 @@ if __name__ == "__main__":
 
     LOGGING = "mlflow"
 
-    seed = 1
+    for seed in range(5):
 
-    mlflow.set_experiment("generated_function")
-    with mlflow.start_run() as run:
-        mlflow.log_param("seed", seed)
+        mlflow.set_experiment("generated_function")
+        with mlflow.start_run() as run:
+            mlflow.log_param("seed", seed)
+            random_state = check_random_state(seed)
 
-        X, Y = generate(rng=np.random.default_rng(seed))
+            X, Y = generate()
 
-        ranges = (0, 1)
+            # TODO Is this what Drugowitsch means by “standardized by a linear
+            # transformation”?
+            x_scaler = preprocessing.StandardScaler().fit(X)
+            X = x_scaler.transform(X)
 
-        def individual(k: int, rng: np.random.Generator):
-            """
-            Individuals are simply lists of matching functions (the length of
-            the list is the number of classifiers, the matching functions
-            specify their localization).
-            """
-            return [RadialMatch1D.random(ranges, rng=rng) for i in range(k)]
+            y_scaler = preprocessing.StandardScaler().fit(Y)
+            Y = y_scaler.transform(Y)
 
-        # [PDF p. 221, 3rd paragraph]
-        # Drugowitsch samples individual sizes from a certain problem-dependent
-        # Binomial distribution.
-        def init(X, Y):
-            Ks = np.clip(rng.binomial(8, 0.5, size=20), 1, 100)
-            ranges = get_ranges(X)
-            return [individual(k, rng=rng) for k in Ks]
+            ranges = (0, 1)
 
-        phi, elitist, p_M_D_elitist, params_elitist = ga(X,
-                                                         Y,
-                                                         iter=250,
-                                                         init=init)
-        W, Lambda_1, a_tau, b_tau, V = get_params(params_elitist)
-        print(elitist)
+            def individual(k: int):
+                """
+                Individuals are simply lists of matching functions (the length of
+                the list is the number of classifiers, the matching functions
+                specify their localization).
+                """
+                return Model([
+                    RadialMatch1D.random(ranges, random_state=random_state)
+                    for i in range(k)
+                ],
+                             phi=phi_standard)
 
-    if LOGGING == "off":
-        plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
+            # [PDF p. 221, 3rd paragraph]
+            # Drugowitsch samples individual sizes from a certain problem-dependent
+            # Binomial distribution.
+            def init(X, Y):
+                Ks = np.clip(random_state.binomial(8, 0.5, size=20), 1, 100)
+                ranges = get_ranges(X)
+                return [individual(k) for k in Ks]
 
-        X_test, Y_test_true = generate(1000,
-                                       rng=np.random.default_rng(seed + 1))
+            estimator = DrugowitschGA1D(n_iter=250,
+                                        init=init,
+                                        random_state=random_state)
+            estimator = estimator.fit(X, Y)
+            # W, Lambda_1, a_tau, b_tau, V = get_params(params_elitist)
+            # print(elitist)
 
-        Y_test, var = np.zeros(Y_test_true.shape), np.zeros(Y_test_true.shape)
-        for i in range(len(X_test)):
-            Y_test[i], var[i] = predict1(X_test[i],
-                                         elitist,
-                                         W,
-                                         Lambda_1,
-                                         a_tau,
-                                         b_tau,
-                                         V,
-                                         phi=phi)
+            plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
 
-        plt.errorbar(X_test.reshape((-1)),
-                     Y_test.reshape((-1)),
-                     var.reshape((-1)),
-                     color="navy",
-                     ecolor="gray",
-                     fmt="v")
+            X_test, Y_test_true = generate(1000, random_state=12345)
+            X_test = x_scaler.transform(X_test)
+            Y_test_true = y_scaler.transform(Y_test_true)
 
-        plt.show()
+            Y_test, var = np.zeros(Y_test_true.shape), np.zeros(
+                Y_test_true.shape)
+            for i in range(len(X_test)):
+                Y_test[i], var[i] = estimator.predict1_mean_var(X_test[i])
+
+            plt.errorbar(X_test.reshape((-1)),
+                         Y_test.reshape((-1)),
+                         var.reshape((-1)),
+                         color="navy",
+                         ecolor="gray",
+                         fmt="v")
+
+            plt.savefig(f"Final approximation {seed}.pdf")
+            mlflow.log_artifact(f"Final approximation.pdf")
