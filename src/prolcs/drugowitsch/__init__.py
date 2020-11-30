@@ -132,7 +132,13 @@ def train_classifier(m_k, X, Y):
         # print(f"train_classifier: {delta_L_k_q} > {DELTA_S_L_K_Q}")
         E_alpha_alpha_k = a_alpha_k / b_alpha_k
         Lambda_k = np.diag([E_alpha_alpha_k] * D_X) + X_k.T @ X_k
-        Lambda_k_1 = np.linalg.inv(Lambda_k)
+        # While, in theory, Lambda_k is always invertible here and we thus
+        # should be able to use inv (as it is described in the algorithm we
+        # implement), we (seldomly) get a singular matrix, probably due to
+        # numerical issues. Thus we simply use pinv which yields the same result
+        # as inv anyways if H is non-singular. Also, in his own code,
+        # Drugowitsch always uses pseudo inverse here.
+        Lambda_k_1 = np.linalg.pinv(Lambda_k)
         W_k = Y_k.T @ X_k @ Lambda_k_1
         a_tau_k = HParams().A_TAU + 0.5 * np.sum(m_k)
         b_tau_k = HParams().B_TAU + 1 / (2 * D_Y) * (
@@ -353,13 +359,13 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         e = E.T.ravel()
         H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
         # Preference of `-` and `@` is OK here, we checked.
-        # In his own code, Drugowitsch always uses pseudo inverse here.
-        # TODO Check whether inv = pinv where inv is defined
-        try:
-            delta_v = -np.linalg.inv(H) @ e
-        except np.linalg.LinAlgError:
-            print("Warning: Singular matrix, falling back to pseudo inverse")
-            delta_v = -np.linalg.pinv(H) @ e
+        # While, in theory, H is always invertible here and we thus should be able
+        # to use inv (as it is described in the algorithm we implement), we
+        # (seldomly) get a singular H, probably due to numerical issues. Thus we
+        # simply use pinv which yields the same result as inv anyways if H is
+        # non-singular. Also, in his own code, Drugowitsch always uses pseudo
+        # inverse here.
+        delta_v = -np.linalg.pinv(H) @ e
         # “D_V × K matrix with jk'th element given by ((k - 1) K + j)'th element
         # of v.” (Probably means “delta_v”.)
         delta_V = delta_v.reshape((K, D_V)).T
@@ -397,11 +403,13 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         assert KLRG >= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
         delta_KLRG = np.abs(KLRG_prev - KLRG)
     H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
-    try:
-        Lambda_V_1 = np.linalg.inv(H)
-    except np.linalg.LinAlgError:
-        print("Warning: Singular matrix, falling back to pseudo inverse")
-        Lambda_V_1 = np.linalg.pinv(H)
+    # While, in theory, H is always invertible here and we thus should be able
+    # to use inv (as it is described in the algorithm we implement), we
+    # (seldomly) get a singular H, probably due to numerical issues. Thus we
+    # simply use pinv which yields the same result as inv anyways if H is
+    # non-singular. Also, in his own code, Drugowitsch always uses pseudo
+    # inverse here.
+    Lambda_V_1 = np.linalg.pinv(H)
     # Note that instead of returning/storing Lambda_V_1, Drugowitsch's
     # LCSBookCode computes and stores np.slogdet(Lambda_V_1) and cov_Tr (the
     # latter of which is used in his update_gating).
