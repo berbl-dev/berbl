@@ -1,3 +1,5 @@
+# ‘LCSBookCode’ refers to Drugowitsch's implementation found here
+# https://github.com/jdrugo/LCSBookCode.
 import sys
 from typing import *
 
@@ -109,7 +111,8 @@ def train_classifier(m_k, X, Y):
     :param Y: output matrix (N × D_Y)
     :param Phi: mixing feature matrix (N × D_V)
 
-    :returns: approximate model probability L(q) + ln p(M)
+    :returns: weight matrix (D_Y × D_X), covariance matrix (D_X × D_X), two
+        noise precision parameters, two weight vector parameters
     """
     N, D_X = X.shape
     N, D_Y = Y.shape
@@ -349,10 +352,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         E = Phi.T @ (G - R) + V * E_beta_beta
         e = E.T.ravel()
         H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
-        assert np.all(np.linalg.eigvals(H) > 0
-                      ), "H is not positive definite although it should be"
         # Preference of `-` and `@` is OK here, we checked.
         # In his own code, Drugowitsch always uses pseudo inverse here.
+        # TODO Check whether inv = pinv where inv is defined
         try:
             delta_v = -np.linalg.inv(H) @ e
         except np.linalg.LinAlgError:
@@ -400,6 +402,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     except np.linalg.LinAlgError:
         print("Warning: Singular matrix, falling back to pseudo inverse")
         Lambda_V_1 = np.linalg.pinv(H)
+    # Note that instead of returning/storing Lambda_V_1, Drugowitsch's
+    # LCSBookCode computes and stores np.slogdet(Lambda_V_1) and cov_Tr (the
+    # latter of which is used in his update_gating).
     return V, Lambda_V_1
 
 
