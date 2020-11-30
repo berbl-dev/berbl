@@ -17,6 +17,8 @@ ms = [
     RadialMatch1D(mu=0.8, sigma_2=0.05, ranges=(0, 1)),
 ]
 
+np.seterr(all="warn")
+
 
 def generate(n: int = 300, random_state: np.random.RandomState = 0):
     """
@@ -72,64 +74,69 @@ if __name__ == "__main__":
 
     LOGGING = "mlflow"
 
-    seed = 0
+    for seed in range(5):
 
-    mlflow.set_experiment("generated_function")
-    with mlflow.start_run() as run:
-        mlflow.log_param("seed", seed)
-        random_state = check_random_state(seed)
+        mlflow.set_experiment("generated_function")
+        with mlflow.start_run() as run:
+            mlflow.log_param("seed", seed)
+            random_state = check_random_state(seed)
 
-        X, Y = generate()
+            X, Y = generate()
 
-        x_scaler = preprocessing.StandardScaler().fit(X)
-        X = x_scaler.transform(X)
+            # TODO Is this what Drugowitsch means by “standardized by a linear
+            # transformation”?
+            x_scaler = preprocessing.StandardScaler().fit(X)
+            X = x_scaler.transform(X)
 
-        y_scaler = preprocessing.StandardScaler().fit(Y)
-        Y = y_scaler.transform(Y)
+            y_scaler = preprocessing.StandardScaler().fit(Y)
+            Y = y_scaler.transform(Y)
 
-        ranges = (0, 1)
+            ranges = (0, 1)
 
-        # TODO Use random_state
-        def individual(k: int):
-            """
-            Individuals are simply lists of matching functions (the length of
-            the list is the number of classifiers, the matching functions
-            specify their localization).
-            """
-            return Model([
-                RadialMatch1D.random(ranges, random_state=random_state)
-                for i in range(k)
-            ], phi=phi_standard)
+            def individual(k: int):
+                """
+                Individuals are simply lists of matching functions (the length of
+                the list is the number of classifiers, the matching functions
+                specify their localization).
+                """
+                return Model([
+                    RadialMatch1D.random(ranges, random_state=random_state)
+                    for i in range(k)
+                ],
+                             phi=phi_standard)
 
-        # [PDF p. 221, 3rd paragraph]
-        # Drugowitsch samples individual sizes from a certain problem-dependent
-        # Binomial distribution.
-        def init(X, Y):
-            Ks = np.clip(random_state.binomial(8, 0.5, size=20), 1, 100)
-            ranges = get_ranges(X)
-            return [individual(k) for k in Ks]
+            # [PDF p. 221, 3rd paragraph]
+            # Drugowitsch samples individual sizes from a certain problem-dependent
+            # Binomial distribution.
+            def init(X, Y):
+                Ks = np.clip(random_state.binomial(8, 0.5, size=20), 1, 100)
+                ranges = get_ranges(X)
+                return [individual(k) for k in Ks]
 
-        estimator = DrugowitschGA1D(n_iter=50, init=init, random_state=random_state)
-        estimator = estimator.fit(X, Y)
-        # W, Lambda_1, a_tau, b_tau, V = get_params(params_elitist)
-        # print(elitist)
+            estimator = DrugowitschGA1D(n_iter=250,
+                                        init=init,
+                                        random_state=random_state)
+            estimator = estimator.fit(X, Y)
+            # W, Lambda_1, a_tau, b_tau, V = get_params(params_elitist)
+            # print(elitist)
 
-        plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
+            plt.plot(X.reshape((-1)), Y.reshape((-1)), "r+")
 
-        X_test, Y_test_true = generate(1000, random_state=12345)
-        X_test = x_scaler.transform(X_test)
-        Y_test_true = y_scaler.transform(Y_test_true)
+            X_test, Y_test_true = generate(1000, random_state=12345)
+            X_test = x_scaler.transform(X_test)
+            Y_test_true = y_scaler.transform(Y_test_true)
 
-        Y_test, var = np.zeros(Y_test_true.shape), np.zeros(Y_test_true.shape)
-        for i in range(len(X_test)):
-            Y_test[i], var[i] = estimator.predict1_mean_var(X_test[i])
+            Y_test, var = np.zeros(Y_test_true.shape), np.zeros(
+                Y_test_true.shape)
+            for i in range(len(X_test)):
+                Y_test[i], var[i] = estimator.predict1_mean_var(X_test[i])
 
-        plt.errorbar(X_test.reshape((-1)),
-                     Y_test.reshape((-1)),
-                     var.reshape((-1)),
-                     color="navy",
-                     ecolor="gray",
-                     fmt="v")
+            plt.errorbar(X_test.reshape((-1)),
+                         Y_test.reshape((-1)),
+                         var.reshape((-1)),
+                         color="navy",
+                         ecolor="gray",
+                         fmt="v")
 
-        plt.savefig(f"Final approximation.pdf")
-        mlflow.log_artifact(f"Final approximation.pdf")
+            plt.savefig(f"Final approximation {seed}.pdf")
+            mlflow.log_artifact(f"Final approximation.pdf")
