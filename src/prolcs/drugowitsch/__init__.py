@@ -347,7 +347,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         i += 1
         # Actually, this should probably be named nabla_E.
         E = Phi.T @ (G - R) + V * E_beta_beta
-        e = E.T.reshape((-1))
+        e = E.T.ravel()
         H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
         assert np.all(np.linalg.eigvals(H) > 0
                       ), "H is not positive definite although it should be"
