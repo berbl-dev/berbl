@@ -223,6 +223,9 @@ class DrugowitschGA1D(BaseEstimator):
         else:
             self.P_ = init(X, Y)
 
+        def fitness(m):
+            return model_probability(m, X, Y, Phi, self.exp_min, self.ln_max)
+
         # TODO Parametrize number of elitists
         self.elitist_ = None
         for i in range(n_iter):
@@ -234,10 +237,7 @@ class DrugowitschGA1D(BaseEstimator):
             )
 
             # Evaluate population and store elitist.
-            self.P_ = list(
-                map(
-                    lambda m: model_probability(m, X, Y, Phi, self.exp_min,
-                                                self.ln_max), self.P_))
+            self.P_ = list(map(fitness, self.P_))
             self.elitist_ = max(
                 self.P_ +
                 ([self.elitist_] if self.elitist_ is not None else []),
@@ -300,6 +300,9 @@ class DrugowitschGA1D(BaseEstimator):
         gW = 0
         for k in range(len(W)):
             gW += g[k] * W[k]
+        # TODO It's probably more efficient to have each classifier predict x_
+        # and then mix the predictions afterwards (as it is done in
+        # LCSBookCode).
         y = gW @ x_
 
         var = np.zeros(D_Y)
