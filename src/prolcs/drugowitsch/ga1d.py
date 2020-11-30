@@ -135,6 +135,13 @@ class DrugowitschGA1D(BaseEstimator):
         self.P_: Population = []
         self.elitist_: Individual = None
 
+    # Don't try to serialize the init function (when serializing the model,
+    # initialization is over anyway, so this is kind of OK, I think).
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state["init"]
+        return state
+
     def fit(self, X, y, **kwargs):
         self.random_state_ = check_random_state(self.random_state)
         self.ga(X=X,
@@ -173,11 +180,6 @@ class DrugowitschGA1D(BaseEstimator):
 
         :param X: input matrix (N × D_X)
         :param Y: output matrix (N × D_Y)
-        :param phi: mixing feature extractor (N × D_X → N × D_V), in LCS usually
-            ``phi(X) = np.ones(…)`` [PDF p. 234]. For performance reasons, we
-            transform the whole input matrix to the feature matrix at once
-            (other than Drugowitsch, who specifies a function operating on a
-            single sample).
         :param n_iter: iterations to run the GA
         :param pop_size: population size
         :param init_avg_ind_size: average individual size to use for
@@ -263,12 +265,12 @@ class DrugowitschGA1D(BaseEstimator):
 
         return self.phi, self.elitist_
 
-    def predict1_mean_var(self, x):
+    def predict1_elitist_mean_var(self, x):
         """
         [PDF p. 224]
 
         The mean and variance of the predictive density described by the
-        parameters.
+        parameters of the GA's elitist.
 
         “As the mixture of Student’s t distributions might be multimodal, there
         exists no clear definition for the 95% confidence intervals, but a
@@ -280,6 +282,9 @@ class DrugowitschGA1D(BaseEstimator):
 
         :returns: mean output vector (D_Y), variance of output (D_Y)
         """
+        # TODO It may sometimes be better to do *some* sort of mixture over all
+        # individuals since otherwise we throw away knowledge? Especially if
+        # elitist is weak (can we then e.g. boost?).
         model = self.elitist_
 
         X = x.reshape((1, -1))
