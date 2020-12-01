@@ -1,16 +1,18 @@
 # TODO It sometimes seems to hang somewhere (i.e. not finishing the generation)
 # TODO Why is variance increasing that much on the right side?!
+import click
+import joblib as jl
 import numpy as np  # type: ignore
 from prolcs.common import matching_matrix, phi_standard
 from prolcs.drugowitsch import mixing
 from prolcs.drugowitsch.ga1d import DrugowitschGA1D
 from prolcs.drugowitsch.model import Model
+from prolcs.logging import log_
 from prolcs.radialmatch1d import RadialMatch1D
 from prolcs.utils import get_ranges
+from sklearn import metrics  # type: ignore
 from sklearn import preprocessing  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
-import joblib as jl
-import click
 
 # The individual used in function generation.
 ms = [
@@ -126,6 +128,11 @@ def run_experiment(n_iter, seed, show):
         for i in range(len(X_test)):
             Y_test[i], var[i] = estimator.predict1_elitist_mean_var(X_test[i])
 
+        mse = metrics.mean_squared_error(Y_test_true, Y_test)
+        r2 = metrics.r2_score(Y_test_true, Y_test)
+        log_("elitist.mse", mse, n_iter)
+        log_("elitist.r2-score", r2, n_iter)
+
         fig, ax = plt.subplots()
 
         # plot input data
@@ -140,7 +147,8 @@ def run_experiment(n_iter, seed, show):
                     fmt="v")
 
         # plot elitist's classifiers
-        W = estimator.elitist_.W
+        elitist = estimator.elitist_
+        W = elitist.W
         X_test_ = np.hstack([np.ones((len(X_test), 1)), X_test])
         # save approximation so we don't need to run it over and over again
         for k in range(len(W)):
@@ -149,7 +157,9 @@ def run_experiment(n_iter, seed, show):
                     c="C" + str(k),
                     zorder=10)
 
-        ax.set(title=f"K = {len(W)}")
+        ax.set(
+            title=
+            f"K = {len(W)}, p(M|D) = {elitist.p_M_D:.2}, mse = {mse:.2}, r2 = {r2:.2}")
 
         # store the figure (e.g. so we can run headless)
         fig_file = f"Final approximation {seed}.pdf"
