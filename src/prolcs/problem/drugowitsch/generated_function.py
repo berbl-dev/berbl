@@ -86,14 +86,6 @@ def run_experiment(n_iter, seed, show):
 
         X, Y = generate()
 
-        # TODO Is this what Drugowitsch means by “standardized by a linear
-        # transformation”?
-        x_scaler = preprocessing.StandardScaler().fit(X)
-        X = x_scaler.transform(X)
-
-        y_scaler = preprocessing.StandardScaler().fit(Y)
-        Y = y_scaler.transform(Y)
-
         ranges = (0, 1)
 
         def individual(k: int):
@@ -128,8 +120,6 @@ def run_experiment(n_iter, seed, show):
 
         # generate test data
         X_test, Y_test_true = generate(1000, random_state=12345)
-        X_test = x_scaler.transform(X_test)
-        Y_test_true = y_scaler.transform(Y_test_true)
 
         # make predictions for test data
         Y_test, var = np.zeros(Y_test_true.shape), np.zeros(Y_test_true.shape)
