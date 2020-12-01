@@ -150,7 +150,7 @@ def run_experiment(n_iter, seed, show):
                     fmt="v")
 
         # plot elitist's classifiers
-        W = estimator.elitist_.W[0]
+        W = estimator.elitist_.W
         X_test_ = np.hstack([np.ones((len(X_test), 1)), X_test])
         # save approximation so we don't need to run it over and over again
         for k in range(len(W)):
