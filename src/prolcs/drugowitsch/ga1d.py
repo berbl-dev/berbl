@@ -259,9 +259,10 @@ class DrugowitschGA1D(BaseEstimator):
                 P__.append(c2)
 
             self.P_ = P__
-            log_("fitness", self.elitist_.p_M_D, step=i)
-            log_("cl_count", cl_count(self.P_), step=i)
-            log_("avg_ind_size", avg_ind_size(self.P_), step=i)
+            log_("elitist.fitness", self.elitist_.p_M_D, step=i)
+            log_("elitist.size", self.elitist_.size(), step=i)
+            log_("pop.cl_count", cl_count(self.P_), step=i)
+            log_("pop.avg_ind_size", avg_ind_size(self.P_), step=i)
 
         return self.phi, self.elitist_
 
