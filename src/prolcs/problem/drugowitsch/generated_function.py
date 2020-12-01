@@ -79,6 +79,7 @@ def run_experiment(n_iter, seed, show):
 
     LOGGING = "mlflow"
 
+    mlflow.set_experiment("generated_function")
     with mlflow.start_run() as run:
         mlflow.log_param("seed", seed)
         random_state = check_random_state(seed)
@@ -120,7 +121,7 @@ def run_experiment(n_iter, seed, show):
                                     random_state=random_state)
         estimator = estimator.fit(X, Y)
 
-        # store the model, you never know when you need it and can't retrain
+        # store the model, you never know when you need it
         model_file = f"Model {seed}.joblib"
         jl.dump(estimator, model_file)
         mlflow.log_artifact(model_file)
