@@ -1,5 +1,7 @@
 # TODO It sometimes seems to hang somewhere (i.e. not finishing the generation)
 # TODO Why is variance increasing that much on the right side?!
+import os
+
 import click
 import joblib as jl
 import numpy as np  # type: ignore
@@ -159,10 +161,14 @@ def run_experiment(n_iter, seed, show):
 
         ax.set(
             title=
-            f"K = {len(W)}, p(M|D) = {elitist.p_M_D:.2}, mse = {mse:.2}, r2 = {r2:.2}")
+            f"K = {len(W)}, p(M|D) = {elitist.p_M_D:.2}, mse = {mse:.2}, r2 = {r2:.2}"
+        )
 
         # store the figure (e.g. so we can run headless)
-        fig_file = f"Final approximation {seed}.pdf"
+        fig_folder = "latest-final-approximations"
+        if not os.path.exists(fig_folder):
+            os.makedirs(fig_folder)
+        fig_file = f"{fig_folder}/Final approximation {seed}.pdf"
         fig.savefig(fig_file)
         mlflow.log_artifact(fig_file)
 
