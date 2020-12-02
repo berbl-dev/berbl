@@ -12,6 +12,7 @@ from prolcs.drugowitsch.model import Model
 from prolcs.logging import log_
 from prolcs.radialmatch1d import RadialMatch1D
 from prolcs.utils import get_ranges
+from prolcs.drugowitsch.hyperparams import HParams
 from sklearn import metrics  # type: ignore
 from sklearn import preprocessing  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
@@ -77,14 +78,18 @@ def generate(n: int = 300, random_state: np.random.RandomState = 0):
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("--show/--no-show", type=bool, default=False)
 def run_experiment(n_iter, seed, show):
+    # We import these packages here so the generate function can be used without
+    # installing them.
     import matplotlib.pyplot as plt
-
     import mlflow
 
     LOGGING = "mlflow"
 
     mlflow.set_experiment("generated_function")
     with mlflow.start_run() as run:
+        for key in HParams().__dict__:
+            mlflow.log_param(key, HParams().__dict__[key])
+
         mlflow.log_param("seed", seed)
         random_state = check_random_state(seed)
 
