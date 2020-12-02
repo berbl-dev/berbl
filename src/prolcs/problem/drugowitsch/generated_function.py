@@ -85,6 +85,9 @@ def run_experiment(n_iter, seed, show):
 
     LOGGING = "mlflow"
 
+    HParams().MAX_ITER_CLS = 40
+    HParams().MAX_ITER_MIXING = 80
+
     mlflow.set_experiment("generated_function")
     with mlflow.start_run() as run:
         for key in HParams().__dict__:
