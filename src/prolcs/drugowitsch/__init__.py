@@ -408,7 +408,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
             KLRG = 0
         assert KLRG >= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
 
-        if KLRG in KLRGs:
+        if KLRG in KLRGs and KLRG != KLRG_prev:
             oscillations = True
             break
         KLRGs[j] = KLRG
