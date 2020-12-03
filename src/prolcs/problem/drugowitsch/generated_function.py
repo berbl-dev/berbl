@@ -90,8 +90,7 @@ def run_experiment(n_iter, seed, show):
 
     mlflow.set_experiment("generated_function")
     with mlflow.start_run() as run:
-        for key in HParams().__dict__:
-            mlflow.log_param(key, HParams().__dict__[key])
+        mlflow.log_params(HParams().__dict__)
 
         mlflow.log_param("seed", seed)
         random_state = check_random_state(seed)
