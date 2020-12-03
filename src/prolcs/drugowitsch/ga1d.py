@@ -225,8 +225,10 @@ class DrugowitschGA1D(BaseEstimator):
         else:
             self.P_ = init(X, Y)
 
-        def fitness(m):
-            return model_probability(m, X, Y, Phi, self.exp_min, self.ln_max)
+        def eval_fitness(m, i):
+            model, oscillations = model_probability(m, X, Y, Phi, self.exp_min, self.ln_max)
+            log_("algorithm.oscillations", oscillations, i)
+            return model
 
         # TODO Parametrize number of elitists
         self.elitist_ = None
@@ -239,7 +241,7 @@ class DrugowitschGA1D(BaseEstimator):
             )
 
             # Evaluate population and store elitist.
-            self.P_ = list(map(fitness, self.P_))
+            self.P_ = list(map(lambda x: eval_fitness(x, i), self.P_))
             self.elitist_ = max(
                 self.P_ +
                 ([self.elitist_] if self.elitist_ is not None else []),
