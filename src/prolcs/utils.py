@@ -30,3 +30,18 @@ def get_ranges(X: np.ndarray):
         maximum in the respective dimension
     """
     return np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
+
+
+
+def add_intercept(X: np.ndarray):
+    """
+    Prefixes each input vector (i.e. row) in the given input matrix with 1 for
+    fitting the intercept.
+
+    :param X: input data as an ``(N, D_X)`` matrix
+
+    :returns: a ``(N, D_X + 1)`` matrix where each row is the corresponding
+        original matrix's row prefixed with 1
+    """
+    N, D_X = X.shape
+    return np.hstack([np.ones((N, 1)), X])

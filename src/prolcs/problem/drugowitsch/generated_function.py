@@ -11,7 +11,7 @@ from prolcs.drugowitsch.ga1d import DrugowitschGA1D
 from prolcs.drugowitsch.model import Model
 from prolcs.logging import log_
 from prolcs.radialmatch1d import RadialMatch1D
-from prolcs.utils import get_ranges
+from prolcs.utils import add_intercept, get_ranges
 from prolcs.drugowitsch.hyperparams import HParams
 from sklearn import metrics  # type: ignore
 from sklearn import preprocessing  # type: ignore
@@ -58,7 +58,7 @@ def generate(n: int = 300, random_state: np.random.RandomState = 0):
 
     # After matching, augment samples by prepending 1 to enable non-zero
     # intercepts.
-    X_ = np.vstack([np.ones(n), X.reshape((n))]).T
+    X_ = add_intercept(X)
     Y = np.zeros(X.shape)
     for n in range(len(X)):
         y = 0

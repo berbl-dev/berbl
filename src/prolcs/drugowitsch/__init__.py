@@ -6,10 +6,10 @@ from typing import *
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
-from .model import Model
 
-from ..utils import logstartstop
+from ..utils import add_intercept
 from .hyperparams import HParams
+from .model import Model
 
 # Underflows may occur in many places, e.g. if X contains values very close to
 # 0.
@@ -50,7 +50,7 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
 
     # Augment X by a bias term. [PDF p. 113] assumes that input is always
     # augmented with a single constant element. We simply enforce that here.
-    X = np.hstack([np.ones((N, 1)), X])
+    X = add_intercept(X)
 
     W = [None] * K
     Lambda_1 = [None] * K
