@@ -122,7 +122,7 @@ def run_experiment(n_iter, seed, show, sample_size):
                                     init=init,
                                     random_state=seed)
         estimator = estimator.fit(X, Y)
-        log_("RANDOM_STATE.random", HParams().RANDOM_STATE.random(), n_iter)
+        log_("random_state.random", HParams().random_state.random(), n_iter)
 
         # store the model, you never know when you need it
         model_file = f"Model {seed}.joblib"
