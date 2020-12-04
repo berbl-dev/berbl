@@ -115,7 +115,7 @@ def run_experiment(n_iter, seed, show, sample_size):
         # [PDF p. 221, 3rd paragraph]
         # Drugowitsch samples individual sizes from a certain
         # problem-dependent Binomial distribution.
-        def init(X, Y):
+        def init(X, Y, random_state):
             Ks = np.clip(random_state.binomial(8, 0.5, size=20), 1, 100)
             ranges = get_ranges(X)
             return [individual(k) for k in Ks]

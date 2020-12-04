@@ -43,28 +43,30 @@ def avg_ind_size(P):
 
 
 class DrugowitschGA1D(BaseEstimator):
-    def __init__(self,
-                 random_state=None,
-                 phi: Callable[[np.ndarray], np.ndarray] = phi_standard,
-                 n_iter: int = 250,
-                 pop_size: int = 20,
-                 init_avg_ind_size: int = 10,
-                 init: Callable[[np.ndarray, np.ndarray], Population] = None,
-                 tnmt_size: int = 5,
-                 cross_prob: float = 0.4,
-                 muta_prob: float = 0.4,
-                 a_alpha: float = 10**-2,
-                 b_alpha: float = 10**-4,
-                 a_beta: float = 10**-2,
-                 b_beta: float = 10**-4,
-                 a_tau: float = 10**-2,
-                 b_tau: float = 10**-4,
-                 delta_s_l_k_q: float = 10**-4,
-                 delta_s_l_m_q: float = 10**-2,
-                 delta_s_klrg: float = 10**-8,
-                 exp_min: float = np.log(np.finfo(None).tiny),
-                 ln_max: float = np.log(np.finfo(None).max),
-                 logging: str = "mlflow"):
+    def __init__(
+            self,
+            random_state=None,
+            phi: Callable[[np.ndarray], np.ndarray] = phi_standard,
+            n_iter: int = 250,
+            pop_size: int = 20,
+            init_avg_ind_size: int = 10,
+            init: Callable[[np.ndarray, np.ndarray, np.random.RandomState],
+                           Population] = None,
+            tnmt_size: int = 5,
+            cross_prob: float = 0.4,
+            muta_prob: float = 0.4,
+            a_alpha: float = 10**-2,
+            b_alpha: float = 10**-4,
+            a_beta: float = 10**-2,
+            b_beta: float = 10**-4,
+            a_tau: float = 10**-2,
+            b_tau: float = 10**-4,
+            delta_s_l_k_q: float = 10**-4,
+            delta_s_l_m_q: float = 10**-2,
+            delta_s_klrg: float = 10**-8,
+            exp_min: float = np.log(np.finfo(None).tiny),
+            ln_max: float = np.log(np.finfo(None).max),
+            logging: str = "mlflow"):
         """
 
 
@@ -84,9 +86,10 @@ class DrugowitschGA1D(BaseEstimator):
         :param init_avg_ind_size: Average individual size to use for
             initialization (done by drawing individual sizes uniformly from
             ``[1, init_avg_ind_size * 2]``), gets overridden by init
-        :param init: Custom function for data-dependent init, receives ``X`` and
-            ``y`` as arguments, generating a list of ``Model``s; overrides
-            ``init_avg_ind_size`` and ``pop_size``.
+        :param init: Custom function for data-dependent init, receives ``X``,
+            ``y`` and this estimator's ``random_state`` as arguments, generating
+            a list of ``Model``s; overrides ``init_avg_ind_size`` and
+            ``pop_size``.
         :param tnmt_size: Tournament size.
         :param cross_prob: Crossover probability.
         :param muta_prob: Mutation probability.
@@ -223,10 +226,11 @@ class DrugowitschGA1D(BaseEstimator):
                 individual(ranges, k, random_state=random_state) for k in Ks
             ]
         else:
-            self.P_ = init(X, Y)
+            self.P_ = init(X, Y, random_state)
 
         def eval_fitness(m, i):
-            model, oscillations = model_probability(m, X, Y, Phi, self.exp_min, self.ln_max)
+            model, oscillations = model_probability(m, X, Y, Phi, self.exp_min,
+                                                    self.ln_max)
             log_("algorithm.oscillations", oscillations, i)
             return model
 
