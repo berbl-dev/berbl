@@ -77,7 +77,8 @@ def generate(n: int = 300, random_state: np.random.RandomState = 0):
 @click.option("-n", "--n_iter", type=click.IntRange(min=1), default=250)
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("--show/--no-show", type=bool, default=False)
-def run_experiment(n_iter, seed, show):
+@click.option("-d", "--sample-size", type=click.IntRange(min=1), default=300)
+def run_experiment(n_iter, seed, show, sample_size):
     # We import these packages here so the generate function can be used without
     # installing them.
     import matplotlib.pyplot as plt
@@ -95,7 +96,7 @@ def run_experiment(n_iter, seed, show):
         mlflow.log_param("seed", seed)
         random_state = check_random_state(seed)
 
-        X, Y = generate()
+        X, Y = generate(sample_size)
 
         ranges = (0, 1)
 
