@@ -92,15 +92,13 @@ def run_experiment(n_iter, seed, show, sample_size):
     mlflow.set_experiment("generated_function")
     with mlflow.start_run() as run:
         mlflow.log_params(HParams().__dict__)
-
         mlflow.log_param("seed", seed)
-        random_state = check_random_state(seed)
 
         X, Y = generate(sample_size)
 
         ranges = (0, 1)
 
-        def individual(k: int):
+        def individual(k: int, random_state: np.random.RandomState):
             """
             Individuals are simply lists of matching functions (the length of
             the list is the number of classifiers, the matching functions
@@ -118,13 +116,13 @@ def run_experiment(n_iter, seed, show, sample_size):
         def init(X, Y, random_state):
             Ks = np.clip(random_state.binomial(8, 0.5, size=20), 1, 100)
             ranges = get_ranges(X)
-            return [individual(k) for k in Ks]
+            return [individual(k, random_state) for k in Ks]
 
         estimator = DrugowitschGA1D(n_iter=n_iter,
                                     init=init,
-                                    random_state=random_state)
+                                    random_state=seed)
         estimator = estimator.fit(X, Y)
-        log_("random_state.random", random_state.random(), n_iter)
+        log_("RANDOM_STATE.random", HParams().RANDOM_STATE.random(), n_iter)
 
         # store the model, you never know when you need it
         model_file = f"Model {seed}.joblib"

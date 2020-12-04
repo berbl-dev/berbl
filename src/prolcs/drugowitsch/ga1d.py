@@ -149,7 +149,6 @@ class DrugowitschGA1D(BaseEstimator):
         self.random_state_ = check_random_state(self.random_state)
         self.ga(X=X,
                 Y=y,
-                random_state=self.random_state_,
                 phi=self.phi,
                 n_iter=self.n_iter,
                 pop_size=self.pop_size,
@@ -162,7 +161,6 @@ class DrugowitschGA1D(BaseEstimator):
         return self
 
     def ga(self, X: np.ndarray, Y: np.ndarray,
-           random_state: np.random.RandomState,
            phi: Callable[[np.ndarray], np.ndarray], n_iter: int, pop_size: int,
            init_avg_ind_size: int, init: Callable[[np.ndarray, np.ndarray],
                                                   Population], tnmt_size: int,
@@ -215,18 +213,12 @@ class DrugowitschGA1D(BaseEstimator):
         HParams().EXP_MIN = self.exp_min
         HParams().LN_MAX = self.ln_max
         HParams().LOGGING = self.logging
+        HParams().random_state = self.random_state_
 
         if init is None:
             raise Exception("Automatic init not supported yet")
-            Ks = random_state.randint(low=1,
-                                      high=2 * init_avg_ind_size,
-                                      size=pop_size)
-            ranges = get_ranges(X)
-            self.P_ = [
-                individual(ranges, k, random_state=random_state) for k in Ks
-            ]
         else:
-            self.P_ = init(X, Y, random_state)
+            self.P_ = init(X, Y, self.random_state_)
 
         def eval_fitness(m, i):
             model, oscillations = model_probability(m, X, Y, Phi, self.exp_min,
@@ -255,12 +247,15 @@ class DrugowitschGA1D(BaseEstimator):
             while len(P__) < pop_size:
                 c1, c2 = deterministic_tournament(
                     self.P_, size=tnmt_size,
-                    random_state=random_state), deterministic_tournament(
-                        self.P_, size=tnmt_size, random_state=random_state)
-                if random_state.random() < cross_prob:
-                    c1, c2 = c1.crossover(c2, random_state)
-                if random_state.random() < muta_prob:
-                    c1, c2 = c1.mutate(random_state), c2.mutate(random_state)
+                    random_state=self.random_state_), deterministic_tournament(
+                        self.P_,
+                        size=tnmt_size,
+                        random_state=self.random_state_)
+                if self.random_state_.random() < cross_prob:
+                    c1, c2 = c1.crossover(c2, self.random_state_)
+                if self.random_state_.random() < muta_prob:
+                    c1, c2 = c1.mutate(self.random_state_), c2.mutate(
+                        self.random_state_)
                 P__.append(c1)
                 P__.append(c2)
 
