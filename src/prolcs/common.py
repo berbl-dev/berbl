@@ -5,13 +5,12 @@ import numpy as np  # type: ignore
 
 def phi_standard(X: np.ndarray):
     """
-    The mixing feature extractor usually employed by LCSs, i.e. ``phi(x) = 1``
-    for each sample ``x``.
+    The input data's mixing feature matrix usually employed by LCSs, i.e. a
+    mixing feature vector of ``phi(x) = 1`` for each sample ``x``.
 
     :param X: input data as an ``(N, D_X)`` matrix
 
-    :returns: a ``(D_X, 2)`` matrix where each row consists the minimum and
-        maximum in the respective dimension
+    :returns: all-ones mixing feature matrix ``(N, 1)``
     """
     N, D_X = X.shape
     return np.ones((N, 1))
