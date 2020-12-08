@@ -410,6 +410,10 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
 
         if KLRG in KLRGs and KLRG != KLRG_prev:
             oscillations = True
+            print("Oscillation detected")
+            import mlflow
+            mlflow.log_metric("algorithms.oscillation_occurred", 1)
+            exit(1)
             break
         KLRGs[j] = KLRG
         j = (j + 1) % 10
