@@ -3,6 +3,7 @@
 import sys
 from typing import *
 
+import mlflow
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
