@@ -93,6 +93,7 @@ def run_experiment(n_iter, seed, show, sample_size):
     with mlflow.start_run() as run:
         mlflow.log_params(HParams().__dict__)
         mlflow.log_param("seed", seed)
+        mlflow.set_tag("on detected oscillation", "abort")
 
         X, Y = generate(sample_size)
 
