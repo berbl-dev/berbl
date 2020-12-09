@@ -14,9 +14,9 @@ from .model import Model
 from .state import State
 
 # Underflows may occur in many places, e.g. if X contains values very close to
-# 0.
-# TODO Are underflows really OK?
-# np.seterr(all="raise", under="ignore")
+# 0. However, they mostly occur in the very first training iterations so they
+# should be OK to ignore for now.
+np.seterr(all="raise", under="warn")
 
 
 def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
@@ -253,6 +253,8 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     """
     [PDF p. 239]
 
+    Is zero wherever a classifier does not match.
+
     :param M: matching matrix (N × K)
     :param Phi: mixing feature matrix (N × D_V)
     :param V: mixing weight matrix (D_V × K)
@@ -260,8 +262,12 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     :returns: mixing matrix (N × K)
     """
     D_V, K = V.shape
+    # If Phi is phi_standard, this simply broadcasts V to a matrix [V, V, V, …]
+    # of shape (N, D_V).
     G = Phi @ V
 
+    # This quasi never happens (at least for the run I checked it did not). That
+    # run also oscillated so this is probably not the source.
     G = np.clip(G, HParams().EXP_MIN, HParams().LN_MAX - np.log(K))
 
     G = np.exp(G) * M
