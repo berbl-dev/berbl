@@ -94,7 +94,6 @@ def run_experiment(n_iter, seed, show, sample_size):
     with mlflow.start_run() as run:
         mlflow.log_params(HParams().__dict__)
         mlflow.log_param("seed", seed)
-        mlflow.set_tag("on detected oscillation", "abort")
 
         X, Y = generate(sample_size)
 
@@ -125,6 +124,7 @@ def run_experiment(n_iter, seed, show, sample_size):
                                     random_state=seed)
         estimator = estimator.fit(X, Y)
         log_("random_state.random", State().random_state.random(), n_iter)
+        log_("algorithm.oscillations.count", State().oscillation_count, n_iter)
 
         # store the model, you never know when you need it
         model_file = f"Model {seed}.joblib"

@@ -416,7 +416,10 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
 
         if KLRG in KLRGs and KLRG != KLRG_prev:
             print("Oscillation detected")
+            # We only log and break when we're at the best KLRG value of the
+            # current oscillation.
             if (KLRG <= KLRGs).all():
+                State().oscillation_count += 1
                 mlflow.log_metric("algorithm.oscillations.occurred", 1, State().step)
                 break
 

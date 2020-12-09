@@ -13,7 +13,8 @@ class State():
         # We use the deprecated API for sklearn compatibility.
         "random_state": np.random.RandomState(),
         # Only used to generate step-stamped logging.
-        "step": 0
+        "step": 0,
+        "oscillation_count": 0
     }
 
     def __init__(self):
