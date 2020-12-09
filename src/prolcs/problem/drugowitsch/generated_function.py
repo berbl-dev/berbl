@@ -13,6 +13,7 @@ from prolcs.logging import log_
 from prolcs.radialmatch1d import RadialMatch1D
 from prolcs.utils import add_intercept, get_ranges
 from prolcs.drugowitsch.hyperparams import HParams
+from prolcs.drugowitsch.state import State
 from sklearn import metrics  # type: ignore
 from sklearn import preprocessing  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
@@ -123,7 +124,7 @@ def run_experiment(n_iter, seed, show, sample_size):
                                     init=init,
                                     random_state=seed)
         estimator = estimator.fit(X, Y)
-        log_("random_state.random", HParams().random_state.random(), n_iter)
+        log_("random_state.random", State().random_state.random(), n_iter)
 
         # store the model, you never know when you need it
         model_file = f"Model {seed}.joblib"

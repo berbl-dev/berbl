@@ -10,6 +10,7 @@ import scipy.stats as sstats  # type: ignore
 from ..utils import add_intercept
 from .hyperparams import HParams
 from .model import Model
+from .state import State
 
 # Underflows may occur in many places, e.g. if X contains values very close to
 # 0.
@@ -62,7 +63,7 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
         W[k], Lambda_1[k], a_tau[k], b_tau[k], a_alpha[k], b_alpha[
             k] = train_classifier(M[:, [k]], X, Y)
 
-    V, Lambda_V_1, a_beta, b_beta, oscillations = train_mixing(
+    V, Lambda_V_1, a_beta, b_beta = train_mixing(
         M=M,
         X=X,
         Y=Y,
@@ -102,7 +103,7 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
                         V=V,
                         Lambda_V_1=Lambda_V_1,
                         a_beta=a_beta,
-                        b_beta=b_beta), oscillations
+                        b_beta=b_beta)
 
 
 def train_classifier(m_k, X, Y):
@@ -195,7 +196,7 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     N, D_Y = Y.shape
     N, D_V = Phi.shape
 
-    V = HParams().random_state.normal(loc=0,
+    V = State().random_state.normal(loc=0,
                                       scale=HParams().A_BETA
                                       / HParams().B_BETA,
                                       size=(D_V, K))
@@ -204,7 +205,6 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     L_M_q = -np.inf
     delta_L_M_q = HParams().DELTA_S_L_M_Q + 1
     i = 0
-    oscillations = 0
     while delta_L_M_q > HParams().DELTA_S_L_M_Q and i < HParams().MAX_ITER_MIXING:
         i += 1
         # This is not monotonous due to the Laplace approximation used [PDF p.
@@ -212,21 +212,17 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
         # arise with other types of approximation methods, such as the Laplace
         # approximation.” (Bayesian parameter estimation via variational methods
         # (Jaakkola, Jordan), p. 10)
-        V, Lambda_V_1, osc = train_mix_weights(M=M,
-                                               X=X,
-                                               Y=Y,
-                                               Phi=Phi,
-                                               W=W,
-                                               Lambda_1=Lambda_1,
-                                               a_tau=a_tau,
-                                               b_tau=b_tau,
-                                               V=V,
-                                               a_beta=a_beta,
-                                               b_beta=b_beta)
-        if oscillations and not osc:
-            import mlflow
-            mlflow.log_metric("algorithm.oscillations.healed", 1)
-        oscillations = float(osc)
+        V, Lambda_V_1 = train_mix_weights(M=M,
+                                          X=X,
+                                          Y=Y,
+                                          Phi=Phi,
+                                          W=W,
+                                          Lambda_1=Lambda_1,
+                                          a_tau=a_tau,
+                                          b_tau=b_tau,
+                                          V=V,
+                                          a_beta=a_beta,
+                                          b_beta=b_beta)
         # TODO LCSBookCode only updates b_beta here as a_beta is constant.
         a_beta, b_beta = train_mix_priors(V, Lambda_V_1)
         G = mixing(M, Phi, V)
@@ -249,7 +245,7 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
         # abs()”. I guess with approximation he means the use of the Laplace
         # approximation (which may violate the lower bound nature of L_M_q).
         delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
-    return V, Lambda_V_1, a_beta, b_beta, oscillations
+    return V, Lambda_V_1, a_beta, b_beta
 
 
 def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
@@ -360,7 +356,6 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     i = 0
     KLRGs = np.repeat(-np.inf, 10)
     j = 0
-    oscillations = False
     while delta_KLRG > HParams().DELTA_S_KLRG and i < HParams().MAX_ITER_MIXING:
         i += 1
         # Actually, this should probably be named nabla_E.
@@ -412,12 +407,11 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         assert KLRG >= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
 
         if KLRG in KLRGs and KLRG != KLRG_prev:
-            oscillations = True
             print("Oscillation detected")
-            import mlflow
-            mlflow.log_metric("algorithms.oscillation_occurred", 1)
-            exit(1)
-            break
+            if (KLRG <= KLRGs).all():
+                import mlflow
+                mlflow.log_metric("algorithm.oscillations.occurred", 1, State().step)
+                break
         KLRGs[j] = KLRG
         j = (j + 1) % 10
 
@@ -434,7 +428,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     # Note that instead of returning/storing Lambda_V_1, Drugowitsch's
     # LCSBookCode computes and stores np.slogdet(Lambda_V_1) and cov_Tr (the
     # latter of which is used in his update_gating).
-    return V, Lambda_V_1, oscillations
+    return V, Lambda_V_1
 
 
 def hessian(Phi: np.ndarray, G: np.ndarray, a_beta: np.ndarray,

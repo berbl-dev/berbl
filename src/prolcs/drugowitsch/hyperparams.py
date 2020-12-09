@@ -28,8 +28,6 @@ class HParams():
         # https://github.com/jdrugo/LCSBookCode
         "MAX_ITER_MIXING": 40,
         "LOGGING": "mlflow",
-        # We use the deprecated API for sklearn compatibility.
-        "random_state": np.random.RandomState()
     }
 
     def __init__(self):

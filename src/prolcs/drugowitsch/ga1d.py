@@ -14,6 +14,7 @@ from ..radialmatch1d import RadialMatch1D
 from ..utils import get_ranges
 from . import *
 from .hyperparams import HParams
+from .state import State
 
 Individual = Model
 Population = List[Individual]
@@ -213,7 +214,8 @@ class DrugowitschGA1D(BaseEstimator):
         HParams().EXP_MIN = self.exp_min
         HParams().LN_MAX = self.ln_max
         HParams().LOGGING = self.logging
-        HParams().random_state = self.random_state_
+
+        State().random_state = self.random_state_
 
         if init is None:
             raise Exception("Automatic init not supported yet")
@@ -221,9 +223,8 @@ class DrugowitschGA1D(BaseEstimator):
             self.P_ = init(X, Y, self.random_state_)
 
         def eval_fitness(m, i):
-            model, oscillations = model_probability(m, X, Y, Phi, self.exp_min,
+            model = model_probability(m, X, Y, Phi, self.exp_min,
                                                     self.ln_max)
-            log_("algorithm.oscillations", oscillations, i)
             return model
 
         # TODO Parametrize number of elitists
@@ -235,6 +236,7 @@ class DrugowitschGA1D(BaseEstimator):
                 f"{self.elitist_.size() if self.elitist_ is not None else '?'} "
                 f"at p_M(D) = {self.elitist_.p_M_D if self.elitist_ is not None else '?'}\t"
             )
+            State().step = i
 
             # Evaluate population and store elitist.
             self.P_ = list(map(lambda x: eval_fitness(x, i), self.P_))
