@@ -354,6 +354,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     KLRG = np.inf
     delta_KLRG = HParams().DELTA_S_KLRG + 1
     i = 0
+    mlflow.log_metric("algorithm.oscillations.occurred", 0, State().step)
     KLRGs = np.repeat(-np.inf, 10)
     j = 0
     while delta_KLRG > HParams().DELTA_S_KLRG and i < HParams().MAX_ITER_MIXING:
@@ -409,9 +410,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         if KLRG in KLRGs and KLRG != KLRG_prev:
             print("Oscillation detected")
             if (KLRG <= KLRGs).all():
-                import mlflow
                 mlflow.log_metric("algorithm.oscillations.occurred", 1, State().step)
                 break
+
         KLRGs[j] = KLRG
         j = (j + 1) % 10
 
