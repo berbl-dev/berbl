@@ -204,7 +204,7 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     L_M_q = -np.inf
     delta_L_M_q = HParams().DELTA_S_L_M_Q + 1
     i = 0
-    oscillations = 2
+    oscillations = 0
     while delta_L_M_q > HParams().DELTA_S_L_M_Q and i < HParams().MAX_ITER_MIXING:
         i += 1
         # This is not monotonous due to the Laplace approximation used [PDF p.
@@ -223,7 +223,10 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                                                V=V,
                                                a_beta=a_beta,
                                                b_beta=b_beta)
-        oscillations = 10 * oscillations + osc
+        if oscillations and not osc:
+            import mlflow
+            mlflow.log_metric("algorithm.oscillations.healed", 1)
+        oscillations = float(osc)
         # TODO LCSBookCode only updates b_beta here as a_beta is constant.
         a_beta, b_beta = train_mix_priors(V, Lambda_V_1)
         G = mixing(M, Phi, V)
