@@ -75,7 +75,7 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
         b_tau=b_tau,
         exp_min=exp_min,
         ln_max=ln_max)
-    L_q = var_bound(M=M,
+    L_q, L_k_q, L_M_q = var_bound(M=M,
                     X=X,
                     Y=Y,
                     Phi=Phi,
@@ -104,7 +104,11 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
                         V=V,
                         Lambda_V_1=Lambda_V_1,
                         a_beta=a_beta,
-                        b_beta=b_beta)
+                        b_beta=b_beta,
+                        L_q=L_q,
+                        ln_p_M=ln_p_M,
+                        L_k_q=L_k_q,
+                        L_M_q=L_M_q)
 
 
 def train_classifier(m_k, X, Y):
@@ -562,7 +566,7 @@ def var_bound(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                                      b_alpha_k=b_alpha[k],
                                      r_k=R[:, [k]])
     L_M_q = var_mix_bound(G, R, V, Lambda_V_1, a_beta, b_beta)
-    return L_K_q + L_M_q
+    return L_K_q + L_M_q, L_K_q, L_M_q
 
 
 def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,

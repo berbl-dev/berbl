@@ -21,7 +21,7 @@ class Model():
         return len(self.matchs)
 
     def fitted(self, p_M_D, W, Lambda_1, a_tau, b_tau, a_alpha, b_alpha, V,
-               Lambda_V_1, a_beta, b_beta):
+               Lambda_V_1, a_beta, b_beta, L_q, ln_p_M, L_k_q, L_M_q):
         self.p_M_D = p_M_D
         self.W = W
         self.Lambda_1 = Lambda_1
@@ -33,6 +33,10 @@ class Model():
         self.Lambda_V_1 = Lambda_V_1,
         self.a_beta = a_beta,
         self.b_beta = b_beta
+        self.L_q = L_q
+        self.ln_p_M = ln_p_M
+        self.L_k_q = L_k_q
+        self.L_M_q = L_M_q
         return self
 
     def unfit(self):
@@ -47,6 +51,10 @@ class Model():
         self.Lambda_V_1 = None
         self.a_beta = None
         self.b_beta = None
+        self.L_q = None
+        self.ln_p_M = None
+        self.L_k_q = None
+        self.L_M_q = None
         return self
 
     def matching_matrix(self, X: np.ndarray):
