@@ -406,9 +406,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         #
         # NOTE I don't think the neginf is strictly required but let's be safe.
         with np.errstate(divide="ignore", invalid="ignore"):
-            # Drugowitsch doesn't add the `-` although it should be there,
-            # strictly speaking.
-            KLRG = -np.sum(
+            # Note that KLRG is actually the negative Kullback-Leibler
+            # divergence (other than is stated in the book).
+            KLRG = np.sum(
                 R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
         # This fixes(?) some numerical problems.
         if KLRG < 0 and np.isclose(KLRG, 0):
@@ -419,12 +419,12 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         assert KLRG >= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
 
         if KLRG in KLRGs and KLRG != KLRG_prev:
-            print("Oscillation detected")
             # We only log and break when we're at the best KLRG value of the
             # current oscillation.
             if (KLRG <= KLRGs).all():
                 State().oscillation_count += 1
-                mlflow.log_metric("algorithm.oscillations.occurred", 1, State().step)
+                mlflow.log_metric("algorithm.oscillations.occurred", 1,
+                                  State().step)
                 break
 
         KLRGs[j] = KLRG
@@ -631,8 +631,6 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     assert a_beta.shape == (K, )
     assert b_beta.shape == (K, )
 
-    # TODO Semantics: Check var_bound of LCSBookCode (they only multiply K with
-    # the first summand)
     L_M1q = K * (-ss.gammaln(HParams().A_BETA)
                  + HParams().A_BETA * np.log(HParams().B_BETA))
     # TODO Performance: LCSBookCode vectorized this
@@ -642,7 +640,7 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
         # NOTE this is just the negated form of the update two lines prior?
         L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
 
-    # L_M2q is the Kullback-Leibler divergence [PDF p. 246].
+    # L_M2q is the negative Kullback-Leibler divergence [PDF p. 246].
     #
     # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we might
     # divide by 0 here. The intended behaviour is to silently get a NaN that can
@@ -655,13 +653,11 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     #
     # NOTE I don't think the neginf is strictly required but let's be safe.
     with np.errstate(divide="ignore", invalid="ignore"):
-        # Drugowitsch doesn't add the `-` although it should be there, strictly
-        # speaking.
-        L_M2q = -np.sum(
+        L_M2q = np.sum(
             R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
     # This fixes(?) some numerical problems.
-    if L_M2q < 0 and np.isclose(L_M2q, 0):
-        L_M2q = 0
+    # if L_M2q < 0 and np.isclose(L_M2q, 0):
+    #     L_M2q = 0
     assert L_M2q >= 0, f"Kullback-Leibler divergence less than zero: {L_M2q}"
     # TODO Performance: slogdet can be cached, is computed more than once
     L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
