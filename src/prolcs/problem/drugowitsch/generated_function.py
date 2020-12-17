@@ -8,16 +8,15 @@ import numpy as np  # type: ignore
 from prolcs.common import matching_matrix, phi_standard
 from prolcs.drugowitsch import mixing
 from prolcs.drugowitsch.ga1d import DrugowitschGA1D
-from prolcs.drugowitsch.model import Model
-from prolcs.logging import log_
-from prolcs.radialmatch1d import RadialMatch1D
-from prolcs.utils import add_intercept, get_ranges
 from prolcs.drugowitsch.hyperparams import HParams
 from prolcs.drugowitsch.state import State
+from prolcs.logging import log_
 from prolcs.problem.drugowitsch.init import make_init
-from sklearn import metrics  # type: ignore
-from sklearn import preprocessing  # type: ignore
+from prolcs.radialmatch1d import RadialMatch1D
+from prolcs.utils import add_intercept
 from sklearn.utils import check_random_state  # type: ignore
+
+from sklearn import metrics  # type: ignore
 
 # The individual used in function generation.
 ms = [
