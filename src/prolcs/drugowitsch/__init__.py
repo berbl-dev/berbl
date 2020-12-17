@@ -97,31 +97,30 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
         W[k], Lambda_1[k], a_tau[k], b_tau[k], a_alpha[k], b_alpha[
             k] = train_classifier(M[:, [k]], X, Y)
 
-    V, Lambda_V_1, a_beta, b_beta = train_mixing(
-        M=M,
-        X=X,
-        Y=Y,
-        Phi=Phi,
-        W=W,
-        Lambda_1=Lambda_1,
-        a_tau=a_tau,
-        b_tau=b_tau,
-        exp_min=exp_min,
-        ln_max=ln_max)
+    V, Lambda_V_1, a_beta, b_beta = train_mixing(M=M,
+                                                 X=X,
+                                                 Y=Y,
+                                                 Phi=Phi,
+                                                 W=W,
+                                                 Lambda_1=Lambda_1,
+                                                 a_tau=a_tau,
+                                                 b_tau=b_tau,
+                                                 exp_min=exp_min,
+                                                 ln_max=ln_max)
     L_q, L_k_q, L_M_q = var_bound(M=M,
-                    X=X,
-                    Y=Y,
-                    Phi=Phi,
-                    W=W,
-                    Lambda_1=Lambda_1,
-                    a_tau=a_tau,
-                    b_tau=b_tau,
-                    a_alpha=a_alpha,
-                    b_alpha=b_alpha,
-                    V=V,
-                    Lambda_V_1=Lambda_V_1,
-                    a_beta=a_beta,
-                    b_beta=b_beta)
+                                  X=X,
+                                  Y=Y,
+                                  Phi=Phi,
+                                  W=W,
+                                  Lambda_1=Lambda_1,
+                                  a_tau=a_tau,
+                                  b_tau=b_tau,
+                                  a_alpha=a_alpha,
+                                  b_alpha=b_alpha,
+                                  V=V,
+                                  Lambda_V_1=Lambda_V_1,
+                                  a_beta=a_beta,
+                                  b_beta=b_beta)
 
     ln_p_M = -np.log(float(
         np.math.factorial(K)))  # (7.3), i.e. p_M \propto 1/K
@@ -235,15 +234,15 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     N, D_V = Phi.shape
 
     V = State().random_state.normal(loc=0,
-                                      scale=HParams().A_BETA
-                                      / HParams().B_BETA,
-                                      size=(D_V, K))
+                                    scale=HParams().A_BETA / HParams().B_BETA,
+                                    size=(D_V, K))
     a_beta = np.repeat(HParams().A_BETA, K)
     b_beta = np.repeat(HParams().B_BETA, K)
     L_M_q = -np.inf
     delta_L_M_q = HParams().DELTA_S_L_M_Q + 1
     i = 0
-    while delta_L_M_q > HParams().DELTA_S_L_M_Q and i < HParams().MAX_ITER_MIXING:
+    while delta_L_M_q > HParams().DELTA_S_L_M_Q and i < HParams(
+    ).MAX_ITER_MIXING:
         i += 1
         # This is not monotonous due to the Laplace approximation used [PDF p.
         # 202, 160]. Also: “This desirable monotonicity property is unlikely to
@@ -316,7 +315,7 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     # this check was added to ensure that even these cases are handled
     # gracefully.”
     with np.errstate(invalid="ignore"):
-        G = G / np.sum(G, 1)[:, np.newaxis]
+        G = G / np.sum(G, axis=1)[:, np.newaxis]
     G = np.nan_to_num(G, nan=1 / K)
     return G
 
@@ -401,7 +400,8 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     mlflow.log_metric("algorithm.oscillations.occurred", 0, State().step)
     KLRGs = np.repeat(-np.inf, 10)
     j = 0
-    while delta_KLRG > HParams().DELTA_S_KLRG and i < HParams().MAX_ITER_MIXING:
+    while delta_KLRG > HParams().DELTA_S_KLRG and i < HParams(
+    ).MAX_ITER_MIXING:
         i += 1
         # Actually, this should probably be named nabla_E.
         E = Phi.T @ (G - R) + V * E_beta_beta
