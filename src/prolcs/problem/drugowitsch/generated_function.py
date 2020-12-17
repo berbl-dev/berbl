@@ -1,4 +1,5 @@
 # TODO Why is variance increasing that much on the right side?!
+# TODO Why do I only get a fitness of ~52 instead of Drugowitschs >100?
 import os
 
 import click
@@ -13,6 +14,7 @@ from prolcs.radialmatch1d import RadialMatch1D
 from prolcs.utils import add_intercept, get_ranges
 from prolcs.drugowitsch.hyperparams import HParams
 from prolcs.drugowitsch.state import State
+from prolcs.problem.drugowitsch.init import make_init
 from sklearn import metrics  # type: ignore
 from sklearn import preprocessing  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
@@ -84,8 +86,6 @@ def run_experiment(n_iter, seed, show, sample_size):
     import matplotlib.pyplot as plt
     import mlflow
 
-    LOGGING = "mlflow"
-
     mlflow.set_experiment("generated_function")
     with mlflow.start_run() as run:
         mlflow.log_params(HParams().__dict__)
@@ -94,27 +94,7 @@ def run_experiment(n_iter, seed, show, sample_size):
 
         X, Y = generate(sample_size)
 
-        ranges = (0, 1)
-
-        def individual(k: int, random_state: np.random.RandomState):
-            """
-            Individuals are simply lists of matching functions (the length of
-            the list is the number of classifiers, the matching functions
-            specify their localization).
-            """
-            return Model([
-                RadialMatch1D.random(ranges, random_state=random_state)
-                for i in range(k)
-            ],
-                         phi=phi_standard)
-
-        # [PDF p. 221, 3rd paragraph]
-        # Drugowitsch samples individual sizes from a certain
-        # problem-dependent Binomial distribution.
-        def init(X, Y, random_state):
-            Ks = np.clip(random_state.binomial(8, 0.5, size=20), 1, 100)
-            ranges = get_ranges(X)
-            return [individual(k, random_state) for k in Ks]
+        init = make_init(8, 0.5, size=20, kmin=1, kmax=100)
 
         estimator = DrugowitschGA1D(n_iter=n_iter,
                                     init=init,
