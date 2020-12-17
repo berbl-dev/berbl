@@ -1,4 +1,3 @@
-# TODO It sometimes seems to hang somewhere (i.e. not finishing the generation)
 # TODO Why is variance increasing that much on the right side?!
 import os
 
@@ -86,9 +85,6 @@ def run_experiment(n_iter, seed, show, sample_size):
     import mlflow
 
     LOGGING = "mlflow"
-
-    HParams().MAX_ITER_CLS = 40
-    HParams().MAX_ITER_MIXING = 80
 
     mlflow.set_experiment("generated_function")
     with mlflow.start_run() as run:
