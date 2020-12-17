@@ -1,5 +1,38 @@
-# ‘LCSBookCode’ refers to Drugowitsch's implementation found here
-# https://github.com/jdrugo/LCSBookCode.
+# TODO Performance: Do many things in place instead of allocating new memory
+"""
+Module implementing the algorithm presented in ‘Design and Analysis of Learning
+Classifier Systems – A Probabilistic Approach’ by Jan Drugowitsch.
+
+This implementation intentionially does break with several Python conventions
+(e.g. PEP8 regarding variable naming) in order to stay as close as possible to
+the formulation of the algorithm in aforementioned work.
+
+The only deviations from the book are:
+* ``model_probability`` returns L(q) - ln K! instead of L(q) + ln K! as the
+  latter is presumably a typographical error in the book (the corresponding
+  formula in Section 7 uses ``-`` as well, which seems to be correct).
+* We always use Moore-Penrose pseudo-inverses instead of actual inverses due to
+  (very seldomly) matrices being invertible—probably due to numerical
+  inaccuracies. This is also done in the code that Jan Drugowitsch published to
+  accompany his book: `1
+  <https://github.com/jdrugo/LCSBookCode/blob/master/cl.py#L120>`_, `2
+  <https://github.com/jdrugo/LCSBookCode/blob/master/cl.py#L385>`_, `3
+  <https://github.com/jdrugo/LCSBookCode/blob/master/cl.py#L409>`_.
+* Since the IRLS training of the mixing weights sometimes starts to oscillate in
+  an infinite loop between several weight values, we add a maximum number of
+  iterations to the three main training loops:
+
+  * classifier training (``train_classifier``)
+  * mixing model training (``train_mixing``)
+  * mixing weight training (``train_mix_weights``)
+
+  This seems reasonable, especially since Jan Drugowitsch's code does the same
+  (a behaviour that is *not documented in the book*).
+
+Within the code, comments referring to “LCSBookCode” refer to `Jan Drugowitsch's
+code <https://github.com/jdrugo/LCSBookCode>`_.
+"""
+import os
 import sys
 from typing import *
 
