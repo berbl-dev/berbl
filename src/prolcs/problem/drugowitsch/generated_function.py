@@ -141,7 +141,7 @@ def run_experiment(n_iter, seed, show, sample_size):
         ax.plot(X.ravel(), Y.ravel(), "r+")
 
         # plot denoised input data for visual reference
-        ax.plot(X_denoised.ravel(), Y_denoised.ravel(), "r--")
+        ax.plot(X_denoised.ravel(), Y_denoised.ravel(), "k--")
 
         # plot test data
         X_test_ = X_test.ravel()
