@@ -103,7 +103,8 @@ def run_experiment(n_iter, seed, show, sample_size):
         mlflow.log_param("train.size", sample_size)
 
         X, Y = generate(sample_size)
-        # For visual reference only.
+
+        # generate denoised data as well (for visual reference)
         X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
         _, Y_denoised = generate(1000, noise=False, X=X_denoised)
 
@@ -157,17 +158,16 @@ def run_experiment(n_iter, seed, show, sample_size):
         elitist = estimator.elitist_
         W = elitist.W
         X_test_ = np.hstack([np.ones((len(X_test), 1)), X_test])
-        # save approximation so we don't need to run it over and over again
         for k in range(len(W)):
-            ax.plot(
-                X_test.ravel(),
-                np.sum(W[k] * X_test_, axis=1),
-                c="grey",
-                linestyle="-",
-                linewidth=0.5,
-                alpha=0.7,
-                zorder=10)
+            ax.plot(X_test.ravel(),
+                    np.sum(W[k] * X_test_, axis=1),
+                    c="grey",
+                    linestyle="-",
+                    linewidth=0.5,
+                    alpha=0.7,
+                    zorder=10)
 
+        # add metadata to plot for ease of use
         ax.set(
             title=
             f"K = {len(W)}, p(M|D) = {elitist.p_M_D:.2}, mse = {mse:.2}, r2 = {r2:.2}"
