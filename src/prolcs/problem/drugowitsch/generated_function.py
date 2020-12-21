@@ -28,17 +28,25 @@ ms = [
 np.seterr(all="warn")
 
 
-def generate(n: int = 300, random_state: np.random.RandomState = 0):
+def generate(n: int = 300,
+             noise=True,
+             X=None,
+             random_state: np.random.RandomState = 0):
     """
     [PDF p. 260]
 
-    :param n: the number of samples to generate
+    :param n: The number of samples to generate. Supplying ``X`` overrides this.
+    :param noise: Whether to generate noisy data (the default) or not. The
+        latter may be useful for visualization purposes.
+    :param X: Sample the function at these exact input points (instead of
+        generating ``n`` input points randomly).
 
     :returns: input and output matrices X (N × 1) and Y (N × 1)
     """
     random_state = check_random_state(random_state)
 
-    X = random_state.random((n, 1))
+    if X is None:
+        X = random_state.random((n, 1))
 
     M = matching_matrix(ms, X)
     Phi = phi_standard(X)
@@ -65,8 +73,11 @@ def generate(n: int = 300, random_state: np.random.RandomState = 0):
         y = 0
         for k in range(len(ms)):
             # sample the three classifiers
-            y += random_state.normal(loc=G[n][k] * (W[k] @ X_[n]),
-                                     scale=Lambda_1[k])
+            if noise:
+                y += random_state.normal(loc=G[n][k] * (W[k] @ X_[n]),
+                                         scale=Lambda_1[k])
+            else:
+                y += G[n][k] * (W[k] @ X_[n])
         Y[n] = y
 
     # We return the non-augmented samples (because our algorithm augments them
@@ -92,6 +103,9 @@ def run_experiment(n_iter, seed, show, sample_size):
         mlflow.log_param("train.size", sample_size)
 
         X, Y = generate(sample_size)
+        # For visual reference only.
+        X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
+        _, Y_denoised = generate(1000, noise=False, X=X_denoised)
 
         init = make_init(8, 0.5, size=20, kmin=1, kmax=100)
 
@@ -125,13 +139,19 @@ def run_experiment(n_iter, seed, show, sample_size):
         # plot input data
         ax.plot(X.ravel(), Y.ravel(), "r+")
 
+        # plot denoised input data for visual reference
+        ax.plot(X_denoised.ravel(), Y_denoised.ravel(), "r--")
+
         # plot test data
-        ax.errorbar(X_test.ravel(),
-                    Y_test.ravel(),
-                    var.ravel(),
-                    color="navy",
-                    ecolor="gray",
-                    fmt="v")
+        X_test_ = X_test.ravel()
+        perm = np.argsort(X_test_)
+        X_test_ = X_test_[perm]
+        Y_test_ = Y_test.ravel()[perm]
+        var_ = var.ravel()[perm]
+        ax.plot(X_test_, Y_test_, "b-")
+        ax.plot(X_test_, Y_test_ - var_, "b--", linewidth=0.5)
+        ax.plot(X_test_, Y_test_ + var_, "b--", linewidth=0.5)
+        ax.fill_between(X_test_, Y_test_ - var_, Y_test_ + var_, alpha=0.2)
 
         # plot elitist's classifiers
         elitist = estimator.elitist_
@@ -139,10 +159,14 @@ def run_experiment(n_iter, seed, show, sample_size):
         X_test_ = np.hstack([np.ones((len(X_test), 1)), X_test])
         # save approximation so we don't need to run it over and over again
         for k in range(len(W)):
-            ax.plot(X_test.ravel(),
-                    np.sum(W[k] * X_test_, axis=1),
-                    c="C" + str(k),
-                    zorder=10)
+            ax.plot(
+                X_test.ravel(),
+                np.sum(W[k] * X_test_, axis=1),
+                c="grey",
+                linestyle="-",
+                linewidth=0.5,
+                alpha=0.7,
+                zorder=10)
 
         ax.set(
             title=
@@ -154,6 +178,7 @@ def run_experiment(n_iter, seed, show, sample_size):
         if not os.path.exists(fig_folder):
             os.makedirs(fig_folder)
         fig_file = f"{fig_folder}/Final approximation {seed}.pdf"
+        print(f"Storing final approximation figure in {fig_file}")
         fig.savefig(fig_file)
         mlflow.log_artifact(fig_file)
 
