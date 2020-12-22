@@ -17,7 +17,7 @@ def f(x, noise_vars=(0.6, 0.1), random_state: np.random.RandomState = 0):
     random_state = check_random_state(random_state)
     return np.where(
         x < 0, -1 - 2 * x
-        + random_state.normal(0, np.sqrt(noise_vars[0]), size=x.shape), 1
+        + random_state.normal(0, np.sqrt(noise_vars[0]), size=x.shape), -1
         + 2 * x + random_state.normal(0, np.sqrt(noise_vars[1]), size=x.shape))
 
 
