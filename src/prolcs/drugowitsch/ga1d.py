@@ -324,5 +324,6 @@ class DrugowitschGA1D(BaseEstimator):
             for k in range(K):
                 var[j] += g[k] * (2 * model.b_tau[k] / (model.a_tau[k] - 1) *
                                   (1 + x_ @ model.Lambda_1[k] @ x_) +
-                                  (model.W[k][j] @ x_)**2) - y[j]**2
+                                  (model.W[k][j] @ x_)**2)
+            var[j] -= y[j]**2
         return y, var
