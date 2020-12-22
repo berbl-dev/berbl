@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 
 import click
@@ -11,24 +12,13 @@ from prolcs.problem.drugowitsch.init import make_init
 from sklearn import metrics  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
-np.seterr(all="warn")
 
-
-def f(x,
-      noise_var: float = 0.2,
-      random_state: np.random.RandomState = 0):
-    """
-    [PDF p. 262]
-
-    :param x: an array_like, ``0 <= x <= 4``
-    :param noise_var: the noise variance (``0.2`` acc. to [PDF p. 262])
-    """
+def f(x, noise_vars=(0.6, 0.1), random_state: np.random.RandomState = 0):
     random_state = check_random_state(random_state)
-
-    # LCSBookCode's first factor is 4.26 which differs from the book's 4.25.
-    return 4.25 * (np.exp(-x) - 4 * np.exp(-2 * x)
-                   + 3 * np.exp(-3 * x)) + random_state.normal(
-                       0, np.sqrt(noise_var), size=x.shape)
+    return np.where(
+        x < 0, -1 - 2 * x
+        + random_state.normal(0, np.sqrt(noise_vars[0]), size=x.shape), 1
+        + 2 * x + random_state.normal(0, np.sqrt(noise_vars[1]), size=x.shape))
 
 
 def generate(n: int = 200, random_state: np.random.RandomState = 0):
@@ -41,7 +31,7 @@ def generate(n: int = 200, random_state: np.random.RandomState = 0):
     """
     random_state = check_random_state(random_state)
 
-    X = random_state.uniform(low=0, high=4, size=(n, 1))
+    X = random_state.uniform(low=-1, high=1, size=(n, 1))
     Y = f(X, random_state=random_state)
 
     return X, Y
@@ -67,10 +57,12 @@ def run_experiment(n_iter, seed, show, sample_size):
         X, Y = generate(sample_size)
 
         # De-noised data for visual reference
-        X_denoised = np.arange(0, 4, 0.01)
-        Y_denoised = f(X_denoised, noise_var=0)
+        X_denoised = np.arange(-1, 1, 0.01)
+        Y_denoised = f(X_denoised, noise_vars=(0, 0))
 
-        init = make_init(n=4, p=0.5, size=20, kmin=1, kmax=100)
+        # TODO Drugowitsch uses soft-interval matching here, I haven't that
+        # implemented as of now
+        init = make_init(n=8, p=0.5, size=20, kmin=1, kmax=100)
 
         estimator = DrugowitschGA1D(n_iter=n_iter,
                                     init=init,
