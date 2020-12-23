@@ -1,86 +1,38 @@
-# TODO Why do I only get a fitness of ~52 instead of Drugowitschs >100?
 import os
 
 import click
 import joblib as jl
 import numpy as np  # type: ignore
-from prolcs.common import matching_matrix, phi_standard
-from prolcs.drugowitsch import mixing
 from prolcs.drugowitsch.ga1d import DrugowitschGA1D
 from prolcs.drugowitsch.hyperparams import HParams
 from prolcs.drugowitsch.state import State
 from prolcs.logging import log_
-from prolcs.problem.drugowitsch.init import make_init
-from prolcs.radialmatch1d import RadialMatch1D
-from prolcs.utils import add_intercept
+from prolcs.drugowitsch.init import make_init
+from sklearn import metrics  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
-from sklearn import metrics  # type: ignore
 
-# The individual used in function generation.
-ms = [
-    RadialMatch1D(mu=0.2, sigma_2=0.05, ranges=(0, 1)),
-    RadialMatch1D(mu=0.5, sigma_2=0.01, ranges=(0, 1)),
-    RadialMatch1D(mu=0.8, sigma_2=0.05, ranges=(0, 1)),
-]
-
-np.seterr(all="warn")
+def f(x, noise_vars=(0.6, 0.1), random_state: np.random.RandomState = 0):
+    random_state = check_random_state(random_state)
+    return np.where(
+        x < 0, -1 - 2 * x
+        + random_state.normal(0, np.sqrt(noise_vars[0]), size=x.shape), -1
+        + 2 * x + random_state.normal(0, np.sqrt(noise_vars[1]), size=x.shape))
 
 
-def generate(n: int = 300,
-             noise=True,
-             X=None,
-             random_state: np.random.RandomState = 0):
+def generate(n: int = 200, random_state: np.random.RandomState = 0):
     """
-    [PDF p. 260]
+    [PDF p. 262]
 
-    :param n: The number of samples to generate. Supplying ``X`` overrides this.
-    :param noise: Whether to generate noisy data (the default) or not. The
-        latter may be useful for visualization purposes.
-    :param X: Sample the function at these exact input points (instead of
-        generating ``n`` input points randomly).
+    :param n: the number of samples to generate
 
     :returns: input and output matrices X (N × 1) and Y (N × 1)
     """
     random_state = check_random_state(random_state)
 
-    if X is None:
-        X = random_state.random((n, 1))
+    X = random_state.uniform(low=-1, high=1, size=(n, 1))
+    Y = f(X, random_state=random_state)
 
-    M = matching_matrix(ms, X)
-    Phi = phi_standard(X)
-
-    W = [
-        np.array([0.05, 0.5]),
-        np.array([2, -4]),
-        np.array([-1.5, 2.5]),
-    ]
-    Lambda_1 = [
-        np.array([0.1]),
-        np.array([0.1]),
-        np.array([0.1]),
-    ]
-    V = np.array([0.5, 1.0, 0.4]).reshape(1, 3)
-
-    G = mixing(M, Phi, V)
-
-    # After matching, augment samples by prepending 1 to enable non-zero
-    # intercepts.
-    X_ = add_intercept(X)
-    Y = np.zeros(X.shape)
-    for n in range(len(X)):
-        y = 0
-        for k in range(len(ms)):
-            # sample the three classifiers
-            if noise:
-                y += random_state.normal(loc=G[n][k] * (W[k] @ X_[n]),
-                                         scale=Lambda_1[k])
-            else:
-                y += G[n][k] * (W[k] @ X_[n])
-        Y[n] = y
-
-    # We return the non-augmented samples (because our algorithm augments them
-    # itself).
     return X, Y
 
 
@@ -88,14 +40,14 @@ def generate(n: int = 300,
 @click.option("-n", "--n_iter", type=click.IntRange(min=1), default=250)
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("--show/--no-show", type=bool, default=False)
-@click.option("-d", "--sample-size", type=click.IntRange(min=1), default=300)
+@click.option("-d", "--sample-size", type=click.IntRange(min=1), default=200)
 def run_experiment(n_iter, seed, show, sample_size):
     # We import these packages here so the generate function can be used without
     # installing them.
     import matplotlib.pyplot as plt
     import mlflow
 
-    mlflow.set_experiment("generated_function")
+    mlflow.set_experiment("variable_noise")
     with mlflow.start_run() as run:
         mlflow.log_params(HParams().__dict__)
         mlflow.log_param("seed", seed)
@@ -103,28 +55,22 @@ def run_experiment(n_iter, seed, show, sample_size):
 
         X, Y = generate(sample_size)
 
-        # generate denoised data as well (for visual reference)
-        X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
-        _, Y_denoised = generate(1000, noise=False, X=X_denoised)
+        # De-noised data for visual reference
+        X_denoised = np.arange(-1, 1, 0.01)
+        Y_denoised = f(X_denoised, noise_vars=(0, 0))
 
-        init = make_init(8, 0.5, size=20, kmin=1, kmax=100)
+        # TODO Drugowitsch uses soft-interval matching here, I haven't that
+        # implemented as of now
+        init = make_init(n=8, p=0.5, size=20, kmin=1, kmax=100)
 
         estimator = DrugowitschGA1D(n_iter=n_iter,
                                     init=init,
                                     random_state=seed)
         estimator = estimator.fit(X, Y)
         log_("random_state.random", State().random_state.random(), n_iter)
-        log_("algorithm.oscillations.count", State().oscillation_count, n_iter)
 
-        # store the model, you never know when you need it
-        model_file = f"Model {seed}.joblib"
-        jl.dump(estimator, model_file)
-        mlflow.log_artifact(model_file)
+        X_test, Y_test_true = generate(1000, random_state=54321)
 
-        # generate test data
-        X_test, Y_test_true = generate(1000, random_state=12345)
-
-        # make predictions for test data
         Y_test, var = np.zeros(Y_test_true.shape), np.zeros(Y_test_true.shape)
         for i in range(len(X_test)):
             Y_test[i], var[i] = estimator.predict1_elitist_mean_var(X_test[i])
@@ -140,7 +86,7 @@ def run_experiment(n_iter, seed, show, sample_size):
         ax.plot(X.ravel(), Y.ravel(), "r+")
 
         # plot denoised input data for visual reference
-        ax.plot(X_denoised.ravel(), Y_denoised.ravel(), "k--")
+        ax.plot(X_denoised.reshape((-1)), Y_denoised.reshape((-1)), "k--")
 
         # plot test data
         X_test_ = X_test.ravel()

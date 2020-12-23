@@ -7,7 +7,7 @@ from prolcs.drugowitsch.ga1d import DrugowitschGA1D
 from prolcs.drugowitsch.hyperparams import HParams
 from prolcs.drugowitsch.state import State
 from prolcs.logging import log_
-from prolcs.problem.drugowitsch.init import make_init
+from prolcs.drugowitsch.init import make_init
 from sklearn import metrics  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
