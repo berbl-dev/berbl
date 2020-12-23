@@ -12,12 +12,10 @@ from sklearn import metrics  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
 
-def f(x, noise_vars=(0.6, 0.1), random_state: np.random.RandomState = 0):
+def f(x, noise_var=0.15, random_state: np.random.RandomState = 0):
     random_state = check_random_state(random_state)
-    return np.where(
-        x < 0, -1 - 2 * x
-        + random_state.normal(0, np.sqrt(noise_vars[0]), size=x.shape), -1
-        + 2 * x + random_state.normal(0, np.sqrt(noise_vars[1]), size=x.shape))
+    return np.sin(2 * np.pi * x) + random_state.normal(
+        0, np.sqrt(noise_var), size=x.shape)
 
 
 def generate(n: int = 200, random_state: np.random.RandomState = 0):
@@ -57,7 +55,7 @@ def run_experiment(n_iter, seed, show, sample_size):
 
         # De-noised data for visual reference
         X_denoised = np.arange(-1, 1, 0.01)
-        Y_denoised = f(X_denoised, noise_vars=(0, 0))
+        Y_denoised = f(X_denoised, noise_var=0)
 
         # TODO Drugowitsch uses soft-interval matching here, I haven't that
         # implemented as of now
