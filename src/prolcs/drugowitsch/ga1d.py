@@ -10,7 +10,7 @@ from sklearn.utils import check_random_state  # type: ignore
 
 from ..common import phi_standard
 from ..logging import log_
-from ..radialmatch1d import RadialMatch1D
+from .radialmatch1d import RadialMatch1D
 from ..utils import get_ranges
 from . import *
 from .hyperparams import HParams
