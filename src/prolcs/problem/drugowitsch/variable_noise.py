@@ -20,7 +20,7 @@ def f(x, noise_vars=(0.6, 0.1), random_state: np.random.RandomState = 0):
         + 2 * x + random_state.normal(0, np.sqrt(noise_vars[1]), size=x.shape))
 
 
-def generate(n: int = 300, random_state: np.random.RandomState = 0):
+def generate(n: int = 200, random_state: np.random.RandomState = 0):
     """
     [PDF p. 262]
 
@@ -40,7 +40,7 @@ def generate(n: int = 300, random_state: np.random.RandomState = 0):
 @click.option("-n", "--n_iter", type=click.IntRange(min=1), default=250)
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("--show/--no-show", type=bool, default=False)
-@click.option("-d", "--sample-size", type=click.IntRange(min=1), default=300)
+@click.option("-d", "--sample-size", type=click.IntRange(min=1), default=200)
 def run_experiment(n_iter, seed, show, sample_size):
     # We import these packages here so the generate function can be used without
     # installing them.
