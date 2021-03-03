@@ -21,8 +21,8 @@ class RadialMatch1D():
             Gaussian is inferred.
         :param mu: Position of the Gaussian.
         :param sigma_2: Standard deviation.
-        :param ranges: The value ranges of the problem considered. If ``None``,
-            use ``[-inf, inf]`` for each dimension.
+        :param ranges: The value range of the problem considered. If ``None``,
+            use ``(-inf, inf)``.
         """
         self.ranges = ranges
 

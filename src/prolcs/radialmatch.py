@@ -9,10 +9,7 @@ class RadialMatch():
     def __init__(self,
                  mu: np.ndarray,
                  lambd_2: np.ndarray,
-                 ranges: np.ndarray = None,
-                 # TODO Use random_state (see RadialMatch1D where we only supply
-                 # it in mutate and where it's needed)
-                 rng: np.random.Generator = np.random.default_rng()):
+                 ranges: np.ndarray = None):
         """
         Note: The covariance matrix has to be positive definite (cf. e.g.
         `Wikipedia
@@ -21,9 +18,9 @@ class RadialMatch():
         have to invert it which is costly and the model structure optimizer
         can very well work on the inverse directly anyway).
 
-        :param mu: Position of the Gaussian
+        :param mu: Position of the Gaussian.
         :param lambd_2: Squared precision matrix (squared inverse covariance
-            matrix)
+            matrix).
         :param ranges: The value ranges of the problem considered. If ``None``,
             use ``[-inf, inf]`` for each dimension.
         """
