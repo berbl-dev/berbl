@@ -53,7 +53,7 @@ np.seterr(all="raise", under="warn")
 
 
 def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
-                      Phi: np.ndarray, exp_min: float, ln_max: float):
+                      Phi: np.ndarray):
     """
     [PDF p. 235]
 
@@ -97,16 +97,14 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
         W[k], Lambda_1[k], a_tau[k], b_tau[k], a_alpha[k], b_alpha[
             k] = train_classifier(M[:, [k]], X, Y)
 
-    V, Lambda_V_1, a_beta, b_beta = train_mixing(M=M,
+    V, Lambda_V_1, a_be)a, b_beta = train_mixing(M=M,
                                                  X=X,
                                                  Y=Y,
                                                  Phi=Phi,
                                                  W=W,
                                                  Lambda_1=Lambda_1,
                                                  a_tau=a_tau,
-                                                 b_tau=b_tau,
-                                                 exp_min=exp_min,
-                                                 ln_max=ln_max)
+                                                 b_tau=b_tau)
     L_q, L_k_q, L_M_q = var_bound(M=M,
                                   X=X,
                                   Y=Y,
@@ -210,7 +208,7 @@ def train_classifier(m_k, X, Y):
 def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                           Phi: np.ndarray, W: List[np.ndarray],
                           Lambda_1: List[np.ndarray], a_tau: np.ndarray,
-                          b_tau: np.ndarray, exp_min: float, ln_max: float):
+                          b_tau: np.ndarray):
     """
     [PDF p. 238]
 
