@@ -207,12 +207,10 @@ def train_classifier(m_k, X, Y):
     return W_k, Lambda_k_1, a_tau_k, b_tau_k, a_alpha_k, b_alpha_k
 
 
-# TODO Drugowitsch also gives this a_alpha and b_alpha although they are not
-# used. Maybe investigate more in-depth whether that is a mistake?
-def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
-                 W: List[np.ndarray], Lambda_1: List[np.ndarray],
-                 a_tau: np.ndarray, b_tau: np.ndarray, exp_min: float,
-                 ln_max: float):
+def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
+                          Phi: np.ndarray, W: List[np.ndarray],
+                          Lambda_1: List[np.ndarray], a_tau: np.ndarray,
+                          b_tau: np.ndarray, exp_min: float, ln_max: float):
     """
     [PDF p. 238]
 
@@ -236,6 +234,15 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     V = State().random_state.normal(loc=0,
                                     scale=HParams().A_BETA / HParams().B_BETA,
                                     size=(D_V, K))
+
+    alpha = State().random_state.normal(loc=0,
+                                        scale=HParams().A_BETA
+                                        / HParams().B_BETA,
+                                        size=(N, 1))
+    xi = State().random_state.random(size=(N, K))
+    lambda_xi = 1 / (2 * xi) * (1 / (1 + np.exp(xi) - 1 / 2))
+    lambda_xi, alpha = opt_bouchard(M, Phi, V, lambda_xi)
+
     a_beta = np.repeat(HParams().A_BETA, K)
     b_beta = np.repeat(HParams().B_BETA, K)
     L_M_q = -np.inf
@@ -244,22 +251,20 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     while delta_L_M_q > HParams().DELTA_S_L_M_Q and i < HParams(
     ).MAX_ITER_MIXING:
         i += 1
-        # This is not monotonous due to the Laplace approximation used [PDF p.
-        # 202, 160]. Also: “This desirable monotonicity property is unlikely to
-        # arise with other types of approximation methods, such as the Laplace
-        # approximation.” (Bayesian parameter estimation via variational methods
-        # (Jaakkola, Jordan), p. 10)
-        V, Lambda_V_1 = train_mix_weights(M=M,
-                                          X=X,
-                                          Y=Y,
-                                          Phi=Phi,
-                                          W=W,
-                                          Lambda_1=Lambda_1,
-                                          a_tau=a_tau,
-                                          b_tau=b_tau,
-                                          V=V,
-                                          a_beta=a_beta,
-                                          b_beta=b_beta)
+        V, Lambda_V_1 = train_mix_weights_bouchard(M=M,
+                                                   X=X,
+                                                   Y=Y,
+                                                   Phi=Phi,
+                                                   W=W,
+                                                   Lambda_1=Lambda_1,
+                                                   a_tau=a_tau,
+                                                   b_tau=b_tau,
+                                                   V=V,
+                                                   a_beta=a_beta,
+                                                   b_beta=b_beta,
+                                                   lambda_xi=lambda_xi,
+                                                   alpha=alpha)
+        lambda_xi, alpha = opt_bouchard(M, Phi, V, lambda_xi)
         # TODO LCSBookCode only updates b_beta here as a_beta is constant.
         a_beta, b_beta = train_mix_priors(V, Lambda_V_1)
         G = mixing(M, Phi, V)
@@ -354,6 +359,89 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
         R = R / np.sum(R, 1)[:, np.newaxis]
     R = np.nan_to_num(R, nan=0)
     return R
+
+
+def train_mix_weights_bouchard(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
+                               Phi: np.ndarray, W: List[np.ndarray],
+                               Lambda_1: List[np.ndarray], a_tau: np.ndarray,
+                               b_tau: np.ndarray, V: np.ndarray,
+                               a_beta: np.ndarray, b_beta: np.ndarray,
+                               lambda_xi: np.ndarray, alpha: np.ndarray):
+    """
+    Potentially more efficient version of ``train_mix_weights``.
+
+    :param M: matching matrix (N × K)
+    :param X: input matrix (N × D_X)
+    :param Y: output matrix (N × D_Y)
+    :param Phi: mixing feature matrix (N × D_V)
+    :param W: classifier weight matrices (list of D_Y × D_X)
+    :param Lambda_1: classifier covariance matrices (list of D_X × D_X)
+    :param a_tau: classifier noise precision parameters
+    :param b_tau: classifier noise precision parameters
+    :param V: mixing weight matrix (D_V × K)
+    :param a_beta: mixing weight prior parameter (row vector of length K)
+    :param b_beta: mixing weight prior parameter (row vector of length K)
+
+    :returns: mixing weight matrix (D_V × K), mixing weight covariance matrix (K
+        D_V × K D_V)
+    """
+    N, _ = X.shape
+    D_V, K = V.shape
+
+    # TODO Should probably cache G and R
+    G = mixing(M, Phi, V)
+    R = responsibilities(X=X,
+                         Y=Y,
+                         G=G,
+                         W=W,
+                         Lambda_1=Lambda_1,
+                         a_tau=a_tau,
+                         b_tau=b_tau)
+
+    E_beta_beta = a_beta / b_beta
+
+    Lambda_V_1 = [np.zeros((D_V, D_V))] * K
+
+    for k in range(K):
+        # TODO Performance: Vectorize this
+        for n in range(N):
+            Lambda_V_1[k] += R[n][k] * lambda_xi[n][k] * np.outer(
+                Phi[n], Phi[n])
+
+        Lambda_V_1[k] *= 2
+        Lambda_V_1[k] = Lambda_V_1[k] + E_beta_beta[k] * np.identity(
+            Lambda_V_1[k].shape[0])
+
+        t = R[:, [k]] * (1 / 2 - 2 * np.log(M[:, [k]]) * lambda_xi[:, [k]]
+                         + alpha * lambda_xi[:, [k]])
+        V[:, [k]] = np.linalg.pinv(Lambda_V_1[k]) @ Phi.T @ t
+
+    return V, Lambda_V_1
+
+
+def opt_bouchard(M: np.ndarray, Phi: np.ndarray, V: np.ndarray,
+                 lambda_xi: np.ndarray):
+    """
+    Updates the parameters of Bouchard's lower bound to their optimal values.
+
+    :returns: variational parameters λ(ξ), α
+    """
+    _, K = V.shape
+    N, D_V = Phi.shape
+
+    h = np.log(M) + Phi @ V
+
+    # TODO We maybe can get rid of one of the sums?
+    alpha = (1 / 2 *
+             (K / 2 - 1) + np.sum(h * lambda_xi, axis=1)) / np.sum(lambda_xi,
+                                                                   axis=1)
+    alpha = alpha.reshape((N, 1))
+
+    xi = np.abs(alpha - h)
+
+    lambda_xi = 1 / (2 * xi) * (1 / (1 + np.exp(-xi)) - 1 / 2)
+
+    return lambda_xi, alpha
 
 
 def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
@@ -519,16 +607,15 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
     [PDF p. 244]
 
     :param V: mixing weight matrix (D_V × K)
-    :param Lambda_V_1: mixing covariance matrix (K D_V × K D_V)
+    :param Lambda_V_1: list of K mixing covariance matrices (D_V × D_V)
 
     :returns: mixing weight vector prior parameters a_beta, b_beta
     """
     D_V, K = V.shape
-    assert Lambda_V_1.shape == (K * D_V, K * D_V)
 
     a_beta = np.zeros(K)
     b_beta = np.zeros(K)
-    Lambda_V_1_diag = np.diag(Lambda_V_1)
+    Lambda_V_1_diag = np.array(list(map(np.diag, Lambda_V_1)))
     # TODO Performance: LCSBookCode vectorized this:
     # b[:,1] = b_b + 0.5 * (sum(V * V, 0) + self.cov_Tr)
     for k in range(K):
@@ -575,7 +662,6 @@ def var_bound(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     :returns: variational bound L(q)
     """
     D_V, K = V.shape
-    assert Lambda_V_1.shape == (K * D_V, K * D_V)
     assert a_beta.shape == b_beta.shape
     assert a_beta.shape == (K, )
 
@@ -650,7 +736,7 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     :param G: mixing matrix (N × K)
     :param R: responsibilities matrix (N × K)
     :param V: mixing weight matrix (D_V × K)
-    :param Lambda_V_1: mixing covariance matrix (K D_V × K D_V)
+    :param Lambda_V_1: list of K mixing covariance matrices (D_V × D_V)
     :param a_beta: mixing weight prior parameter (row vector of length K)
     :param b_beta: mixing weight prior parameter (row vector of length K)
 
@@ -660,7 +746,6 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
 
     assert G.shape == R.shape
     assert G.shape[1] == K
-    assert Lambda_V_1.shape == (K * D_V, K * D_V)
     assert a_beta.shape == (K, )
     assert b_beta.shape == (K, )
 
@@ -669,10 +754,18 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     # TODO Performance: LCSBookCode vectorized this
     # TODO Performance: ss.gammaln(a_beta[k]) is constant throughout the loop in the calling
     # function
+    L_M3q = K * D_V
     for k in range(K):
         # NOTE this is just the negated form of the update two lines prior?
         L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
+        # TODO Vectorize or at least get rid of for loop
+        # TODO Maybe cache determinant
+        if Lambda_V_1[k].shape == (1, ):
+            L_M3q += Lambda_V_1[k]
+        else:
+            L_M3q += np.linalg.slogdet(Lambda_V_1[k])[1]
 
+    L_M3q /= 2
     # L_M2q is the negative Kullback-Leibler divergence [PDF p. 246].
     #
     # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we might
@@ -692,6 +785,4 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     if L_M2q > 0 and np.isclose(L_M2q, 0):
         L_M2q = 0
     assert L_M2q <= 0, f"Kullback-Leibler divergence less than zero: {L_M2q}"
-    # TODO Performance: slogdet can be cached, is computed more than once
-    L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
     return L_M1q + L_M2q + L_M3q
