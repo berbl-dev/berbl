@@ -1,0 +1,118 @@
+import numpy as np  # type: ignore
+import scipy.special as ss  # type: ignore
+
+
+class Classifier():
+    # NOTE We drop the k subscript for brevity (i.e. we write W instead of
+    # W_k etc.).
+    def __init__(self,
+                 match,
+                 A_ALPHA=10**-2,
+                 B_ALPHA=10**-4,
+                 A_TAU=10**-2,
+                 B_TAU=10**-4,
+                 DELTA_S_L_K_Q=10**-4,
+                 MAX_ITER=20):
+        """
+        A local linear regression model (in LCS speak, a “linear regression
+        classifier”) based on the provided match function.
+
+        :param match: ``match.match`` is this classifier's match function.
+        :param A_ALPHA: Scale parameter of weight vector variance prior.
+        :param B_ALPHA: Shape parameter of weight vector variance prior.
+        :param A_TAU: Scale parameter of noise variance prior.
+        :param B_TAU: Shape parameter of noise variance prior.
+        :param DELTA_S_L_K_Q: Stopping criterion for variational update loop.
+        :param MAX_ITER: Only perform up to this many iterations of variational
+            updates (abort then, even if stopping criterion is not yet met).
+        """
+        self.match = match
+        self.A_ALPHA = A_ALPHA
+        self.B_ALPHA = B_ALPHA
+        self.A_TAU = A_TAU
+        self.B_TAU = B_TAU
+        self.DELTA_S_L_K_Q = DELTA_S_L_K_Q
+        self.MAX_ITER = MAX_ITER
+
+    def fit(self, X: np.ndarray, y: np.ndarray):
+        """
+        Fits this classifier to the provided data.
+        """
+
+        m = self.match.match(X)
+
+        # Augment X by a bias term. [PDF p. 113] assumes that input is always
+        # augmented with a single constant element. We simply enforce that here.
+        # X = add_intercept(X)
+        # TODO We expect data to be centered here like in
+        # https://github.com/scikit-learn/scikit-learn/blob/95119c13a/sklearn/linear_model/_base.py#L525
+        # .
+
+        N, D_X = X.shape
+        N, D_y = y.shape
+        X_ = X * np.sqrt(m)
+        y_ = y * np.sqrt(m)
+
+        self.a_alpha, self.b_alpha = self.A_ALPHA, self.B_ALPHA
+        self.a_tau, self.b_tau = self.A_TAU, self.B_TAU
+        self.L_q = -np.inf
+        delta_L_q = self.DELTA_S_L_K_Q + 1
+
+        # Since this is constant, there's no need to put it into the loop.
+        self.a_alpha = self.A_ALPHA + D_X * D_y / 2
+
+        iter = 0
+        while delta_L_q > self.DELTA_S_L_K_Q and iter < self.MAX_ITER:
+            iter += 1
+            # print(f"train_classifier: {delta_L_k_q} > {DELTA_S_L_K_Q}")
+            E_alpha_alpha = self.a_alpha / self.b_alpha
+            self.Lambda = np.diag([E_alpha_alpha] * D_X) + X_.T @ X_
+            # While, in theory, Lambda is always invertible here and we thus
+            # should be able to use inv (as it is described in the algorithm we
+            # implement), we (seldomly) get a singular matrix, probably due to
+            # numerical issues. Thus we simply use pinv which yields the same
+            # result as inv anyways if the matrix is in fact non-singular. Also,
+            # in his own code, Drugowitsch always uses pseudo inverse here.
+            self.Lambda_1 = np.linalg.pinv(self.Lambda)
+            self.W = y_.T @ X_ @ self.Lambda_1
+            self.a_tau = self.A_TAU + 0.5 * np.sum(m)
+            self.b_tau = self.B_TAU + 1 / (2 * D_y) * (
+                np.sum(y_ * y_) - np.sum(self.W * (self.W @ self.Lambda)))
+            E_tau_tau = self.a_tau / self.b_tau
+            # D_y factor in front of trace due to sum over D_y elements (7.100).
+            self.b_alpha = self.B_ALPHA + 0.5 * (E_tau_tau * np.sum(
+                self.W * self.W) + D_y * np.trace(self.Lambda_1))
+            L_q_prev = self.L_q
+            self.L_q = self.var_bound(
+                X=X,
+                y=y,
+                # Substitute r by m in order to train classifiers independently
+                # (see [PDF p. 219]).
+                r=m)
+            delta_L_q = self.L_q - L_q_prev
+            # “Each parameter update either increases L_q or leaves it unchanged
+            # (…). If this is not the case, then the implementation is faulty
+            # and/or suffers from numerical instabilities.” [PDF p. 237]
+            assert delta_L_q >= 0, f"delta_L_q = {delta_L_q} < 0"
+
+    def var_bound(self, X: np.ndarray, y: np.ndarray, r: np.ndarray):
+        D_y, D_X = self.W.shape
+        E_tau_tau = self.a_tau / self.b_tau
+        L_1_q = D_y / 2 * (ss.digamma(self.a_tau) - np.log(self.b_tau)
+                           - np.log(2 * np.pi)) * np.sum(r)
+        # We reshape r to a NumPy row vector since NumPy seems to understand
+        # what we want to do when we multiply two row vectors (i.e. a^T a).
+        L_2_q = (-0.5 * r).reshape((-1)) @ (E_tau_tau * np.sum(
+            (y - X @ self.W.T)**2, 1) + D_y * np.sum(X *
+                                                     (X @ self.Lambda_1), 1))
+        L_3_q = -ss.gammaln(self.A_ALPHA) + self.A_ALPHA * np.log(
+            self.B_ALPHA) + ss.gammaln(
+                self.a_alpha) - self.a_alpha * np.log(
+                    self.b_alpha) + D_X * D_y / 2 + D_y / 2 * np.log(
+                        np.linalg.det(self.Lambda_1))
+        L_4_q = D_y * (-ss.gammaln(self.A_TAU)
+                       + self.A_TAU * np.log(self.B_TAU) +
+                       (self.A_TAU - self.a_tau) * ss.digamma(self.a_tau)
+                       - self.A_TAU * np.log(self.b_tau) - self.B_TAU
+                       * E_tau_tau + ss.gammaln(self.a_tau) + self.a_tau)
+        return L_1_q + L_2_q + L_3_q + L_4_q
