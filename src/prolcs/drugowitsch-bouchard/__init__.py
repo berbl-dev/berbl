@@ -97,7 +97,7 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
         W[k], Lambda_1[k], a_tau[k], b_tau[k], a_alpha[k], b_alpha[
             k] = train_classifier(M[:, [k]], X, Y)
 
-    V, Lambda_V_1, a_be)a, b_beta = train_mixing(M=M,
+    V, Lambda_V_1, a_beta, b_beta = train_mixing(M=M,
                                                  X=X,
                                                  Y=Y,
                                                  Phi=Phi,
@@ -284,6 +284,7 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         # bound might decrease, so we're not checking and need to take the
         # abs()”. I guess with approximation he means the use of the Laplace
         # approximation (which may violate the lower bound nature of L_M_q).
+        # TODO Check whether the abs is necessary for Bouchard.
         delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
     return V, Lambda_V_1, a_beta, b_beta
 
