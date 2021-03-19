@@ -9,13 +9,14 @@ from .classifier import Classifier
 from .mixing import Mixing
 
 
-class Model():
+class Mixture():
     def __init__(self, matchs: List, phi=None, fit_intercept=False):
         """
-        A linear classifier–based solution based on the given model structure.
+        A model based on mixing linear classifiers using the given model
+        structure.
 
         :param matchs: A list of matching functions (i.e. objects implementing a
-            ``match`` attribute) defining the structure of this model.
+            ``match`` attribute) defining the structure of this mixture.
         :param phi: mixing feature extractor (N × D_X → N × D_V); if ``None``
             uses the default LCS mixing feature matrix based on ``phi(x) = 1``
         """
