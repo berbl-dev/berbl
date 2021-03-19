@@ -48,8 +48,8 @@ class Classifier():
         # https://github.com/scikit-learn/scikit-learn/blob/95119c13a/sklearn/linear_model/_base.py#L525
         # .
 
-        N, D_X = X.shape
-        N, D_y = y.shape
+        N, self.D_X = X.shape
+        N, self.D_y = y.shape
         X_ = X * np.sqrt(m)
         y_ = y * np.sqrt(m)
 
@@ -59,14 +59,14 @@ class Classifier():
         delta_L_q = self.DELTA_S_L_K_Q + 1
 
         # Since this is constant, there's no need to put it into the loop.
-        self.a_alpha = self.A_ALPHA + D_X * D_y / 2
+        self.a_alpha = self.A_ALPHA + self.D_X * self.D_y / 2
 
         iter = 0
         while delta_L_q > self.DELTA_S_L_K_Q and iter < self.MAX_ITER:
             iter += 1
             # print(f"train_classifier: {delta_L_k_q} > {DELTA_S_L_K_Q}")
             E_alpha_alpha = self.a_alpha / self.b_alpha
-            self.Lambda = np.diag([E_alpha_alpha] * D_X) + X_.T @ X_
+            self.Lambda = np.diag([E_alpha_alpha] * self.D_X) + X_.T @ X_
             # While, in theory, Lambda is always invertible here and we thus
             # should be able to use inv (as it is described in the algorithm we
             # implement), we (seldomly) get a singular matrix, probably due to
@@ -76,18 +76,19 @@ class Classifier():
             self.Lambda_1 = np.linalg.pinv(self.Lambda)
             self.W = y_.T @ X_ @ self.Lambda_1
             self.a_tau = self.A_TAU + 0.5 * np.sum(m)
-            self.b_tau = self.B_TAU + 1 / (2 * D_y) * (
+            self.b_tau = self.B_TAU + 1 / (2 * self.D_y) * (
                 np.sum(y_ * y_) - np.sum(self.W * (self.W @ self.Lambda)))
             E_tau_tau = self.a_tau / self.b_tau
             # D_y factor in front of trace due to sum over D_y elements (7.100).
             self.b_alpha = self.B_ALPHA + 0.5 * (E_tau_tau * np.sum(
-                self.W * self.W) + D_y * np.trace(self.Lambda_1))
+                self.W * self.W) + self.D_y * np.trace(self.Lambda_1))
             L_q_prev = self.L_q
             self.L_q = self.var_bound(
                 X=X,
                 y=y,
                 # Substitute r by m in order to train classifiers independently
-                # (see [PDF p. 219]).
+                # (see [PDF p. 219]). After having trained the mixing model
+                # we finally evaluate the classifier using r=R[:,[k]] though.
                 r=m)
             delta_L_q = self.L_q - L_q_prev
             # “Each parameter update either increases L_q or leaves it unchanged
@@ -96,23 +97,21 @@ class Classifier():
             assert delta_L_q >= 0, f"delta_L_q = {delta_L_q} < 0"
 
     def var_bound(self, X: np.ndarray, y: np.ndarray, r: np.ndarray):
-        D_y, D_X = self.W.shape
         E_tau_tau = self.a_tau / self.b_tau
-        L_1_q = D_y / 2 * (ss.digamma(self.a_tau) - np.log(self.b_tau)
-                           - np.log(2 * np.pi)) * np.sum(r)
+        L_1_q = self.D_y / 2 * (ss.digamma(self.a_tau) - np.log(self.b_tau)
+                                - np.log(2 * np.pi)) * np.sum(r)
         # We reshape r to a NumPy row vector since NumPy seems to understand
         # what we want to do when we multiply two row vectors (i.e. a^T a).
-        L_2_q = (-0.5 * r).reshape((-1)) @ (E_tau_tau * np.sum(
-            (y - X @ self.W.T)**2, 1) + D_y * np.sum(X *
-                                                     (X @ self.Lambda_1), 1))
+        L_2_q = (-0.5 * r).reshape(
+            (-1)) @ (E_tau_tau * np.sum((y - X @ self.W.T)**2, 1)
+                     + self.D_y * np.sum(X * (X @ self.Lambda_1), 1))
         L_3_q = -ss.gammaln(self.A_ALPHA) + self.A_ALPHA * np.log(
-            self.B_ALPHA) + ss.gammaln(
-                self.a_alpha) - self.a_alpha * np.log(
-                    self.b_alpha) + D_X * D_y / 2 + D_y / 2 * np.log(
-                        np.linalg.det(self.Lambda_1))
-        L_4_q = D_y * (-ss.gammaln(self.A_TAU)
-                       + self.A_TAU * np.log(self.B_TAU) +
-                       (self.A_TAU - self.a_tau) * ss.digamma(self.a_tau)
-                       - self.A_TAU * np.log(self.b_tau) - self.B_TAU
-                       * E_tau_tau + ss.gammaln(self.a_tau) + self.a_tau)
+            self.B_ALPHA) + ss.gammaln(self.a_alpha) - self.a_alpha * np.log(
+                self.b_alpha) + self.D_X * self.D_y / 2 + self.D_y / 2 * np.log(
+                    np.linalg.det(self.Lambda_1))
+        L_4_q = self.D_y * (
+            -ss.gammaln(self.A_TAU) + self.A_TAU * np.log(self.B_TAU) +
+            (self.A_TAU - self.a_tau) * ss.digamma(self.a_tau)
+            - self.A_TAU * np.log(self.b_tau) - self.B_TAU * E_tau_tau
+            + ss.gammaln(self.a_tau) + self.a_tau)
         return L_1_q + L_2_q + L_3_q + L_4_q
