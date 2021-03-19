@@ -10,7 +10,7 @@ class Mixing():
     def __init__(
             self,
             classifiers,
-            phi=None,
+            phi,
             A_BETA=10**-2,
             B_BETA=10**-4,
             DELTA_S_L_M_Q=10**-2,
@@ -36,8 +36,10 @@ class Mixing():
             default dtype.
         """
 
-        self.classifiers = classifiers
-        self.phi = phi
+        # The set of classifiers is constant here.
+        self.CLS = classifiers
+        # … as is phi.
+        self.PHI = phi
         self.A_BETA = A_BETA
         self.B_BETA = B_BETA
         self.DELTA_S_L_M_Q = DELTA_S_L_M_Q
@@ -50,12 +52,12 @@ class Mixing():
         # I'm not sure how much this gains us).
         # TODO Check gain of not using check_random_state here
 
-        if self.phi is None:
+        if self.PHI is None:
             Phi = np.ones((len(X), 1))
         else:
             raise NotImplementedError("phi is not None in Mixing")
 
-        M = matching_matrix([cl.match for cl in self.classifiers], X)
+        M = matching_matrix([cl.match for cl in self.CLS], X)
 
         _, self.K = M.shape
         _, self.D_X = X.shape
@@ -250,7 +252,7 @@ class Mixing():
         # transpose before multiplying elementwise with G.
         R_T = np.zeros((self.K, N))
         for k in range(self.K):
-            cl = self.classifiers[k]
+            cl = self.CLS[k]
             R_T[k] = np.exp(D_y / 2 * (ss.digamma(cl.a_tau) - np.log(cl.b_tau))
                             - 0.5 * (cl.a_tau / cl.b_tau * np.sum(
                                 (y - X @ cl.W.T)**2, 1)
