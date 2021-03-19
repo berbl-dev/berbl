@@ -96,6 +96,34 @@ class Classifier():
             # and/or suffers from numerical instabilities.” [PDF p. 237]
             assert delta_L_q >= 0, f"delta_L_q = {delta_L_q} < 0"
 
+    def predict(self, X):
+        """
+        This model's mean at the given positions; may serve as a prediction.
+
+        :param X: input vector (N × D_X)
+
+        :returns: mean output vector (N × D_y)
+        """
+        return X @ self.W
+
+    def predict_var(self, X):
+        """
+        This model's variance at the given positions; may serve as some kind of
+        confidence for the prediction.
+
+        The model currently assumes the same variance in all dimensions; thus
+        the same value is repeated for each dimension.
+
+        :param X: input vector (N × D_X)
+
+        :returns: variance vector (N × D_y)
+        """
+        # TODO Check whether this is correct
+        # The sum corresponds to x @ self.Lambda_1 @ x for each x in X.
+        var = 2 * self.b_tau / (self.a_tau
+                                - 1) * (1 + np.sum(X * X @ self.Lambda_1, 1))
+        return var.reshape((len(X), self.D_y)).repeat(self.D_y, axis=1)
+
     def var_bound(self, X: np.ndarray, y: np.ndarray, r: np.ndarray):
         E_tau_tau = self.a_tau / self.b_tau
         L_1_q = self.D_y / 2 * (ss.digamma(self.a_tau) - np.log(self.b_tau)
