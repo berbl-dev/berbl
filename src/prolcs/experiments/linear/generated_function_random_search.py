@@ -38,12 +38,11 @@ def run_experiment(n_iter, seed, show, sample_size):
         X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
         _, y_denoised = generate(1000, noise=False, X=X_denoised)
 
-        best_p_M_D = -np.inf
         best_model = None
         # NOTE I'm noticing that only very few classifiers are descending …
         for i in range(n_iter):
             print(f"Training random model {i}, "
-                  f"current best has ln p(M | D) = {best_p_M_D}")
+                  f"current best has ln p(M | D) = {best_model.p_M_D:.2}")
             K = 5
             ranges = np.array((X.min(), X.max()))
             matchs = [
@@ -53,9 +52,10 @@ def run_experiment(n_iter, seed, show, sample_size):
             model = Mixture(matchs)
             model.fit(X_augmented, y, random_state=random_state)
 
-            if model.p_M_D > best_p_M_D:
-                best_p_M_D = model.p_M_D
+            if model.p_M_D > best_model.p_M_D:
                 best_model = model
+
+            log_("p_M_D", best_model.p_M_D, n_iter)
 
         model = best_model
 
@@ -68,8 +68,8 @@ def run_experiment(n_iter, seed, show, sample_size):
 
         mse = metrics.mean_squared_error(y_test_true, y_test)
         r2 = metrics.r2_score(y_test_true, y_test)
-        log_("elitist.mse", mse, n_iter)
-        log_("elitist.r2-score", r2, n_iter)
+        log_("mse", mse, n_iter)
+        log_("r2-score", r2, n_iter)
 
         fig, ax = plt.subplots()
 
