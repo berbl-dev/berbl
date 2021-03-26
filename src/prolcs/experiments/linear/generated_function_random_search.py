@@ -41,8 +41,6 @@ def run_experiment(n_iter, seed, show, sample_size):
         best_model = None
         # NOTE I'm noticing that only very few classifiers are descending …
         for i in range(n_iter):
-            print(f"Training random model {i}, "
-                  f"current best has ln p(M | D) = {best_model.p_M_D:.2}")
             K = 5
             ranges = np.array((X.min(), X.max()))
             matchs = [
@@ -52,10 +50,13 @@ def run_experiment(n_iter, seed, show, sample_size):
             model = Mixture(matchs)
             model.fit(X_augmented, y, random_state=random_state)
 
-            if  best_model is None or model.p_M_D > best_model.p_M_D:
+            if best_model is None or model.p_M_D > best_model.p_M_D:
                 best_model = model
 
             log_("p_M_D", best_model.p_M_D, n_iter)
+
+            print(f"Trained random model {i}, "
+                  f"current best has ln p(M | D) = {best_model.p_M_D:.2}")
 
         model = best_model
 
