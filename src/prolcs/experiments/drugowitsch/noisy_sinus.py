@@ -45,7 +45,7 @@ def run_experiment(n_iter, seed, show, sample_size):
     import matplotlib.pyplot as plt
     import mlflow
 
-    mlflow.set_experiment("noisy_sinus")
+    mlflow.set_experiment("drugowitsch-noisy_sinus")
     with mlflow.start_run() as run:
         mlflow.log_params(HParams().__dict__)
         mlflow.log_param("seed", seed)

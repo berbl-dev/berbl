@@ -24,7 +24,7 @@ def run_experiment(n_iter, seed, show, sample_size):
     import matplotlib.pyplot as plt
     import mlflow
 
-    mlflow.set_experiment("generated_function")
+    mlflow.set_experiment("linear-generated_function")
     with mlflow.start_run() as run:
         mlflow.log_param("seed", seed)
         mlflow.log_param("train.size", sample_size)
