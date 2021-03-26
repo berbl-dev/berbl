@@ -40,7 +40,7 @@ def run_experiment(n_iter, seed, show, sample_size):
 
         best_model = None
         # NOTE I'm noticing that only very few classifiers are descending …
-        for i in range(n_iter):
+        for iter in range(n_iter):
             K = 5
             ranges = np.array((X.min(), X.max()))
             matchs = [
@@ -53,9 +53,9 @@ def run_experiment(n_iter, seed, show, sample_size):
             if best_model is None or model.p_M_D > best_model.p_M_D:
                 best_model = model
 
-            log_("p_M_D", best_model.p_M_D, n_iter)
+            log_("p_M_D", best_model.p_M_D, iter)
 
-            print(f"Trained random model {i}, "
+            print(f"Trained random model {iter}, "
                   f"current best has ln p(M | D) = {best_model.p_M_D:.2}")
 
         model = best_model
