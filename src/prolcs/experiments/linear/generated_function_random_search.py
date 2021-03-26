@@ -52,7 +52,7 @@ def run_experiment(n_iter, seed, show, sample_size):
             model = Mixture(matchs)
             model.fit(X_augmented, y, random_state=random_state)
 
-            if model.p_M_D > best_model.p_M_D:
+            if  best_model is None or model.p_M_D > best_model.p_M_D:
                 best_model = model
 
             log_("p_M_D", best_model.p_M_D, n_iter)
