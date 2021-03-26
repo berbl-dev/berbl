@@ -22,22 +22,19 @@ class Mixture():
         """
         self.matchs = matchs
         self.phi = phi
-        self.fit_intercept = fit_intercept
-
-        # TODO Implement this if necessary (we assume standardized data for now)
-        # See, for example, https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/linear_model/_base.py#L104
-        if fit_intercept:
-            raise NotImplementedError("fit_intercept not yet supported")
-
         self.K = len(matchs)
 
     def fit(self, X: np.ndarray, y: np.ndarray, random_state=0):
         """
         Fits this model to the provided data.
 
+        Note that unless ``X`` contains a bias column (e.g. a column of ones),
+        the individual classifiers do not fit the intercept.
+
         :param X: input matrix (N × D_X)
         :param y: output matrix (N × D_y)
         """
+        # TODO Use NumPy style of param dimension descriptions
 
         check_consistent_length(X, y)
 
@@ -75,6 +72,7 @@ class Mixture():
         self.p_M_D = self.L_q + self.ln_p_M
 
     def predict(self, X):
+
         return self.predict_mean_var(X)[0]
 
     def predict_mean_var(self, X):
@@ -147,6 +145,7 @@ class Mixture():
         :returns: mean output vectors of each classifier (K × N × D_y)
         """
         N = len(X)
+
         y = np.zeros((self.K, N, self.D_y))
         for k in range(self.K):
             y[k] = self.classifiers[k].predict(X)

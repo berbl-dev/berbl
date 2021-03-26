@@ -41,13 +41,6 @@ class Classifier():
 
         m = self.match.match(X)
 
-        # Augment X by a bias term. [PDF p. 113] assumes that input is always
-        # augmented with a single constant element. We simply enforce that here.
-        # X = add_intercept(X)
-        # TODO We expect data to be centered here like in
-        # https://github.com/scikit-learn/scikit-learn/blob/95119c13a/sklearn/linear_model/_base.py#L525
-        # .
-
         N, self.D_X = X.shape
         N, self.D_y = y.shape
         X_ = X * np.sqrt(m)
