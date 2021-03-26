@@ -50,9 +50,6 @@ class RadialMatch1D():
     def sigma_2(self):
         return 10**(-self.b / 10)
 
-    def __repr__(self):
-        return f"RadialMatch1D({self.mu}, {self.sigma}, {self.ranges})"
-
     @classmethod
     def random(cls, ranges: Tuple[float, float],
                random_state: np.random.RandomState):
