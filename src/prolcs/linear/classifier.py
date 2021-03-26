@@ -104,7 +104,7 @@ class Classifier():
 
         :returns: mean output vector (N × D_y)
         """
-        return X @ self.W
+        return X @ self.W.T
 
     def predict_var(self, X):
         """
