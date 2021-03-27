@@ -157,24 +157,19 @@ class Mixing():
         E_beta_beta = a_beta / b_beta
 
         Lambda_V_1 = [np.zeros((self.D_V, self.D_V))] * self.K
-        Lambda_V_1_ = [np.zeros((self.D_V, self.D_V))] * self.K
 
+        Rlxi = R * lxi
         for k in range(self.K):
-            # TODO Performance: This can be vectorized, e.g.
-            # https://gregorygundersen.com/blog/2020/07/17/matmul/
-            # Lambda_V_1[k] = (R[:, [k]] * Phi) @ Phi.T
-            for n in range(N):
-                Lambda_V_1[k] += R[n][k] * lxi[n][k] * np.outer(Phi[n], Phi[n])
-
-            # TODO Performance: Put this and the above assignment together.
-            Lambda_V_1[k] *= 2
-            Lambda_V_1[k] = Lambda_V_1[k] + E_beta_beta[k] * np.identity(
-                Lambda_V_1[k].shape[0])
+            Lambda_V_1[k] = 2 * (Rlxi[:, [k]].T
+                                 * Phi.T) @ Phi + E_beta_beta[k] * np.identity(
+                                     Lambda_V_1[k].shape[0])
 
             t = R[:, [k]] * (1 / 2 - 2 * np.log(M[:, [k]]) * lxi[:, [k]]
                              + alpha * lxi[:, [k]])
             V[:, [k]] = np.linalg.pinv(Lambda_V_1[k]) @ Phi.T @ t
 
+        # NOTE Doing this in-place instead of returning values doesn't seem to
+        # result in a significant speedup.
         return V, Lambda_V_1
 
     def _opt_bouchard(self, M: np.ndarray, Phi: np.ndarray, V, alpha, lxi):
