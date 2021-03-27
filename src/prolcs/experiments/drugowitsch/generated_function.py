@@ -117,7 +117,7 @@ def run_experiment(n_iter, seed, show, sample_size):
         log_("algorithm.oscillations.count", State().oscillation_count, n_iter)
 
         # store the model, you never know when you need it
-        model_file = f"Model {seed}.joblib"
+        model_file = f"models/Model {seed}.joblib"
         jl.dump(estimator, model_file)
         mlflow.log_artifact(model_file)
 
