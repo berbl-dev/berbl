@@ -6,7 +6,7 @@ import scipy.special as ss  # type: ignore
 from ..common import matching_matrix
 
 
-class Mixing():
+class Mixing:
     def __init__(
             self,
             classifiers,
@@ -17,6 +17,7 @@ class Mixing():
             MAX_ITER=40,
             EXP_MIN=np.log(np.finfo(None).tiny),
             LN_MAX=np.log(np.finfo(None).max),
+            **kwargs
     ):
         """
         :param classifiers: List of classifier models (which are held fixed
@@ -34,6 +35,10 @@ class Mixing():
         :param ln_max: ``ln(x)``, where ``x`` is the highest real number on the
             system. The default is the logarithm of the highest number of the
             default dtype.
+        :param **kwargs: This is here so that we don't need to repeat all the
+            hyperparameters in ``Mixture``, ``RandomSearch`` etc. ``Mixture``
+            simply passes through ``**kwargs`` to both ``Mixing`` and
+            ``Classifier``.
         """
 
         # The set of classifiers is constant here.

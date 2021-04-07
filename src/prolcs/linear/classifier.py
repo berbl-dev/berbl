@@ -12,7 +12,8 @@ class Classifier():
                  A_TAU=10**-2,
                  B_TAU=10**-4,
                  DELTA_S_L_K_Q=10**-4,
-                 MAX_ITER=20):
+                 MAX_ITER=20,
+                 **kwargs):
         """
         A local linear regression model (in LCS speak, a “linear regression
         classifier”) based on the provided match function.
@@ -25,6 +26,10 @@ class Classifier():
         :param DELTA_S_L_K_Q: Stopping criterion for variational update loop.
         :param MAX_ITER: Only perform up to this many iterations of variational
             updates (abort then, even if stopping criterion is not yet met).
+        :param **kwargs: This is here so that we don't need to repeat all the
+            hyperparameters in ``Mixture``, ``RandomSearch`` etc. ``Mixture``
+            simply passes through ``**kwargs`` to both ``Mixing`` and
+            ``Classifier``.
         """
         self.match = match
         self.A_ALPHA = A_ALPHA

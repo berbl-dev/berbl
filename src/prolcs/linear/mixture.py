@@ -7,24 +7,61 @@ from sklearn.utils import check_random_state  # type: ignore
 from ..common import matching_matrix
 from .classifier import Classifier
 from .mixing import Mixing
+from .mixing_laplace import MixingLaplace
+from ..radialmatch1d import RadialMatch1D
 
 
 class Mixture():
-    def __init__(self, matchs: List, phi=None, fit_intercept=False):
+    def __init__(self,
+                 n_cls=10,
+                 cl_class=RadialMatch1D,
+                 ranges=None,
+                 random_state=None,
+                 matchs: List = None,
+                 phi=None,
+                 fit_mixing="bouchard",
+                 **kwargs):
         """
         A model based on mixing linear classifiers using the given model
         structure.
 
+        :param n_cls: Generate ``n_cls`` many random classifiers (using
+            ``random_state``) with class ``cl_class``. If ``n_cls`` is given,
+            ``matchs`` must be ``None``.
+        :param cl_class: See ``n_cls``.
+        :param random_state: See ``n_cls``.
         :param matchs: A list of matching functions (i.e. objects implementing a
-            ``match`` attribute) defining the structure of this mixture.
+            ``match`` attribute) defining the structure of this mixture. If
+            given, ``n_cls`` and ``cl_class`` are not used to generate
+            classifiers randomly.
         :param phi: mixing feature extractor (N × D_X → N × D_V); if ``None``
             uses the default LCS mixing feature matrix based on ``phi(x) = 1``
+        :param fit_mixing: either of "bouchard" or "laplace"
+        :param **kwargs: This is passed through unchanged to both ``Mixing`` and
+            ``Classifier``.
         """
-        self.matchs = matchs
+        if matchs is None and n_cls is not None and cl_class is not None:
+            self.K = n_cls
+            self.matchs = self.random_matchs(self.K, cl_class, ranges,
+                                             random_state)
+        elif matchs is not None:
+            self.matchs = matchs
+            self.K = len(matchs)
+        else:
+            raise ValueError(
+                f"If matchs isn't given, must provide at least n_cls, cl_class "
+                f"and ranges and these are {n_cls}, {cl_class} and {ranges}")
         self.phi = phi
-        self.K = len(matchs)
+        self.fit_mixing = fit_mixing
+        self.__kwargs = kwargs
 
-    def fit(self, X: np.ndarray, y: np.ndarray, random_state=0):
+    def random_matchs(self, K, cl_class, ranges, random_state):
+        return [
+            cl_class.random(ranges, random_state=random_state)
+            for i in range(K)
+        ]
+
+    def fit(self, X: np.ndarray, y: np.ndarray, random_state=None):
         """
         Fits this model to the provided data.
 
@@ -46,14 +83,21 @@ class Mixture():
         # Train classifiers.
         #
         # “When fit is called, any previous call to fit should be ignored.”
-        self.classifiers = list(map(lambda m: Classifier(m), self.matchs))
+        self.classifiers = list(
+            map(lambda m: Classifier(m, **self.__kwargs), self.matchs))
         for k in range(self.K):
             self.classifiers[k].fit(X, y)
 
         # Train mixing model.
         #
         # “When fit is called, any previous call to fit should be ignored.”
-        self.mixing = Mixing(self.classifiers, self.phi)
+        if self.fit_mixing == "bouchard":
+            self.mixing = Mixing(classifiers=self.classifiers,
+                                 phi=self.phi,
+                                 **self.__kwargs)
+        else:
+            raise NotImplementedError(
+                "Only 'bouchard' and 'laplace' supported for fit_mixing")
         self.mixing.fit(X, y, random_state=random_state)
 
         # We need to recalculate the classifiers' here because we now have

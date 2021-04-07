@@ -1,7 +1,8 @@
 from typing import *
 
 import numpy as np  # type: ignore
-import scipy.special as ss  # type: ignore
+import scipy.special  # type: ignore
+from sklearn.utils import check_random_state  # type: ignore
 
 
 class RadialMatch1D():
@@ -61,6 +62,7 @@ class RadialMatch1D():
 
         :param ranges: The input values' range
         """
+        random_state = check_random_state(random_state)
         return RadialMatch1D(a=random_state.uniform(0, 100),
                              b=random_state.uniform(0, 50),
                              ranges=ranges)
