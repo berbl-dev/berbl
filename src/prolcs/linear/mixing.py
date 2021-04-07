@@ -7,18 +7,16 @@ from ..common import matching_matrix
 
 
 class Mixing:
-    def __init__(
-            self,
-            classifiers,
-            phi,
-            A_BETA=10**-2,
-            B_BETA=10**-4,
-            DELTA_S_L_M_Q=10**-2,
-            MAX_ITER=40,
-            EXP_MIN=np.log(np.finfo(None).tiny),
-            LN_MAX=np.log(np.finfo(None).max),
-            **kwargs
-    ):
+    def __init__(self,
+                 classifiers,
+                 phi,
+                 A_BETA=10**-2,
+                 B_BETA=10**-4,
+                 DELTA_S_L_M_Q=10**-2,
+                 MAX_ITER=40,
+                 EXP_MIN=np.log(np.finfo(None).tiny),
+                 LN_MAX=np.log(np.finfo(None).max),
+                 **kwargs):
         """
         :param classifiers: List of classifier models (which are held fixed
             during mixing training).
@@ -29,10 +27,10 @@ class Mixing:
         :param DELTA_S_L_M_Q: Stopping criterion for variational update loop.
         :param MAX_ITER: Only perform up to this many iterations of variational
             updates (abort then, even if stopping criterion is not yet met).
-        :param exp_min: Lowest real number ``x`` on system such that ``exp(x) >
+        :param EXP_MIN: Lowest real number ``x`` on system such that ``exp(x) >
             0``. The default is the logarithm of the smallest positive number of
             the default dtype (as of 2020-10-06, this dtype is float64).
-        :param ln_max: ``ln(x)``, where ``x`` is the highest real number on the
+        :param LN_MAX: ``ln(x)``, where ``x`` is the highest real number on the
             system. The default is the logarithm of the highest number of the
             default dtype.
         :param **kwargs: This is here so that we don't need to repeat all the
@@ -313,9 +311,7 @@ class Mixing:
         # loop in the calling function
         L_M3q = self.K * self.D_V
         for k in range(self.K):
-            # NOTE this is just the negated form of the update two lines prior?
-            L_M1q = L_M1q + ss.gammaln(
-                a_beta[k]) - a_beta[k] * np.log(b_beta[k])
+            L_M1q += ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
             # TODO Vectorize or at least get rid of for loop
             # TODO Maybe cache determinant
             if Lambda_V_1[k].shape == (1, ):
