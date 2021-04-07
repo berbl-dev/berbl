@@ -95,6 +95,10 @@ class Mixture():
             self.mixing = Mixing(classifiers=self.classifiers,
                                  phi=self.phi,
                                  **self.__kwargs)
+        elif self.fit_mixing == "laplace":
+            self.mixing = MixingLaplace(classifiers=self.classifiers,
+                                        phi=self.phi,
+                                        **self.__kwargs)
         else:
             raise NotImplementedError(
                 "Only 'bouchard' and 'laplace' supported for fit_mixing")
