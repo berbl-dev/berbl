@@ -50,6 +50,9 @@ class RadialMatch1D():
             self.b = b
         elif b is None and sigma_2 is not None:
             self.b = -10 * np.log10(sigma_2)
+            if not (0 <= self.b <= 50):
+                raise ValueError(
+                    "sigma_2 is too small (i.e. probably too close to zero)")
         else:
             raise ValueError("Exactly one of b and sigma_2 has to be given")
 
@@ -109,9 +112,10 @@ class RadialMatch1D():
         # returns a value larger than 1 (it's a probability, after all), meaning
         # that m should not be larger than 0.
         m_min = np.log(np.finfo(None).tiny)
-        # TODO The maximum negative number might be different than simply the
-        # negation of the minimum positive number.
         m_max = 0
+        # NOTE If ``self.sigma_2()`` is very close to 0 then the next line may
+        # result in ``nan`` due to ``-inf * 0 = nan``. However, if we use ``b``
+        # to set ``self.sigma_2()`` this problem will not occur.
         m = np.clip(-0.5 / self.sigma_2() * (X - self.mu())**2, m_min, m_max)
         return np.exp(m)
 
