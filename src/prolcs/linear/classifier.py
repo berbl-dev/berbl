@@ -89,10 +89,6 @@ class Classifier():
                 # we finally evaluate the classifier using r=R[:,[k]] though.
                 r=m)
             delta_L_q = self.L_q - L_q_prev
-            # “Each parameter update either increases L_q or leaves it unchanged
-            # (…). If this is not the case, then the implementation is faulty
-            # and/or suffers from numerical instabilities.” [PDF p. 237]
-            assert delta_L_q >= 0, f"delta_L_q = {delta_L_q} < 0"
 
         return self
 
