@@ -7,6 +7,7 @@ from sklearn.utils import check_random_state  # type: ignore
 
 class RadialMatch1D():
     def __init__(self,
+                 *,
                  a: float = None,
                  b: float = None,
                  mu: float = None,
@@ -14,17 +15,23 @@ class RadialMatch1D():
                  ranges: Tuple[float, float] = (-np.inf, np.inf),
                  has_bias_column=True):
         """
-        Exactly one of ``a`` and ``mu`` has to be given (the other one can be
-        inferred); the same goes for ``b`` and ``sigma_2``.
+        ``self.match`` is a radial basis function–based matching function as
+        defined in Drugowitsch's book [PDF p. 256].
 
         :param a: Evolving parameter from which the position of the Gaussian is
-            inferred.
+            inferred (``0 <= a <= 100``). [PDF p. 256]
+
+            Exactly one of ``a`` and ``mu`` has to be given (the other one can
+            be inferred); the same goes for ``b`` and ``sigma_2``.
         :param b: Evolving parameter from which the standard deviation of the
-            Gaussian is inferred.
-        :param mu: Position of the Gaussian.
-        :param sigma_2: Standard deviation.
+            Gaussian is inferred (``0 <= b <= 50``). See ``a``.
+        :param mu: Position of the Gaussian. See ``a``.
+        :param sigma_2: Standard deviation. See ``a``.
         :param ranges: The value range of the problem considered. If ``None``,
             use ``(-inf, inf)``.
+        :param has_bias_column: Whether to expect 2D data where we always match
+            the first dimension (e.g. because it is all ones as a bias to
+            implicitly fit the intercept).
         """
         self.ranges = ranges
         self.has_bias_column = has_bias_column
@@ -46,15 +53,17 @@ class RadialMatch1D():
         else:
             raise ValueError("Exactly one of b and sigma_2 has to be given")
 
+    def __repr__(self):
+        return (
+            f"RadialMatch1D(mu={self.mu()},sigma_2={self.sigma_2()},"
+            f"ranges={self.ranges},has_bias_column={self.has_bias_column})")
+
     def mu(self):
         l, u = self.ranges
         return l + (u - l) * self.a / 100
 
     def sigma_2(self):
         return 10**(-self.b / 10)
-
-    def __repr__(self):
-        return f"RadialMatch1D({self.mu}, {self.sigma}, {self.ranges})"
 
     @classmethod
     def random(cls, ranges: Tuple[float, float],
