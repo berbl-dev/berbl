@@ -26,6 +26,8 @@ class RandomSearch:
 
         self.mixture = mixture
 
+        return self
+
     def predict(self, X):
         return self.mixture.predict(X)
 

@@ -119,6 +119,8 @@ class Mixture():
             self.K)))  # (7.3), i.e. p_M \propto 1/K
         self.p_M_D = self.L_q + self.ln_p_M
 
+        return self
+
     def predict(self, X):
 
         return self.predict_mean_var(X)[0]

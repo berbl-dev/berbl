@@ -94,6 +94,8 @@ class Classifier():
             # and/or suffers from numerical instabilities.” [PDF p. 237]
             assert delta_L_q >= 0, f"delta_L_q = {delta_L_q} < 0"
 
+        return self
+
     def predict(self, X):
         """
         This model's mean at the given positions; may serve as a prediction.

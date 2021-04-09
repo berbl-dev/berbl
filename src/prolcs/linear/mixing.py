@@ -137,6 +137,8 @@ class Mixing:
             # if self.L_M_q < L_M_q_prev:
             #     print(f"self.L_M_q < L_M_q_prev: {self.L_M_q} < {L_M_q_prev}")
 
+        return self
+
     def _train_mix_weights(self, M, X, y, Phi, R, V, a_beta, b_beta, lxi,
                            alpha):
         """
