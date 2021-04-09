@@ -11,7 +11,8 @@ class RadialMatch1D():
                  b: float = None,
                  mu: float = None,
                  sigma_2: float = None,
-                 ranges: Tuple[float, float] = (-np.inf, np.inf)):
+                 ranges: Tuple[float, float] = (-np.inf, np.inf),
+                 has_bias_column=True):
         """
         Exactly one of ``a`` and ``mu`` has to be given (the other one can be
         inferred); the same goes for ``b`` and ``sigma_2``.
@@ -26,6 +27,7 @@ class RadialMatch1D():
             use ``(-inf, inf)``.
         """
         self.ranges = ranges
+        self.has_bias_column = has_bias_column
 
         if a is not None and mu is None:
             self.a = a
@@ -75,7 +77,7 @@ class RadialMatch1D():
         self.b = np.clip(random_state.normal(loc=self.b, scale=5), 0, 50)
         return self
 
-    def match(self, X: np.ndarray, has_bias_column=True):
+    def match(self, X: np.ndarray):
         """
         We vectorize the following (i.e. feed the whole input through at once)::
 
@@ -83,15 +85,13 @@ class RadialMatch1D():
                 M[n] = np.exp(-0.5 / sigma_2 * (x - mu)**2)
 
         :param X: input matrix ``(N × D_X)`` with ``D_X == 1``
-        :param has_bias_column: Whether to expect 2D data where we always match
-            the first dimension (e.g. because it is all ones as a bias to
-            implicitly fit the intercept).
         :returns: matching vector ``(N)`` of this matching function (i.e. of
             this classifier)
         """
 
-        if has_bias_column:
-            assert X.shape[1] == 2, f"X should have shape 2 but has {X.shape[1]}"
+        if self.has_bias_column:
+            assert X.shape[
+                1] == 2, f"X should have shape 2 but has {X.shape[1]}"
             X = X.T[1:].T
 
         # We have to clip this so we don't return 0 here (0 should never be
