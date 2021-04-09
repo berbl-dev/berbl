@@ -33,7 +33,7 @@ def get_ranges(X: np.ndarray):
 
 
 
-def add_intercept(X: np.ndarray):
+def add_bias(X: np.ndarray):
     """
     Prefixes each input vector (i.e. row) in the given input matrix with 1 for
     fitting the intercept.

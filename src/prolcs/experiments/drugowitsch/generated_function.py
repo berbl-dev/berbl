@@ -12,7 +12,7 @@ from prolcs.drugowitsch.state import State
 from prolcs.logging import log_
 from prolcs.drugowitsch.init import make_init
 from prolcs.drugowitsch.radialmatch1d import RadialMatch1D
-from prolcs.utils import add_intercept
+from prolcs.utils import add_bias
 from sklearn.utils import check_random_state  # type: ignore
 
 from sklearn import metrics  # type: ignore
@@ -66,7 +66,7 @@ def generate(n: int = 300,
 
     # After matching, augment samples by prepending 1 to enable non-zero
     # intercepts.
-    X_ = add_intercept(X)
+    X_ = add_bias(X)
     Y = np.zeros(X.shape)
     for n in range(len(X)):
         y = 0

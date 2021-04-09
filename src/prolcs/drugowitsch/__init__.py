@@ -41,7 +41,7 @@ import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
 
-from ..utils import add_intercept
+from ..utils import add_bias
 from .hyperparams import HParams
 from .model import Model
 from .state import State
@@ -85,7 +85,7 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
 
     # Augment X by a bias term. [PDF p. 113] assumes that input is always
     # augmented with a single constant element. We simply enforce that here.
-    X = add_intercept(X)
+    X = add_bias(X)
 
     W = [None] * K
     Lambda_1 = [None] * K

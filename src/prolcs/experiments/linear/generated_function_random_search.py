@@ -8,7 +8,7 @@ from prolcs.linear.mixture import Mixture
 from prolcs.logging import log_
 from sklearn import metrics  # type: ignore
 from sklearn.preprocessing import StandardScaler
-from prolcs.utils import add_intercept
+from prolcs.utils import add_bias
 
 np.seterr(all="warn")
 
@@ -32,7 +32,7 @@ def run_experiment(n_iter, seed, show, sample_size):
         random_state = np.random.RandomState(seed)
 
         X, y = generate(sample_size)
-        X_augmented = add_intercept(X)
+        X_augmented = add_bias(X)
 
         # generate denoised data as well (for visual reference)
         X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
@@ -62,7 +62,7 @@ def run_experiment(n_iter, seed, show, sample_size):
 
         # generate test data
         X_test, y_test_true = generate(1000, random_state=12345)
-        X_test_augmented = add_intercept(X_test)
+        X_test_augmented = add_bias(X_test)
 
         # make predictions for test data
         y_test, var = model.predict_mean_var(X_test_augmented)
