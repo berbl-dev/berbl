@@ -19,6 +19,12 @@ class Classifier():
         classifier”) based on the provided match function.
 
         :param match: ``match.match`` is this classifier's match function.
+            According to Drugowitsch's framework (or mixture of experts), each
+            classifier should get assigned a responsibility for each data point.
+            However, in order to be able to train the classifiers independently,
+            that responsibility (which depends on the matching function but
+            also on the other classifiers' responsibilities) is replaced with
+            the matching function.
         :param A_ALPHA: Scale parameter of weight vector variance prior.
         :param B_ALPHA: Shape parameter of weight vector variance prior.
         :param A_TAU: Scale parameter of noise variance prior.
@@ -73,6 +79,7 @@ class Classifier():
             # in his own code, Drugowitsch always uses pseudo inverse here.
             self.Lambda_1 = np.linalg.pinv(self.Lambda)
             self.W = y_.T @ X_ @ self.Lambda_1
+            # TODO This seems to be constant and should be outside the loop
             self.a_tau = self.A_TAU + 0.5 * np.sum(m)
             self.b_tau = self.B_TAU + 1 / (2 * self.D_y) * (
                 np.sum(y_ * y_) - np.sum(self.W * (self.W @ self.Lambda)))
