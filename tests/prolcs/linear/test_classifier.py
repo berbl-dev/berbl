@@ -161,8 +161,8 @@ def test_fit_non_linear(data):
     # We clip scores because of possible floating point instabilities arising in
     # this test if they are too close to zero (i.e. proper comparison becomes
     # inconveniently hard to do).
-    score = np.clip(score, a_min=1e-4, a_max=np.inf)
-    score_oracle = np.clip(score_oracle, a_min=1e-4, a_max=np.inf)
+    score = np.clip(score, a_min=1e-3, a_max=np.inf)
+    score_oracle = np.clip(score_oracle, a_min=1e-3, a_max=np.inf)
 
     assert (np.isclose(
         score / score_oracle, 1,
