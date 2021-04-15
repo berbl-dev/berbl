@@ -5,11 +5,12 @@ from sklearn.utils import check_random_state  # type: ignore
 
 
 class RandomSearch:
+    """
+    Generates random match functions, trains the mixture model for each and
+    keeps the best of those models.
+    """
     def __init__(self, n_iter=250, random_state=None, **kwargs):
         """
-        Generates `n_iter` many random match functions, trains the mixture model
-        for each, keeping the best of those models.
-
         Parameters
         ----------
         n_iter   : int, optional
