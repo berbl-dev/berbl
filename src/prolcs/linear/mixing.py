@@ -2,6 +2,7 @@ from typing import List
 
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
+from sklearn.utils import check_random_state  # type: ignore
 
 from ..common import matching_matrix
 
@@ -16,6 +17,7 @@ class Mixing:
                  MAX_ITER=40,
                  EXP_MIN=np.log(np.finfo(None).tiny),
                  LN_MAX=np.log(np.finfo(None).max),
+                 random_state=None,
                  **kwargs):
         """
         :param classifiers: List of classifier models (which are held fixed
@@ -49,12 +51,12 @@ class Mixing:
         self.MAX_ITER = MAX_ITER
         self.EXP_MIN = EXP_MIN
         self.LN_MAX = LN_MAX
+        self.random_state = random_state
         self.K = len(self.CLS)
 
-    def fit(self, X, y, random_state):
-        # NOTE We don't check_random_state here to be more performant (although
-        # I'm not sure how much this gains us).
-        # TODO Check gain of not using check_random_state here
+    def fit(self, X, y):
+
+        random_state = check_random_state(self.random_state)
 
         if self.PHI is None:
             Phi = np.ones((len(X), 1))

@@ -16,10 +16,10 @@ class Mixture():
                  n_cls=10,
                  cl_class=RadialMatch1D,
                  ranges=None,
-                 random_state=None,
                  matchs: List = None,
                  phi=None,
                  fit_mixing="bouchard",
+                 random_state=None,
                  **kwargs):
         """
         A model based on mixing linear classifiers using the given model
@@ -40,21 +40,14 @@ class Mixture():
         :param **kwargs: This is passed through unchanged to both ``Mixing`` and
             ``Classifier``.
         """
-        # TODO Acc. to sklearn docs, I shouldn't perform any validation here but
-        # delay it all to fit
-        if matchs is None and n_cls is not None and cl_class is not None:
-            self.K = n_cls
-            self.matchs_ = self.random_matchs(self.K, cl_class, ranges,
-                                              random_state)
-        elif matchs is not None:
-            self.matchs_ = matchs
-            self.K = len(matchs)
-        else:
-            raise ValueError(
-                f"If matchs isn't given, must provide at least n_cls, cl_class "
-                f"and ranges and these are {n_cls}, {cl_class} and {ranges}")
+
+        self.n_cls = n_cls
+        self.cl_class = cl_class
+        self.ranges = ranges
+        self.matchs = matchs
         self.phi = phi
         self.fit_mixing = fit_mixing
+        self.random_state = random_state
         self.__kwargs = kwargs
 
     def random_matchs(self, K, cl_class, ranges, random_state):
@@ -63,7 +56,7 @@ class Mixture():
             for i in range(K)
         ]
 
-    def fit(self, X: np.ndarray, y: np.ndarray, random_state=None):
+    def fit(self, X: np.ndarray, y: np.ndarray):
         """
         Fits this model to the provided data.
 
@@ -77,7 +70,21 @@ class Mixture():
 
         check_consistent_length(X, y)
 
-        random_state = check_random_state(random_state)
+        random_state = check_random_state(self.random_state)
+
+        if self.matchs is None and self.n_cls is not None and self.cl_class is not None:
+            self.K = self.n_cls
+            self.matchs_ = self.random_matchs(self.K, self.cl_class, self.ranges,
+                                              random_state)
+        elif self.matchs is not None:
+            self.matchs_ = self.matchs
+            self.K = len(self.matchs)
+        else:
+            raise ValueError(
+                f"If matchs isn't given, must provide at least n_cls, cl_class "
+                f"and ranges and these are {self.n_cls}, {self.cl_class} and"
+                f"{self.ranges}")
+
 
         _, self.D_X_ = X.shape
         _, self.D_y_ = y.shape
@@ -96,15 +103,17 @@ class Mixture():
         if self.fit_mixing == "bouchard":
             self.mixing_ = Mixing(classifiers=self.classifiers_,
                                   phi=self.phi,
+                                  random_state=random_state,
                                   **self.__kwargs)
         elif self.fit_mixing == "laplace":
             self.mixing_ = MixingLaplace(classifiers=self.classifiers_,
                                          phi=self.phi,
+                                         random_state=random_state,
                                          **self.__kwargs)
         else:
             raise NotImplementedError(
                 "Only 'bouchard' and 'laplace' supported for fit_mixing")
-        self.mixing_.fit(X, y, random_state=random_state)
+        self.mixing_.fit(X, y)
 
         # We need to recalculate the classifiers' here because we now have
         # access to the final value of R (which we substituted by M during
