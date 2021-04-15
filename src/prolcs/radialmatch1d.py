@@ -91,10 +91,9 @@ class RadialMatch1D():
 
     def match(self, X: np.ndarray):
         """
-        We vectorize the following (i.e. feed the whole input through at once)::
-
-            for n in range(len(X)):
-                M[n] = np.exp(-0.5 / sigma_2 * (x - mu)**2)
+        Compute matching vector for given input. Depending on whether the input
+        is expected to have a bias column (see attribute
+        ``self.has_bias_column``), remove that beforehand.
 
         :param X: input matrix ``(N × D_X)`` with ``D_X == 1``
         :returns: matching vector ``(N)`` of this matching function (i.e. of
@@ -106,6 +105,22 @@ class RadialMatch1D():
                 1] == 2, f"X should have shape 2 but has {X.shape[1]}"
             X = X.T[1:].T
 
+        return self._match_wo_bias(X)
+
+    def _match_wo_bias(self, X: np.ndarray):
+        """
+        Compute matching vector for given input assuming that the input doesn't
+        have bias column.
+
+        We vectorize the following (i.e. feed the whole input through at once)::
+
+            for n in range(len(X)):
+                M[n] = np.exp(-0.5 / sigma_2 * (x - mu)**2)
+
+        :param X: input matrix ``(N × D_X)`` with ``D_X == 1``
+        :returns: matching vector ``(N)`` of this matching function (i.e. of
+            this classifier)
+        """
         # We have to clip this so we don't return 0 here (0 should never be
         # returned because every match function matches everywhere at least a
         # little bit). Also, we clip from above such that this function never
@@ -123,6 +138,6 @@ class RadialMatch1D():
         l = self.ranges[0]
         h = self.ranges[1]
         X = np.arange(l, h, 0.01)[:, np.newaxis]
-        M = self.match(X, has_bias_column=False)
+        M = self._match_wo_bias(X)
         ax.plot(X, M, **kwargs)
         ax.axvline(self.mu(), color=kwargs["color"])
