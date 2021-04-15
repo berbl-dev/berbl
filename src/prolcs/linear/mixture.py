@@ -50,10 +50,10 @@ class Mixture():
         self.random_state = random_state
         self.__kwargs = kwargs
 
-    def random_matchs(self, K, cl_class, ranges, random_state):
+    def _random_matchs(self, n_cls, cl_class, ranges, random_state):
         return [
             cl_class.random(ranges, random_state=random_state)
-            for i in range(K)
+            for i in range(n_cls)
         ]
 
     def fit(self, X: np.ndarray, y: np.ndarray):
@@ -72,20 +72,19 @@ class Mixture():
 
         random_state = check_random_state(self.random_state)
 
-        if self.matchs is None and self.n_cls is not None and self.cl_class is not None:
-            self.K = self.n_cls
-            self.matchs_ = self.random_matchs(self.K, self.cl_class, self.ranges,
-                                              random_state)
+        if (self.matchs is None and self.n_cls is not None
+                and self.cl_class is not None):
+            self.matchs_ = self._random_matchs(self.n_cls, self.cl_class,
+                                               self.ranges, random_state)
         elif self.matchs is not None:
             self.matchs_ = self.matchs
-            self.K = len(self.matchs)
         else:
             raise ValueError(
                 f"If matchs isn't given, must provide at least n_cls, cl_class "
                 f"and ranges and these are {self.n_cls}, {self.cl_class} and"
                 f"{self.ranges}")
 
-
+        self.K_ = len(self.matchs_)
         _, self.D_X_ = X.shape
         _, self.D_y_ = y.shape
 
@@ -94,7 +93,7 @@ class Mixture():
         # “When fit is called, any previous call to fit should be ignored.”
         self.classifiers_ = list(
             map(lambda m: Classifier(m, **self.__kwargs), self.matchs_))
-        for k in range(self.K):
+        for k in range(self.K_):
             self.classifiers_[k].fit(X, y)
 
         # Train mixing model.
@@ -119,13 +118,13 @@ class Mixture():
         # access to the final value of R (which we substituted by M during
         # classifier training for ensuring indenpendence).
         self.L_C_q_ = np.repeat(-np.inf, len(self.classifiers_))
-        for k in range(self.K):
+        for k in range(self.K_):
             self.L_C_q_[k] = self.classifiers_[k].var_bound(
                 X, y, r=self.mixing_.R_[:, [k]])
         self.L_M_q_ = self.mixing_.L_M_q_
         self.L_q_ = np.sum(self.L_C_q_) + self.L_M_q_
         self.ln_p_M_ = -np.log(float(np.math.factorial(
-            self.K)))  # (7.3), i.e. p_M \propto 1/K
+            self.K_)))  # (7.3), i.e. p_M \propto 1/K
         self.p_M_D_ = self.L_q_ + self.ln_p_M_
 
         return self
@@ -163,8 +162,8 @@ class Mixture():
 
         y = self.predicts(X)
 
-        y_var = np.zeros((self.K, N, D_y))
-        for k in range(self.K):
+        y_var = np.zeros((self.K_, N, D_y))
+        for k in range(self.K_):
             y_var[k] = self.classifiers_[k].predict_var(X)
 
         G_ = self.mixing_._mixing(M, Phi, self.mixing_.V_).T  # K × N
@@ -184,7 +183,7 @@ class Mixture():
         #     x_ = X[n]
         #     g = G_.T[n]
         #     for j in range(D_y):
-        #         for k in range(self.K):
+        #         for k in range(self.K_):
         #             cl = self.classifiers[k]
         #             var[n][j] += g[k] * (2 * cl.b_tau / (cl.a_tau - 1) *
         #                                  (1 + x_ @ cl.Lambda_1 @ x_) +
@@ -205,7 +204,7 @@ class Mixture():
         """
         N = len(X)
 
-        y = np.zeros((self.K, N, self.D_y_))
-        for k in range(self.K):
+        y = np.zeros((self.K_, N, self.D_y_))
+        for k in range(self.K_):
             y[k] = self.classifiers_[k].predict(X)
         return y
