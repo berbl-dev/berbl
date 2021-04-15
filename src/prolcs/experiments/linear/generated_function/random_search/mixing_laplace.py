@@ -74,7 +74,7 @@ def run_experiment(n_iter, seed, show, sample_size):
         ax.fill_between(X_test_, y_test_ - var_, y_test_ + var_, alpha=0.2)
 
         if True:  # plot matching and classifiers
-            for m in model.mixture.matchs:
+            for m in model.mixture_.matchs_:
                 m.plot(ax, color="grey")
 
             # plot classifier models
@@ -89,7 +89,7 @@ def run_experiment(n_iter, seed, show, sample_size):
                         zorder=10)
 
         # add metadata to plot for ease of use
-        ax.set(title=f"K = {K}, p(M|D) = {model.mixture.p_M_D:.2}")
+        ax.set(title=f"K = {K}, p(M|D) = {model.mixture_.p_M_D_:.2}")
 
         # store the figure (e.g. so we can run headless)
         fig_folder = "latest-final-approximations"
