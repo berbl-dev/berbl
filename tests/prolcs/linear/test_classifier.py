@@ -49,10 +49,10 @@ def test_fit_inc_L_q(match, X, y):
 
     assert delta_L_q >= 0, f"delta_L_q = {delta_L_q} < 0"
     """
-    max_iters = range(0, 100, 10)
+    max_iters = range(1, 101, 10)
     L_qs = np.array([None] * len(max_iters))
     for i in range(len(max_iters)):
-        L_qs[i] = Classifier(match, MAX_ITER=max_iters[i]).fit(X, y).L_q
+        L_qs[i] = Classifier(match, MAX_ITER=max_iters[i]).fit(X, y).L_q_
 
     assert np.all(np.diff(L_qs) >= 0)
 
@@ -112,8 +112,8 @@ def test_fit_linear_functions(data):
     tol = 2e-3
     assert score < tol, (
         f"Mean absolute error is {score} (> {tol})."
-        f"Even though L(q) = {cl.L_q}, classifier's weight matrix is still"
-        f"{cl.W} when it should be [{intercept}, {slope}]")
+        f"Even though L(q) = {cl.L_q_}, classifier's weight matrix is still"
+        f"{cl.W_} when it should be [{intercept}, {slope}]")
 
 
 @st.composite
@@ -137,10 +137,14 @@ def random_data(draw, N=100):
     return (X, y)
 
 
-# NOTE We use more samples here to make sure that the algorithms' score are
+# We use more samples here to make sure that the algorithms' score are
 # really close.
 @given(random_data(N=1000))
 def test_fit_non_linear(data):
+    """
+    A single classifier should behave very similar to a
+    ``sklearn.linear_model.LinearRegression`` on random data.
+    """
     X, y = data
 
     match = AllMatch()
@@ -154,10 +158,16 @@ def test_fit_non_linear(data):
     y_pred_oracle = oracle.predict(X)
     score_oracle = mean_absolute_error(y_pred_oracle, y)
 
-    score = np.clip(score, a_min=1e-5, a_max=np.inf)
-    score_oracle = np.clip(score_oracle, a_min=1e-5, a_max=np.inf)
+    # We clip scores because of possible floating point instabilities arising in
+    # this test if they are too close to zero (i.e. proper comparison becomes
+    # inconveniently hard to do).
+    score = np.clip(score, a_min=1e-4, a_max=np.inf)
+    score_oracle = np.clip(score_oracle, a_min=1e-4, a_max=np.inf)
 
     assert (np.isclose(
         score / score_oracle, 1,
         atol=1e-1)), (f"Classifier score ({score}) not close to"
                       f"linear regression oracle score ({score_oracle})")
+
+
+# TODO Add tests for all the other hyperparameters of Classifier.

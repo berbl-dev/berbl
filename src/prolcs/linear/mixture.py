@@ -40,12 +40,14 @@ class Mixture():
         :param **kwargs: This is passed through unchanged to both ``Mixing`` and
             ``Classifier``.
         """
+        # TODO Acc. to sklearn docs, I shouldn't perform any validation here but
+        # delay it all to fit
         if matchs is None and n_cls is not None and cl_class is not None:
             self.K = n_cls
-            self.matchs = self.random_matchs(self.K, cl_class, ranges,
-                                             random_state)
+            self.matchs_ = self.random_matchs(self.K, cl_class, ranges,
+                                              random_state)
         elif matchs is not None:
-            self.matchs = matchs
+            self.matchs_ = matchs
             self.K = len(matchs)
         else:
             raise ValueError(
@@ -77,47 +79,45 @@ class Mixture():
 
         random_state = check_random_state(random_state)
 
-        _, self.D_X = X.shape
-        _, self.D_y = y.shape
+        _, self.D_X_ = X.shape
+        _, self.D_y_ = y.shape
 
         # Train classifiers.
         #
         # “When fit is called, any previous call to fit should be ignored.”
-        self.classifiers = list(
-            map(lambda m: Classifier(m, **self.__kwargs), self.matchs))
+        self.classifiers_ = list(
+            map(lambda m: Classifier(m, **self.__kwargs), self.matchs_))
         for k in range(self.K):
-            self.classifiers[k].fit(X, y)
+            self.classifiers_[k].fit(X, y)
 
         # Train mixing model.
         #
         # “When fit is called, any previous call to fit should be ignored.”
         if self.fit_mixing == "bouchard":
-            self.mixing = Mixing(classifiers=self.classifiers,
-                                 phi=self.phi,
-                                 **self.__kwargs)
+            self.mixing_ = Mixing(classifiers=self.classifiers_,
+                                  phi=self.phi,
+                                  **self.__kwargs)
         elif self.fit_mixing == "laplace":
-            self.mixing = MixingLaplace(classifiers=self.classifiers,
-                                        phi=self.phi,
-                                        **self.__kwargs)
+            self.mixing_ = MixingLaplace(classifiers=self.classifiers_,
+                                         phi=self.phi,
+                                         **self.__kwargs)
         else:
             raise NotImplementedError(
                 "Only 'bouchard' and 'laplace' supported for fit_mixing")
-        self.mixing.fit(X, y, random_state=random_state)
+        self.mixing_.fit(X, y, random_state=random_state)
 
         # We need to recalculate the classifiers' here because we now have
         # access to the final value of R (which we substituted by M during
         # classifier training for ensuring indenpendence).
-        self.L_C_q = np.repeat(-np.inf, len(self.classifiers))
+        self.L_C_q_ = np.repeat(-np.inf, len(self.classifiers_))
         for k in range(self.K):
-            self.L_C_q[k] = self.classifiers[k].var_bound(X,
-                                                          y,
-                                                          r=self.mixing.R[:,
-                                                                          [k]])
-        self.L_M_q = self.mixing.L_M_q
-        self.L_q = np.sum(self.L_C_q) + self.L_M_q
-        self.ln_p_M = -np.log(float(np.math.factorial(
+            self.L_C_q_[k] = self.classifiers_[k].var_bound(
+                X, y, r=self.mixing_.R_[:, [k]])
+        self.L_M_q_ = self.mixing_.L_M_q_
+        self.L_q_ = np.sum(self.L_C_q_) + self.L_M_q_
+        self.ln_p_M_ = -np.log(float(np.math.factorial(
             self.K)))  # (7.3), i.e. p_M \propto 1/K
-        self.p_M_D = self.L_q + self.ln_p_M
+        self.p_M_D_ = self.L_q_ + self.ln_p_M_
 
         return self
 
@@ -143,9 +143,9 @@ class Mixture():
         :returns: mean output vector (N × D_y), variance of output (N × D_y)
         """
 
-        M = matching_matrix([cl.match for cl in self.classifiers], X)
+        M = matching_matrix([cl.match for cl in self.classifiers_], X)
         N, _ = M.shape
-        D_y, D_X = self.classifiers[0].W.shape
+        D_y, D_X = self.classifiers_[0].W_.shape
 
         if self.phi is None:
             Phi = np.ones((len(X), 1))
@@ -156,9 +156,9 @@ class Mixture():
 
         y_var = np.zeros((self.K, N, D_y))
         for k in range(self.K):
-            y_var[k] = self.classifiers[k].predict_var(X)
+            y_var[k] = self.classifiers_[k].predict_var(X)
 
-        G_ = self.mixing._mixing(M, Phi, self.mixing.V).T  # K × N
+        G_ = self.mixing_._mixing(M, Phi, self.mixing_.V_).T  # K × N
 
         # For each classifier's prediction, we weigh every dimension of the
         # output vector by the same amount, thus we simply repeat the G values
@@ -196,7 +196,7 @@ class Mixture():
         """
         N = len(X)
 
-        y = np.zeros((self.K, N, self.D_y))
+        y = np.zeros((self.K, N, self.D_y_))
         for k in range(self.K):
-            y[k] = self.classifiers[k].predict(X)
+            y[k] = self.classifiers_[k].predict(X)
         return y

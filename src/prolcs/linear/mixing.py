@@ -49,6 +49,7 @@ class Mixing:
         self.MAX_ITER = MAX_ITER
         self.EXP_MIN = EXP_MIN
         self.LN_MAX = LN_MAX
+        self.K = len(self.CLS)
 
     def fit(self, X, y, random_state):
         # NOTE We don't check_random_state here to be more performant (although
@@ -62,77 +63,76 @@ class Mixing:
 
         M = matching_matrix([cl.match for cl in self.CLS], X)
 
-        _, self.K = M.shape
-        _, self.D_X = X.shape
-        _, self.D_y = y.shape
-        N, self.D_V = Phi.shape
+        _, self.D_X_ = X.shape
+        _, self.D_y_ = y.shape
+        N, self.D_V_ = Phi.shape
 
-        self.V = random_state.normal(loc=0,
+        self.V_ = random_state.normal(loc=0,
                                      scale=self.A_BETA / self.B_BETA,
-                                     size=(self.D_V, self.K))
+                                     size=(self.D_V_, self.K))
         # a_beta is actually constant so we can set it here and be done with it.
-        self.a_beta = np.repeat(self.A_BETA + self.D_V / 2, self.K)
-        self.b_beta = np.repeat(self.B_BETA, self.K)
+        self.a_beta_ = np.repeat(self.A_BETA + self.D_V_ / 2, self.K)
+        self.b_beta_ = np.repeat(self.B_BETA, self.K)
 
         # Initialize parameters for the Bouchard approximation.
-        self.alpha = random_state.normal(loc=0,
+        self.alpha_ = random_state.normal(loc=0,
                                          scale=self.A_BETA / self.B_BETA,
                                          size=(N, 1))
         # lxi stands for λ(ξ) which is used in Bouchard's approximation. Its
         # supremum value is one eighth.
-        self.lxi = random_state.random(size=(N, self.K)) * 0.125
-        self.alpha, self.lxi = self._opt_bouchard(M=M,
+        self.lxi_ = random_state.random(size=(N, self.K)) * 0.125
+        self.alpha_, self.lxi_ = self._opt_bouchard(M=M,
                                                   Phi=Phi,
-                                                  V=self.V,
-                                                  alpha=self.alpha,
-                                                  lxi=self.lxi)
+                                                  V=self.V_,
+                                                  alpha=self.alpha_,
+                                                    lxi=self.lxi_)
 
-        self.G = self._mixing(M, Phi, self.V)
-        self.R = self._responsibilities(X=X, y=y, G=self.G)
+        self.G_ = self._mixing(M, Phi, self.V_)
+        self.R_ = self._responsibilities(X=X, y=y, G=self.G_)
 
-        self.L_M_q = -np.inf
+        self.L_M_q_ = -np.inf
         delta_L_M_q = self.DELTA_S_L_M_Q + 1
         i = 0
         while delta_L_M_q > self.DELTA_S_L_M_Q and i < self.MAX_ITER:
             i += 1
 
-            self.V, self.Lambda_V_1 = self._train_mix_weights(
+            self.V_, self.Lambda_V_1_ = self._train_mix_weights(
                 M=M,
                 X=X,
                 y=y,
                 Phi=Phi,
-                R=self.R,
-                V=self.V,
-                a_beta=self.a_beta,
-                b_beta=self.b_beta,
-                lxi=self.lxi,
-                alpha=self.alpha)
+                R=self.R_,
+                V=self.V_,
+                a_beta=self.a_beta_,
+                b_beta=self.b_beta_,
+                lxi=self.lxi_,
+                alpha=self.alpha_)
 
             # TODO How much faster would in-place ugliness be?
-            self.alpha, self.lxi = self._opt_bouchard(M=M,
+            self.alpha_, self.lxi_ = self._opt_bouchard(M=M,
                                                       Phi=Phi,
-                                                      V=self.V,
-                                                      alpha=self.alpha,
-                                                      lxi=self.lxi)
+                                                      V=self.V_,
+                                                      alpha=self.alpha_,
+                                                        lxi=self.lxi_)
 
-            self.b_beta = self._train_b_beta(V=self.V,
-                                             Lambda_V_1=self.Lambda_V_1)
+            self.b_beta_ = self._train_b_beta(V=self.V_,
+                                              Lambda_V_1=self.Lambda_V_1_)
 
-            self.G = self._mixing(M, Phi, self.V)
-            self.R = self._responsibilities(X=X, y=y, G=self.G)
+            self.G_ = self._mixing(M, Phi, self.V_)
+            self.R_ = self._responsibilities(X=X, y=y, G=self.G_)
 
-            L_M_q_prev = self.L_M_q
-            self.L_M_q = self._var_bound(G=self.G,
-                                         R=self.R,
-                                         V=self.V,
-                                         Lambda_V_1=self.Lambda_V_1,
-                                         a_beta=self.a_beta,
-                                         b_beta=self.b_beta)
+            L_M_q_prev = self.L_M_q_
+            self.L_M_q_ = self._var_bound(G=self.G_,
+                                          R=self.R_,
+                                          V=self.V_,
+                                          Lambda_V_1=self.Lambda_V_1_,
+                                          a_beta=self.a_beta_,
+                                          b_beta=self.b_beta_)
             # LCSBookCode states: “as we are using an approximation, the variational
             # bound might decrease, so we're not checking and need to take the
             # abs()”. I guess with approximation he means the use of the Laplace
             # approximation (which may violate the lower bound nature of L_M_q).
-            delta_L_M_q = np.abs(self.L_M_q - L_M_q_prev)
+            delta_L_M_q = np.abs(self.L_M_q_ - L_M_q_prev)
             # TODO Check whether the abs is necessary for Bouchard.
             # if self.L_M_q < L_M_q_prev:
             #     print(f"self.L_M_q < L_M_q_prev: {self.L_M_q} < {L_M_q_prev}")
@@ -158,10 +158,11 @@ class Mixing:
             matrix (K D_V × K D_V)
         """
         N, _ = X.shape
+        D_V, _ = V.shape
 
         E_beta_beta = a_beta / b_beta
 
-        Lambda_V_1 = [np.zeros((self.D_V, self.D_V))] * self.K
+        Lambda_V_1 = [np.zeros((D_V, D_V))] * self.K
 
         Rlxi = R * lxi
         for k in range(self.K):
@@ -197,7 +198,7 @@ class Mixing:
 
         lxi = 1 / (2 * xi) * (1 / (1 + np.exp(-xi)) - 1 / 2)
 
-        return self.alpha, self.lxi
+        return alpha, lxi
 
     def _mixing(self, M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
         """
@@ -253,10 +254,10 @@ class Mixing:
         R_T = np.zeros((self.K, N))
         for k in range(self.K):
             cl = self.CLS[k]
-            R_T[k] = np.exp(D_y / 2 * (ss.digamma(cl.a_tau) - np.log(cl.b_tau))
-                            - 0.5 * (cl.a_tau / cl.b_tau * np.sum(
-                                (y - X @ cl.W.T)**2, 1)
-                                     + D_y * np.sum(X * (X @ cl.Lambda_1), 1)))
+            R_T[k] = np.exp(D_y / 2 * (ss.digamma(cl.a_tau_) - np.log(cl.b_tau_))
+                            - 0.5 * (cl.a_tau_ / cl.b_tau_ * np.sum(
+                                (y - X @ cl.W_.T)**2, 1)
+                                     + D_y * np.sum(X * (X @ cl.Lambda_1_), 1)))
         R = R_T.T * G
         # The sum can be 0 meaning we do 0/0 (== NaN in Python) but we ignore it
         # because it is fixed one line later (this is how Drugowitsch does it).
@@ -274,14 +275,15 @@ class Mixing:
 
         :returns: mixing weight vector prior parameter b_beta
         """
+        D_V, _ = V.shape
         b_beta = np.zeros(self.K)
         Lambda_V_1_diag = np.array(list(map(np.diag, Lambda_V_1)))
         # TODO Performance: LCSBookCode vectorized this:
         # b[:,1] = b_b + 0.5 * (sum(V * V, 0) + self.cov_Tr)
         for k in range(self.K):
             v_k = V[:, [k]]
-            l = k * self.D_V
-            u = (k + 1) * self.D_V
+            l = k * D_V
+            u = (k + 1) * D_V
             # Not that efficient, I think (but very close to [PDF p. 244]).
             # Lambda_V_1_kk = Lambda_V_1[l:u:1, l:u:1]
             # b_beta[k] = B_BETA + 0.5 * (np.trace(Lambda_V_1_kk) + v_k.T @ v_k)
@@ -306,12 +308,13 @@ class Mixing:
 
         :returns: mixing component L_M(q) of variational bound
         """
+        D_V, _ = V.shape
         L_M1q = self.K * (-ss.gammaln(self.A_BETA)
                           + self.A_BETA * np.log(self.B_BETA))
         # TODO Performance: LCSBookCode vectorized this
         # TODO Performance: ss.gammaln(a_beta[k]) is constant throughout the
         # loop in the calling function
-        L_M3q = self.K * self.D_V
+        L_M3q = self.K * D_V
         for k in range(self.K):
             L_M1q += ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
             # TODO Vectorize or at least get rid of for loop
