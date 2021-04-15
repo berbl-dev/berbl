@@ -1,27 +1,26 @@
-from typing import List
-
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
-from .mixing import Mixing
 from sklearn.utils import check_random_state  # type: ignore
 
 from ..common import matching_matrix
+from .mixing import Mixing
 
 
 # NOTE It's not *that* nice to inherit from Mixing because they should be
 # siblings and not parent and child.
 class MixingLaplace(Mixing):
+    """
+    Mixing model that is fitted using Drugowitsch's Laplace approximation.
+
+    Structurally, the main difference `Mixing` is that `Lambda_V_1` is a `K *
+    D_V` × `K * D_V` matrix (i.e. the mixing problem is solved for all
+    classifiers at once), whereas the parent has `K` mixing matrices (one for
+    each classifier).
+    """
     def __init__(self, DELTA_S_KLRG=10**-8, **kwargs):
         """
-        Mixing model that is fitted using Drugowitsch's Laplace approximation.
-
-        Structurally, the main difference to its parent class is that
-        `Lambda_V_1` is a `K * D_V` × `K * D_V` matrix (i.e. the mixing problem
-        is solved for all classifiers at once), whereas the parent has `K`
-        mixing matrices (one for each classifier).
-
-        :param DELTA_S_KLRG: Stopping criterion for iterative Laplace
-            approximation in mixing weight update.
+        :param DELTA_S_KLRG: Stopping criterion for the iterative Laplace
+            approximation in the mixing weight update.
         """
         self.DELTA_S_KLRG = DELTA_S_KLRG
         super().__init__(**kwargs)
@@ -163,10 +162,12 @@ class MixingLaplace(Mixing):
             # This fixes(?) some numerical problems.
             if KLRG > 0 and np.isclose(KLRG, 0):
                 print(
-                    "Warning: Kullback-Leibler divergence ever so slightly less than zero, fixing"
+                    "Warning: Kullback-Leibler divergence ever so slightly less"
+                    "than zero, fixing"
                 )
                 KLRG = 0
-            assert KLRG <= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
+            assert KLRG <= 0, (f"Kullback-Leibler divergence less than zero:"
+            f" {KLRG}\n{G}\n{R}")
 
             if KLRG in KLRGs and KLRG != KLRG_prev:
                 # We only log and break when we're at the best KLRG value of the
