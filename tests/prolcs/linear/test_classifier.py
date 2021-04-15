@@ -99,12 +99,17 @@ def test_fit_linear_functions(data):
     cl = Classifier(match, MAX_ITER=100).fit(X, y)
 
     y_pred = cl.predict(X)
-    sample_weight = match.match(X)
-    score = mean_absolute_error(y_pred, y, sample_weight=sample_weight)
 
-    tol = 1e-03
+    assert y_pred.shape[1] == 1, (f"Shape of prediction output is wrong "
+                                  f"({y.pred.shape[1]} instead of 1)")
+
+    score = mean_absolute_error(y_pred, y)
+
+    # TODO This is not yet ideal; we probably want to scale the score by the
+    # range of y values somehow.
+    # score /= np.max(y) - np.min(y)
+    tol = 2e-3
     assert score < tol, (
         f"Mean absolute error is {score} (> {tol})."
-        f"Even though L(q) = {cl.L_q} classifier's weight matrix is still"
-        f"{cl.W} when it should be [{intercept}, {slope}]"
-        f"{sample_weight}")
+        f"Even though L(q) = {cl.L_q}, classifier's weight matrix is still"
+        f"{cl.W} when it should be [{intercept}, {slope}]")
