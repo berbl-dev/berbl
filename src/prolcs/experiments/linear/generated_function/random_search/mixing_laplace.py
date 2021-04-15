@@ -40,7 +40,7 @@ def run_experiment(n_iter, seed, show, sample_size):
                              n_iter=250,
                              fit_mixing="laplace",
                              random_state=random_state)
-        model.fit(X_augmented, y, random_state=random_state)
+        model.fit(X_augmented, y)
 
         # generate test data
         X_test, y_test_true = generate(1000, random_state=12345)

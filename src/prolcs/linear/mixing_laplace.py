@@ -3,6 +3,7 @@ from typing import List
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 from .mixing import Mixing
+from sklearn.utils import check_random_state  # type: ignore
 
 from ..common import matching_matrix
 
@@ -25,10 +26,9 @@ class MixingLaplace(Mixing):
         self.DELTA_S_KLRG = DELTA_S_KLRG
         super().__init__(**kwargs)
 
-    def fit(self, X, y, random_state):
-        # NOTE We don't check_random_state here to be more performant (although
-        # I'm not sure how much this gains us).
-        # TODO Check gain of not using check_random_state here
+    def fit(self, X, y):
+
+        random_state = check_random_state(self.random_state)
 
         if self.PHI is None:
             Phi = np.ones((len(X), 1))
@@ -37,56 +37,55 @@ class MixingLaplace(Mixing):
 
         M = matching_matrix([cl.match for cl in self.CLS], X)
 
-        _, self.K = M.shape
-        _, self.D_X = X.shape
-        _, self.D_y = y.shape
-        N, self.D_V = Phi.shape
+        _, self.D_X_ = X.shape
+        _, self.D_y_ = y.shape
+        N, self.D_V_ = Phi.shape
 
-        self.V = random_state.normal(loc=0,
+        self.V_ = random_state.normal(loc=0,
                                      scale=self.A_BETA / self.B_BETA,
-                                     size=(self.D_V, self.K))
+                                     size=(self.D_V_, self.K))
         # a_beta is actually constant so we can set it here and be done with it.
-        self.a_beta = np.repeat(self.A_BETA + self.D_V / 2, self.K)
-        self.b_beta = np.repeat(self.B_BETA, self.K)
+        self.a_beta_ = np.repeat(self.A_BETA + self.D_V_ / 2, self.K)
+        self.b_beta_ = np.repeat(self.B_BETA, self.K)
 
-        self.G = self._mixing(M, Phi, self.V)
-        self.R = self._responsibilities(X=X, y=y, G=self.G)
+        self.G_ = self._mixing(M, Phi, self.V_)
+        self.R_ = self._responsibilities(X=X, y=y, G=self.G_)
 
-        self.L_M_q = -np.inf
+        self.L_M_q_ = -np.inf
         delta_L_M_q = self.DELTA_S_L_M_Q + 1
         i = 0
         while delta_L_M_q > self.DELTA_S_L_M_Q and i < self.MAX_ITER:
             i += 1
 
-            self.V, self.Lambda_V_1 = self._train_mix_weights(
+            self.V_, self.Lambda_V_1_ = self._train_mix_weights(
                 M=M,
                 X=X,
                 y=y,
                 Phi=Phi,
-                G=self.G,
-                R=self.R,
-                V=self.V,
-                a_beta=self.a_beta,
-                b_beta=self.b_beta)
+                G=self.G_,
+                R=self.R_,
+                V=self.V_,
+                a_beta=self.a_beta_,
+                b_beta=self.b_beta_)
 
-            self.b_beta = self._train_b_beta(V=self.V,
-                                             Lambda_V_1=self.Lambda_V_1)
+            self.b_beta_ = self._train_b_beta(V=self.V_,
+                                              Lambda_V_1=self.Lambda_V_1_)
 
-            self.G = self._mixing(M, Phi, self.V)
-            self.R = self._responsibilities(X=X, y=y, G=self.G)
+            self.G_ = self._mixing(M, Phi, self.V_)
+            self.R_ = self._responsibilities(X=X, y=y, G=self.G_)
 
-            L_M_q_prev = self.L_M_q
-            self.L_M_q = self._var_bound(G=self.G,
-                                         R=self.R,
-                                         V=self.V,
-                                         Lambda_V_1=self.Lambda_V_1,
-                                         a_beta=self.a_beta,
-                                         b_beta=self.b_beta)
+            L_M_q_prev = self.L_M_q_
+            self.L_M_q_ = self._var_bound(G=self.G_,
+                                         R=self.R_,
+                                         V=self.V_,
+                                         Lambda_V_1=self.Lambda_V_1_,
+                                         a_beta=self.a_beta_,
+                                          b_beta=self.b_beta_)
             # LCSBookCode states: “as we are using an approximation, the variational
             # bound might decrease, so we're not checking and need to take the
             # abs()”. I guess with approximation he means the use of the Laplace
             # approximation (which may violate the lower bound nature of L_M_q).
-            delta_L_M_q = np.abs(self.L_M_q - L_M_q_prev)
+            delta_L_M_q = np.abs(self.L_M_q_ - L_M_q_prev)
             # if self.L_M_q < L_M_q_prev:
             #     print(f"self.L_M_q < L_M_q_prev: {self.L_M_q} < {L_M_q_prev}")
 
@@ -110,6 +109,7 @@ class MixingLaplace(Mixing):
             matrix (K D_V × K D_V)
         """
         N, _ = X.shape
+        D_V, _ = V.shape
 
         E_beta_beta = a_beta / b_beta
 
@@ -135,11 +135,11 @@ class MixingLaplace(Mixing):
             delta_v = -np.linalg.pinv(H) @ e
             # “D_V × K matrix with jk'th element given by ((k - 1) K + j)'th
             # element of v.” (Probably means “delta_v”.)
-            delta_V = delta_v.reshape((self.K, self.D_V)).T
+            delta_V = delta_v.reshape((self.K, D_V)).T
             V = V + delta_V
 
-            self.G = self._mixing(M, Phi, self.V)
-            self.R = self._responsibilities(X=X, y=y, G=self.G)
+            G = self._mixing(M, Phi, V)
+            R = self._responsibilities(X=X, y=y, G=G)
 
             KLRG_prev = KLRG
             # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we
