@@ -23,8 +23,6 @@ class RandomSearch:
             print(f"Trained random mixture {iter}, "
                   f"current best has ln p(M | D) = {self.mixture_.p_M_D_:.2}")
 
-        self.mixture = mixture
-
         return self
 
     def predict(self, X):
