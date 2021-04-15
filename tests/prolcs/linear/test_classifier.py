@@ -8,6 +8,7 @@ from prolcs.linear.classifier import Classifier
 from prolcs.radialmatch1d import RadialMatch1D
 from prolcs.utils import add_bias
 from sklearn.metrics import mean_absolute_error
+from sklearn.linear_model import LinearRegression
 
 
 @st.composite
@@ -113,3 +114,50 @@ def test_fit_linear_functions(data):
         f"Mean absolute error is {score} (> {tol})."
         f"Even though L(q) = {cl.L_q}, classifier's weight matrix is still"
         f"{cl.W} when it should be [{intercept}, {slope}]")
+
+
+@st.composite
+def random_data(draw, N=100):
+    """
+    Creates a “perfectly” sampled sample for a random (non-smooth) function on
+    [-1, 1] in 1 to 10 input or output dimensions.
+    """
+    D_X = draw(st.integers(min_value=1, max_value=10))
+    D_Y = draw(st.integers(min_value=1, max_value=10))
+
+    # We create perfect values for X here so we don't run into sampling issues
+    # (i.e. evenly spaced).
+    X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
+
+    y = draw(
+        arrays(np.float64, (N, D_Y),
+               elements=st.floats(min_value=0, max_value=100)))
+    X = add_bias(X)
+
+    return (X, y)
+
+
+# NOTE We use more samples here to make sure that the algorithms' score are
+# really close.
+@given(random_data(N=1000))
+def test_fit_non_linear(data):
+    X, y = data
+
+    match = AllMatch()
+
+    cl = Classifier(match, MAX_ITER=100).fit(X, y)
+
+    y_pred = cl.predict(X)
+    score = mean_absolute_error(y_pred, y)
+
+    oracle = LinearRegression().fit(X, y)
+    y_pred_oracle = oracle.predict(X)
+    score_oracle = mean_absolute_error(y_pred_oracle, y)
+
+    score = np.clip(score, a_min=1e-5, a_max=np.inf)
+    score_oracle = np.clip(score_oracle, a_min=1e-5, a_max=np.inf)
+
+    assert (np.isclose(
+        score / score_oracle, 1,
+        atol=1e-1)), (f"Classifier score ({score}) not close to"
+                      f"linear regression oracle score ({score_oracle})")
