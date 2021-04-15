@@ -5,12 +5,11 @@ import matplotlib.pyplot as plt
 import mlflow
 import numpy as np  # type: ignore
 from prolcs.experiments.drugowitsch.generated_function import generate
-from prolcs.linear.mixture import Mixture
+from prolcs.linear.search.random import RandomSearch
 from prolcs.logging import log_
-from prolcs.radialmatch1d import RadialMatch1D
 from prolcs.utils import add_bias
 from sklearn import metrics  # type: ignore
-from prolcs.linear.search.random import RandomSearch
+from sklearn.utils import check_random_state  # type: ignore
 
 np.seterr(all="warn")
 
@@ -36,7 +35,11 @@ def run_experiment(n_iter, seed, show, sample_size):
         _, y_denoised = generate(1000, noise=False, X=X_denoised)
 
         K = 5
-        model = RandomSearch(n_cls=K,
+        def prob_n_cls(random_state):
+            random_state = check_random_state(random_state)
+            return random_state.randint(100)
+
+        model = RandomSearch(n_cls=prob_n_cls,
                              n_iter=250,
                              fit_mixing="bouchard",
                              random_state=seed)
@@ -89,7 +92,7 @@ def run_experiment(n_iter, seed, show, sample_size):
                         zorder=10)
 
         # add metadata to plot for ease of use
-        ax.set(title=f"K = {K}, p(M|D) = {model.mixture_.p_M_D_:.2}")
+        ax.set(title=f"K = {model.mixture_.K_}, p(M|D) = {model.mixture_.p_M_D_:.2}")
 
         # store the figure (e.g. so we can run headless)
         fig_folder = "latest-final-approximations"
