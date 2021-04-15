@@ -6,6 +6,18 @@ from sklearn.utils import check_random_state  # type: ignore
 
 class RandomSearch:
     def __init__(self, n_iter=250, random_state=None, **kwargs):
+        """
+        Generates `n_iter` many random match functions, trains the mixture model
+        for each, keeping the best of those models.
+
+        Parameters
+        ----------
+        n_iter   : int, optional
+                   The number or random match functions to generate.
+        **kwargs
+                 Keyword parameters passed through to `Mixture`, `Classifier`
+                 and `Mixing`.
+        """
         self.n_iter = n_iter
         self.random_state = random_state
         self.__kwargs = kwargs
