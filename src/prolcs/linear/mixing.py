@@ -1,8 +1,7 @@
-from typing import List
-
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
+from sklearn.utils.validation import check_is_fitted # type: ignore
 
 from ..common import matching_matrix
 

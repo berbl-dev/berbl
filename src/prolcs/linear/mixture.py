@@ -3,12 +3,12 @@ from typing import *
 import numpy as np  # type: ignore
 from sklearn.utils import check_consistent_length  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
+from sklearn.utils.validation import check_is_fitted  # type: ignore
 
-from ..common import matching_matrix
+from ..radialmatch1d import RadialMatch1D
 from .classifier import Classifier
 from .mixing import Mixing
 from .mixing_laplace import MixingLaplace
-from ..radialmatch1d import RadialMatch1D
 
 
 class Mixture():
@@ -150,6 +150,7 @@ class Mixture():
 
         :returns: mean output vector (N × D_y), variance of output (N × D_y)
         """
+        check_is_fitted(self)
 
         N, _ = X.shape
         D_y, D_X = self.classifiers_[0].W_.shape
@@ -201,6 +202,8 @@ class Mixture():
 
         :returns: mean output vectors of each classifier (K × N × D_y)
         """
+        check_is_fitted(self)
+
         N = len(X)
 
         y = np.zeros((self.K_, N, self.D_y_))
