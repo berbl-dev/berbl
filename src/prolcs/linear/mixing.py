@@ -224,7 +224,15 @@ class Mixing:
 
         xi = np.abs(alpha - h)
 
-        lxi = 1 / (2 * xi) * (1 / (1 + np.exp(-xi)) - 1 / 2)
+        # If ``alpha == h``, then the following contains a division by zero and
+        # then a multiplication by NaN which results in a divide and an invalid
+        # value warning to be thrown.
+        with np.errstate(divide="ignore", invalid="ignore"):
+            lxi = 1 / (2 * xi) * (1 / (1 + np.exp(-xi)) - 1 / 2)
+        # Where `alpha == h` we get NaN's in the previous formula due to xi = 0
+        # there. We simply solve that by setting the corresponding entries to
+        # the limit for `x -> 0` of `lambda(x)` which is `0.125`.
+        lxi[np.where(np.logical_and(xi == 0, np.isnan(lxi)))] = 0.125
 
         return alpha, lxi
 
