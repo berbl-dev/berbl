@@ -161,10 +161,6 @@ class MixingLaplace(Mixing):
                     * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
             # This fixes(?) some numerical problems.
             if KLRG > 0 and np.isclose(KLRG, 0):
-                print(
-                    "Warning: Kullback-Leibler divergence ever so slightly less"
-                    "than zero, fixing"
-                )
                 KLRG = 0
             assert KLRG <= 0, (f"Kullback-Leibler divergence less than zero:"
             f" {KLRG}\n{G}\n{R}")
