@@ -69,23 +69,23 @@ class Mixing:
         N, self.D_V_ = Phi.shape
 
         self.V_ = random_state.normal(loc=0,
-                                     scale=self.A_BETA / self.B_BETA,
-                                     size=(self.D_V_, self.K))
+                                      scale=self.A_BETA / self.B_BETA,
+                                      size=(self.D_V_, self.K))
         # a_beta is actually constant so we can set it here and be done with it.
         self.a_beta_ = np.repeat(self.A_BETA + self.D_V_ / 2, self.K)
         self.b_beta_ = np.repeat(self.B_BETA, self.K)
 
         # Initialize parameters for the Bouchard approximation.
         self.alpha_ = random_state.normal(loc=0,
-                                         scale=self.A_BETA / self.B_BETA,
-                                         size=(N, 1))
+                                          scale=self.A_BETA / self.B_BETA,
+                                          size=(N, 1))
         # lxi stands for λ(ξ) which is used in Bouchard's approximation. Its
         # supremum value is one eighth.
         self.lxi_ = random_state.random(size=(N, self.K)) * 0.125
         self.alpha_, self.lxi_ = self._opt_bouchard(M=M,
-                                                  Phi=Phi,
-                                                  V=self.V_,
-                                                  alpha=self.alpha_,
+                                                    Phi=Phi,
+                                                    V=self.V_,
+                                                    alpha=self.alpha_,
                                                     lxi=self.lxi_)
 
         self.G_ = self._mixing(M, Phi, self.V_)
@@ -111,9 +111,9 @@ class Mixing:
 
             # TODO How much faster would in-place ugliness be?
             self.alpha_, self.lxi_ = self._opt_bouchard(M=M,
-                                                      Phi=Phi,
-                                                      V=self.V_,
-                                                      alpha=self.alpha_,
+                                                        Phi=Phi,
+                                                        V=self.V_,
+                                                        alpha=self.alpha_,
                                                         lxi=self.lxi_)
 
             self.b_beta_ = self._train_b_beta(V=self.V_,
@@ -137,6 +137,7 @@ class Mixing:
             # TODO Check whether the abs is necessary for Bouchard.
             # if self.L_M_q < L_M_q_prev:
             #     print(f"self.L_M_q < L_M_q_prev: {self.L_M_q} < {L_M_q_prev}")
+            assert np.all(~ np.isnan(self.lxi_))
 
         return self
 
