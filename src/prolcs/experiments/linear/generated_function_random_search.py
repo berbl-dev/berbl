@@ -2,7 +2,7 @@ import os
 
 import click
 import numpy as np  # type: ignore
-from prolcs.radialmatch1d import RadialMatch1D
+from prolcs.match.radial1d import RadialMatch1D
 from prolcs.experiments.drugowitsch.generated_function import generate
 from prolcs.linear.mixture import Mixture
 from prolcs.logging import log_

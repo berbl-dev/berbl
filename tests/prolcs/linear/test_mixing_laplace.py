@@ -6,7 +6,7 @@ from prolcs.allmatch import AllMatch
 from prolcs.linear.classifier import Classifier
 from prolcs.linear.mixing_laplace import MixingLaplace
 from prolcs.nomatch import NoMatch
-from prolcs.radialmatch1d import RadialMatch1D
+from prolcs.match.radial1d import RadialMatch1D
 from prolcs.utils import add_bias
 
 

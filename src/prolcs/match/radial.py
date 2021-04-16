@@ -18,6 +18,10 @@ class RadialMatch():
         have to invert it which is costly and the model structure optimizer
         can very well work on the inverse directly anyway).
 
+        However: The inverse we have here may not be positive semi-definite
+        (i.e. it may not be an inverse of a positive semi-definite matrix) which
+        invalidates our point.
+
         :param mu: Position of the Gaussian.
         :param lambd_2: Squared precision matrix (squared inverse covariance
             matrix).

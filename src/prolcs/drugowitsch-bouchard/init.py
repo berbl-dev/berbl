@@ -1,7 +1,7 @@
 import numpy as np
 from prolcs.common import phi_standard
 from prolcs.drugowitsch.model import Model
-from prolcs.drugowitsch.radialmatch1d import RadialMatch1D
+from prolcs.drugowitsch.match.radial1d import RadialMatch1D
 from prolcs.utils import get_ranges
 
 
