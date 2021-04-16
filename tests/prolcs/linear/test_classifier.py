@@ -12,16 +12,6 @@ from sklearn.linear_model import LinearRegression
 
 
 @st.composite
-def match1d(draw, has_bias_column=True):
-    a = draw(st.floats(min_value=0, max_value=100))
-    b = draw(st.floats(min_value=0, max_value=50))
-    return RadialMatch1D(a=a,
-                         b=b,
-                         ranges=(-1, 1),
-                         has_bias_column=has_bias_column)
-
-
-@st.composite
 def Xs(draw, N=10, D_X=1, bias_column=True):
     X = draw(
         arrays(np.float64, (N, D_X),
@@ -39,9 +29,9 @@ def ys(draw, N=10, D_y=1):
                elements=st.floats(min_value=-1000, max_value=1000)))
 
 
-@given(match1d(), Xs(), ys())
+@given(Xs(), ys())
 @settings(deadline=None, max_examples=15)
-def test_fit_inc_L_q(match, X, y):
+def test_fit_inc_L_q(X, y):
     """
     “Each parameter update either increases L_q or leaves it unchanged (…). If
     this is not the case, then the implementation is faulty and/or suffers from
@@ -49,6 +39,7 @@ def test_fit_inc_L_q(match, X, y):
 
     assert delta_L_q >= 0, f"delta_L_q = {delta_L_q} < 0"
     """
+    match = AllMatch()
     max_iters = range(1, 101, 10)
     L_qs = np.array([None] * len(max_iters))
     for i in range(len(max_iters)):
@@ -109,7 +100,7 @@ def test_fit_linear_functions(data):
     # TODO This is not yet ideal; we probably want to scale the score by the
     # range of y values somehow.
     # score /= np.max(y) - np.min(y)
-    tol = 2e-3
+    tol = 1e-2
     assert score < tol, (
         f"Mean absolute error is {score} (> {tol})."
         f"Even though L(q) = {cl.L_q_}, classifier's weight matrix is still"
@@ -142,7 +133,7 @@ def random_data(draw, N=100):
 @given(random_data(N=1000))
 def test_fit_non_linear(data):
     """
-    A single classifier should behave very similar to a
+    A single classifier should behave better or very similar to a
     ``sklearn.linear_model.LinearRegression`` on random data.
     """
     X, y = data
@@ -164,10 +155,10 @@ def test_fit_non_linear(data):
     score = np.clip(score, a_min=1e-3, a_max=np.inf)
     score_oracle = np.clip(score_oracle, a_min=1e-3, a_max=np.inf)
 
-    assert (np.isclose(
-        score / score_oracle, 1,
-        atol=1e-1)), (f"Classifier score ({score}) not close to"
-                      f"linear regression oracle score ({score_oracle})")
+    assert (score < score_oracle
+            or np.isclose(score / score_oracle, 1, atol=1e-1)), (
+                f"Classifier score ({score}) not close to"
+                f"linear regression oracle score ({score_oracle})")
 
 
 # TODO Add tests for all the other hyperparameters of Classifier.
