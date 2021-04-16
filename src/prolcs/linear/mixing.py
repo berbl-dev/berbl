@@ -282,16 +282,21 @@ class Mixing:
         R_T = np.zeros((self.K, N))
         for k in range(self.K):
             cl = self.CLS[k]
-            R_T[k] = np.exp(D_y / 2 * (ss.digamma(cl.a_tau_) - np.log(cl.b_tau_))
-                            - 0.5 * (cl.a_tau_ / cl.b_tau_ * np.sum(
-                                (y - X @ cl.W_.T)**2, 1)
-                                     + D_y * np.sum(X * (X @ cl.Lambda_1_), 1)))
+            R_T[k] = np.exp(
+                D_y / 2 * (ss.digamma(cl.a_tau_) - np.log(cl.b_tau_)) - 0.5
+                * (cl.a_tau_ / cl.b_tau_ * np.sum((y - X @ cl.W_.T)**2, 1)
+                   + D_y * np.sum(X * (X @ cl.Lambda_1_), 1)))
         R = R_T.T * G
+        # Make a copy of the reference for checking for nans a few lines later.
+        R_ = R
         # The sum can be 0 meaning we do 0/0 (== NaN in Python) but we ignore it
         # because it is fixed one line later (this is how Drugowitsch does it).
         with np.errstate(invalid="ignore"):
             R = R / np.sum(R, 1)[:, np.newaxis]
-        R = np.nan_to_num(R, nan=0)
+        # This is safer than Drugowitsch's plain `R = np.nan_to_num(R, nan=0)`
+        # (i.e. we checks whether the nan really came from the cause described
+        # above at the cost of an additional run over R to check for zeroes).
+        R[np.where(np.logical_and(R_ == 0, np.isnan(R)))] = 0
         return R
 
     def _train_b_beta(self, V: np.ndarray, Lambda_V_1: np.ndarray):
