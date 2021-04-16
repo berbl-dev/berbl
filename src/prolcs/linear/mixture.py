@@ -151,8 +151,7 @@ class Mixture():
         :returns: mean output vector (N × D_y), variance of output (N × D_y)
         """
 
-        M = matching_matrix([cl.match for cl in self.classifiers_], X)
-        N, _ = M.shape
+        N, _ = X.shape
         D_y, D_X = self.classifiers_[0].W_.shape
 
         if self.phi is None:
@@ -166,7 +165,7 @@ class Mixture():
         for k in range(self.K_):
             y_var[k] = self.classifiers_[k].predict_var(X)
 
-        G_ = self.mixing_._mixing(M, Phi, self.mixing_.V_).T  # K × N
+        G_ = self.mixing_.mixing(X).T  # K × N
 
         # For each classifier's prediction, we weigh every dimension of the
         # output vector by the same amount, thus we simply repeat the G values

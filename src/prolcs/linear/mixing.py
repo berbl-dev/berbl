@@ -141,6 +141,32 @@ class Mixing:
 
         return self
 
+    def mixing(self, X):
+        """
+        Calculates the mixing weights for each of the given inputs.
+
+        Parameters
+        ----------
+        X : array
+            input data
+
+        Returns
+        -------
+        array of shape (N, K)
+            Mixing matrix containing the classifiers' mixing weights for each
+            input.
+        """
+        check_is_fitted(self)
+
+        if self.PHI is None:
+            Phi = np.ones((len(X), 1))
+        else:
+            raise NotImplementedError("phi is not None in Mixing")
+
+        M = matching_matrix([cl.match for cl in self.CLS], X)
+
+        return self._mixing(M, Phi, self.V_)
+
     def _train_mix_weights(self, M, X, y, Phi, R, V, a_beta, b_beta, lxi,
                            alpha):
         """
