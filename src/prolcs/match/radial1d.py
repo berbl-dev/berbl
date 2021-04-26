@@ -12,7 +12,7 @@ class RadialMatch1D():
                  b: float = None,
                  mu: float = None,
                  sigma_2: float = None,
-                 ranges: Tuple[float, float] = (-np.inf, np.inf),
+                 ranges: np.ndarray = np.array([[-np.inf, np.inf]]),
                  has_bias_column=True):
         """
         ``self.match`` is a radial basis function–based matching function as
@@ -41,7 +41,7 @@ class RadialMatch1D():
         elif a is None and mu is not None:
             assert np.isfinite(
                 ranges).all(), "If specifying mu, ranges need to be finite"
-            l, u = self.ranges
+            l, u = self.ranges[0][0], self.ranges[0][1]
             self.a = 100 * (mu - l) / (u - l)
         else:
             raise ValueError("Exactly one of a and mu has to be given")
@@ -62,7 +62,7 @@ class RadialMatch1D():
             f"ranges={self.ranges},has_bias_column={self.has_bias_column})")
 
     def mu(self):
-        l, u = self.ranges
+        l, u = self.ranges[0][0], self.ranges[0][1]
         return l + (u - l) * self.a / 100
 
     def sigma_2(self):
@@ -95,9 +95,15 @@ class RadialMatch1D():
         is expected to have a bias column (see attribute
         ``self.has_bias_column``), remove that beforehand.
 
-        :param X: input matrix ``(N × D_X)`` with ``D_X == 1``
-        :returns: matching vector ``(N)`` of this matching function (i.e. of
-            this classifier)
+        Parameters
+        ----------
+        X : array of shape ``(N, 1)`` or ``(N, 2)`` if ``self.has_bias_column``
+            Input matrix.
+
+        Returns
+        -------
+        array of shape ``(N)``
+            Matching vector of this matching function for the given input.
         """
 
         if self.has_bias_column:
@@ -107,7 +113,7 @@ class RadialMatch1D():
 
         return self._match_wo_bias(X)
 
-    def _match_wo_bias(self, X: np.ndarray):
+    def _match_wo_bias(self, X: np.ndarray) -> np.ndarray:
         """
         Compute matching vector for given input assuming that the input doesn't
         have bias column.
@@ -135,9 +141,8 @@ class RadialMatch1D():
         return np.exp(m)
 
     def plot(self, ax, **kwargs):
-        l = self.ranges[0]
-        h = self.ranges[1]
-        X = np.arange(l, h, 0.01)[:, np.newaxis]
+        l, u = self.ranges[0][0], self.ranges[0][1]
+        X = np.arange(l, u, 0.01)[:, np.newaxis]
         M = self._match_wo_bias(X)
         ax.plot(X, M, **kwargs)
         ax.axvline(self.mu(), color=kwargs["color"])

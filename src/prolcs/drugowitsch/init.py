@@ -1,8 +1,8 @@
 import numpy as np
-from prolcs.common import phi_standard
-from prolcs.drugowitsch.model import Model
-from prolcs.drugowitsch.match.radial1d import RadialMatch1D
-from prolcs.utils import get_ranges
+from ..common import phi_standard
+from .model import Model
+from ..match.radial1d import RadialMatch1D
+from ..utils import get_ranges
 
 
 def _individual(k: int, ranges: np.ndarray,

@@ -11,7 +11,7 @@ from prolcs.drugowitsch.hyperparams import HParams
 from prolcs.drugowitsch.state import State
 from prolcs.logging import log_
 from prolcs.drugowitsch.init import make_init
-from prolcs.drugowitsch.match.radial1d import RadialMatch1D
+from prolcs.match.radial1d import RadialMatch1D
 from prolcs.utils import add_bias
 from sklearn.utils import check_random_state  # type: ignore
 
@@ -19,9 +19,9 @@ from sklearn import metrics  # type: ignore
 
 # The individual used in function generation.
 ms = [
-    RadialMatch1D(mu=0.2, sigma_2=0.05, ranges=(0, 1)),
-    RadialMatch1D(mu=0.5, sigma_2=0.01, ranges=(0, 1)),
-    RadialMatch1D(mu=0.8, sigma_2=0.05, ranges=(0, 1)),
+    RadialMatch1D(mu=0.2, sigma_2=0.05, ranges=[[0, 1]], has_bias_column=False),
+    RadialMatch1D(mu=0.5, sigma_2=0.01, ranges=[[0, 1]], has_bias_column=False),
+    RadialMatch1D(mu=0.8, sigma_2=0.05, ranges=[[0, 1]], has_bias_column=False),
 ]
 
 np.seterr(all="warn")

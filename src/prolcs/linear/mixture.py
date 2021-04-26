@@ -5,7 +5,7 @@ from sklearn.utils import check_consistent_length  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 
-from ..match.radial1d import RadialMatch1D
+from ..match.radial import RadialMatch
 from .classifier import Classifier
 from .mixing import Mixing
 from .mixing_laplace import MixingLaplace
@@ -14,7 +14,7 @@ from .mixing_laplace import MixingLaplace
 class Mixture():
     def __init__(self,
                  n_cls=10,
-                 cl_class=RadialMatch1D,
+                 cl_class=RadialMatch,
                  ranges=None,
                  matchs: List = None,
                  phi=None,
@@ -74,8 +74,10 @@ class Mixture():
 
         if (self.matchs is None and self.n_cls is not None
                 and self.cl_class is not None):
-            self.matchs_ = self._random_matchs(self.n_cls, self.cl_class,
-                                               self.ranges, random_state)
+            self.matchs_ = self._random_matchs(n_cls=self.n_cls,
+                                               cl_class=self.cl_class,
+                                               ranges=self.ranges,
+                                               random_state=random_state)
         elif self.matchs is not None:
             self.matchs_ = self.matchs
         else:

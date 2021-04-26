@@ -1,5 +1,7 @@
 import numpy as np  # type: ignore
 from prolcs.linear.mixture import Mixture
+from prolcs.match.radial1d import RadialMatch1D
+from prolcs.match.radial import RadialMatch
 from prolcs.logging import log_
 from sklearn.utils import check_random_state  # type: ignore
 
@@ -8,6 +10,9 @@ class RandomSearch:
     """
     Generates random solutions (i.e. random sets of match functions), trains the
     mixture model for each and keeps the best of those models.
+
+    Note that different matching functions are used for on- and
+    multi-dimensional input.
     """
     def __init__(self, n_iter=250, n_cls=5, random_state=None, **kwargs):
         """
@@ -35,6 +40,10 @@ class RandomSearch:
         random_state = check_random_state(self.random_state)
 
         self.mixture_ = None
+        if X.shape[1] > 1:
+            cl_class = RadialMatch1D
+        else:
+            cl_class = RadialMatch
 
         for iter in range(self.n_iter):
             if type(self.n_cls) is int:
@@ -44,8 +53,9 @@ class RandomSearch:
 
             # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
             seed = random_state.randint(2**32 - 1)
-            ranges = (X.min(), X.max())
+            ranges = np.vstack([X.min(), X.max()]).T
             mixture = Mixture(ranges=ranges,
+                              cl_class=cl_class,
                               random_state=seed,
                               **self.__kwargs)
             mixture.fit(X, y)
