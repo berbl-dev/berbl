@@ -14,7 +14,7 @@ from .mixing_laplace import MixingLaplace
 class Mixture():
     def __init__(self,
                  n_cls=10,
-                 cl_class=RadialMatch,
+                 match_class=RadialMatch,
                  ranges=None,
                  matchs: List = None,
                  phi=None,
@@ -26,13 +26,13 @@ class Mixture():
         structure.
 
         :param n_cls: Generate ``n_cls`` many random classifiers (using
-            ``random_state``) with class ``cl_class``. If ``n_cls`` is given,
+            ``random_state``) with class ``match_class``. If ``n_cls`` is given,
             ``matchs`` must be ``None``.
-        :param cl_class: See ``n_cls``.
+        :param match_class: See ``n_cls``.
         :param random_state: See ``n_cls``.
         :param matchs: A list of matching functions (i.e. objects implementing a
             ``match`` attribute) defining the structure of this mixture. If
-            given, ``n_cls`` and ``cl_class`` are not used to generate
+            given, ``n_cls`` and ``match_class`` are not used to generate
             classifiers randomly.
         :param phi: mixing feature extractor (N × D_X → N × D_V); if ``None``
             uses the default LCS mixing feature matrix based on ``phi(x) = 1``
@@ -42,7 +42,7 @@ class Mixture():
         """
 
         self.n_cls = n_cls
-        self.cl_class = cl_class
+        self.match_class = match_class
         self.ranges = ranges
         self.matchs = matchs
         self.phi = phi
@@ -50,9 +50,9 @@ class Mixture():
         self.random_state = random_state
         self.__kwargs = kwargs
 
-    def _random_matchs(self, n_cls, cl_class, ranges, random_state):
+    def _random_matchs(self, n_cls, match_class, ranges, random_state):
         return [
-            cl_class.random(ranges, random_state=random_state)
+            match_class.random(ranges, random_state=random_state)
             for i in range(n_cls)
         ]
 
@@ -73,17 +73,17 @@ class Mixture():
         random_state = check_random_state(self.random_state)
 
         if (self.matchs is None and self.n_cls is not None
-                and self.cl_class is not None):
+                and self.match_class is not None):
             self.matchs_ = self._random_matchs(n_cls=self.n_cls,
-                                               cl_class=self.cl_class,
+                                               match_class=self.match_class,
                                                ranges=self.ranges,
                                                random_state=random_state)
         elif self.matchs is not None:
             self.matchs_ = self.matchs
         else:
             raise ValueError(
-                f"If matchs isn't given, must provide at least n_cls, cl_class "
-                f"and ranges and these are {self.n_cls}, {self.cl_class} and"
+                f"If matchs isn't given, must provide at least n_cls, match_class "
+                f"and ranges and these are {self.n_cls}, {self.match_class} and"
                 f"{self.ranges}")
 
         self.K_ = len(self.matchs_)

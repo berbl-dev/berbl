@@ -11,25 +11,24 @@ class RandomSearch:
     Generates random solutions (i.e. random sets of match functions), trains the
     mixture model for each and keeps the best of those models.
 
-    Note that different matching functions are used for on- and
+    Note that different matching functions are used for one- and
     multi-dimensional input.
     """
     def __init__(self, n_iter=250, n_cls=5, random_state=None, **kwargs):
         """
         Parameters
         ----------
-        n_iter       : int, optional
-                       The number of random solutions to generate.
-        n_cls        : int or prob distribution over ints expecting a random_state
-                       The number of match functions/classifiers each solution
-                       should have. Either fixed or a probability distribution over
-                       this variable.
+        n_iter : int, optional
+            The number of random solutions to generate.
+        n_cls : int or prob distribution over ints expecting a
+            random_state The number of match functions/classifiers each solution
+            should have. Either fixed or a probability distribution over this
+            variable.
         random_state
-                       The usual `random_state` argument to probabilistic
-                       modules.
+            The usual `random_state` argument to probabilistic modules.
         **kwargs
-                       Any other keyword parameters are passed through to
-                       `Mixture`, `Classifier` and `Mixing`.
+            Any other keyword parameters are passed through to `Mixture`,
+            `Classifier` and `Mixing`.
         """
         self.n_iter = n_iter
         self.n_cls = n_cls
@@ -41,9 +40,9 @@ class RandomSearch:
 
         self.mixture_ = None
         if X.shape[1] > 1:
-            cl_class = RadialMatch1D
+            match_class = RadialMatch1D
         else:
-            cl_class = RadialMatch
+            match_class = RadialMatch
 
         for iter in range(self.n_iter):
             if type(self.n_cls) is int:
@@ -55,7 +54,7 @@ class RandomSearch:
             seed = random_state.randint(2**32 - 1)
             ranges = np.vstack([X.min(), X.max()]).T
             mixture = Mixture(ranges=ranges,
-                              cl_class=cl_class,
+                              match_class=match_class,
                               random_state=seed,
                               **self.__kwargs)
             mixture.fit(X, y)
