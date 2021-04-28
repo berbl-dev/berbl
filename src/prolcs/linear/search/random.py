@@ -6,6 +6,26 @@ from prolcs.logging import log_
 from sklearn.utils import check_random_state  # type: ignore
 
 
+def uniform_interval(low, high):
+    """
+    A uniform distribution over the number of classifiers in a solution.
+
+    The arguments get passed through to ``random_state.randint(low, high)``.
+
+    Parameters
+    ----------
+    low : int
+        Minimum number of classifiers.
+    high : int
+        Maximum number of classifiers.
+    """
+    def f(random_state):
+        random_state = check_random_state(random_state)
+        return random_state.randint(low, high)
+
+    return f
+
+
 class RandomSearch:
     """
     Generates random solutions (i.e. random sets of match functions), trains the
