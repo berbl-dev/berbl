@@ -20,10 +20,9 @@ class RandomSearch:
         ----------
         n_iter : int, optional
             The number of random solutions to generate.
-        n_cls : int or prob distribution over ints expecting a
-            random_state The number of match functions/classifiers each solution
-            should have. Either fixed or a probability distribution over this
-            variable.
+        n_cls : int or prob distribution over ints expecting a random_state
+            The number of match functions/classifiers each solution should have.
+            Either fixed or a probability distribution over this variable.
         random_state
             The usual `random_state` argument to probabilistic modules.
         **kwargs
@@ -38,11 +37,12 @@ class RandomSearch:
     def fit(self, X: np.ndarray, y: np.ndarray):
         random_state = check_random_state(self.random_state)
 
-        self.mixture_ = None
-        if X.shape[1] > 1:
+        if X.shape[1] <= 2:
             match_class = RadialMatch1D
         else:
             match_class = RadialMatch
+
+        self.mixture_ = None
 
         for iter in range(self.n_iter):
             if type(self.n_cls) is int:
