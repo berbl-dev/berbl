@@ -8,6 +8,7 @@ from sklearn.utils.validation import check_is_fitted  # type: ignore
 from ..match.radial import RadialMatch
 from .classifier import Classifier
 from .mixing import Mixing
+from ..utils import add_bias
 from .mixing_laplace import MixingLaplace
 
 
@@ -16,6 +17,7 @@ class Mixture():
                  n_cls=10,
                  match_class=RadialMatch,
                  ranges=None,
+                 add_bias=True,
                  matchs: List = None,
                  phi=None,
                  fit_mixing="bouchard",
@@ -25,43 +27,56 @@ class Mixture():
         A model based on mixing linear classifiers using the given model
         structure.
 
-        :param n_cls: Generate ``n_cls`` many random classifiers (using
-            ``random_state``) with class ``match_class``. If ``n_cls`` is given,
-            ``matchs`` must be ``None``.
-        :param match_class: See ``n_cls``.
-        :param random_state: See ``n_cls``.
-        :param matchs: A list of matching functions (i.e. objects implementing a
-            ``match`` attribute) defining the structure of this mixture. If
-            given, ``n_cls`` and ``match_class`` are not used to generate
-            classifiers randomly.
-        :param phi: mixing feature extractor (N × D_X → N × D_V); if ``None``
-            uses the default LCS mixing feature matrix based on ``phi(x) = 1``
-        :param fit_mixing: either of "bouchard" or "laplace"
-        :param **kwargs: This is passed through unchanged to both ``Mixing`` and
+        Parameters
+        ----------
+        n_cls
+            Generate ``n_cls`` many random classifiers (using ``random_state``)
+            with class ``match_class``. If ``n_cls`` is given, ``matchs`` must
+            be ``None``.
+        match_class
+            See ``n_cls``.
+        ranges : array of shape ``(X_D, 2)``
+            A value range pair per input dimension.
+        add_bias : bool
+            Whether to add an all-ones bias column to the input data.
+        matchs
+            A list of matching functions (i.e. objects implementing a ``match``
+            attribute) defining the structure of this mixture. If given,
+            ``n_cls`` and ``match_class`` are not used to generate classifiers
+            randomly.
+        phi
+            mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
+            default LCS mixing feature matrix based on ``phi(x) = 1``
+        fit_mixing
+            either of "bouchard" or "laplace"
+        random_state
+            See ``n_cls``.
+        **kwargs
+            This is passed through unchanged to both ``Mixing`` and
             ``Classifier``.
         """
 
         self.n_cls = n_cls
         self.match_class = match_class
         self.ranges = ranges
+        self.add_bias = add_bias
         self.matchs = matchs
         self.phi = phi
         self.fit_mixing = fit_mixing
         self.random_state = random_state
         self.__kwargs = kwargs
 
-    def _random_matchs(self, n_cls, match_class, ranges, random_state):
+    def _random_matchs(self, n_cls, match_class, ranges, has_bias,
+                       random_state):
         return [
-            match_class.random(ranges, random_state=random_state)
-            for i in range(n_cls)
+            match_class.random(ranges,
+                               has_bias=has_bias,
+                               random_state=random_state) for i in range(n_cls)
         ]
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         """
         Fits this model to the provided data.
-
-        Note that unless ``X`` contains a bias column (e.g. a column of ones),
-        the individual classifiers do not fit the intercept.
 
         :param X: input matrix (N × D_X)
         :param y: output matrix (N × D_y)
@@ -70,6 +85,9 @@ class Mixture():
 
         check_consistent_length(X, y)
 
+        if self.add_bias:
+            X = add_bias(X)
+
         random_state = check_random_state(self.random_state)
 
         if (self.matchs is None and self.n_cls is not None
@@ -77,14 +95,15 @@ class Mixture():
             self.matchs_ = self._random_matchs(n_cls=self.n_cls,
                                                match_class=self.match_class,
                                                ranges=self.ranges,
+                                               has_bias=self.add_bias,
                                                random_state=random_state)
         elif self.matchs is not None:
             self.matchs_ = self.matchs
         else:
             raise ValueError(
-                f"If matchs isn't given, must provide at least n_cls, match_class "
-                f"and ranges and these are {self.n_cls}, {self.match_class} and"
-                f"{self.ranges}")
+                f"If matchs isn't given, must provide at least n_cls, "
+                f"match_class and ranges and these are {self.n_cls}, "
+                f"{self.match_class} and {self.ranges}")
 
         self.K_ = len(self.matchs_)
         _, self.D_X_ = X.shape
@@ -154,6 +173,9 @@ class Mixture():
         """
         check_is_fitted(self)
 
+        if self.add_bias:
+            X = add_bias(X)
+
         N, _ = X.shape
         D_y, D_X = self.classifiers_[0].W_.shape
 
@@ -205,6 +227,9 @@ class Mixture():
         :returns: mean output vectors of each classifier (K × N × D_y)
         """
         check_is_fitted(self)
+
+        if self.add_bias:
+            X = add_bias(X)
 
         N = len(X)
 
