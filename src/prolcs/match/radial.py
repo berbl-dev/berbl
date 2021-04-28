@@ -1,164 +1,180 @@
 # TODO Check for standard deviation (sigma) vs variance (sigma**2) vs inverse of
 # those
-from typing import *
+
 import numpy as np  # type: ignore
-import scipy.special as ss  # type: ignore
+import scipy.stats as st  # type: ignore
+from ..utils import radius_for_ci
+from sklearn.utils import check_random_state  # type: ignore
+
+
+def _check_dimensions(D_X):
+    assert D_X > 1, f"Dimensionality {D_X} not suitable for RadialMatch"
 
 
 class RadialMatch():
-    def __init__(self,
-                 mu: np.ndarray,
-                 lambd_2: np.ndarray,
-                 ranges: np.ndarray = None):
-        """
-        Note: The covariance matrix has to be positive definite (cf. e.g.
-        `Wikipedia
-        <https://en.wikipedia.org/wiki/Gaussian_function#Multi-dimensional_Gaussian_function>`_),
-        thus we simply require its inverse right away (also, this way we don't
-        have to invert it which is costly and the model structure optimizer
-        can very well work on the inverse directly anyway).
+    """
+    Radial basis function–based matching for dimensions greater than 1.
 
-        However: The inverse we have here may not be positive semi-definite
-        (i.e. it may not be an inverse of a positive semi-definite matrix) which
-        invalidates our point.
-
-        :param mu: Position of the Gaussian.
-        :param lambd_2: Squared precision matrix (squared inverse covariance
-            matrix).
-        :param ranges: The value ranges of the problem considered. If ``None``,
-            use ``[-inf, inf]`` for each dimension.
+    Important: The very first column is always matched as we expect it to be a
+    bias column.
+    """
+    def __init__(self, mu: np.ndarray, eigvals: np.ndarray,
+                 eigvecs: np.ndarray, has_bias=True):
         """
-        assert mu.shape[0] == lambd_2.shape[0]
-        assert mu.shape[0] == lambd_2.shape[1]
+        Parameters
+        ----------
+
+        mu : array
+             Position of the Gaussian.
+        eigvals : array
+            Eigenvalues of the Gaussian's precision matrix.
+        eigvecs : array
+            Eigenvectors of the Gaussian's precision matrix.
+        """
+        self.D_X = mu.shape[0]
+        _check_dimensions(self.D_X)
+
+        assert mu.shape[0] == eigvals.shape[0]
+        assert mu.shape[0] == eigvecs.shape[0]
         self.mu = mu
-        self.lambd_2 = lambd_2
-        self.rng = rng
-        if ranges is not None:
-            assert ranges.shape == (mu.shape[0], 2)
-            self.ranges = ranges
-        else:
-            self.ranges = np.repeat([-np.inf, np.inf], len(mu)).reshape(
-                (mu.shape[0], 2))
+
+        self.eigvals = eigvals
+        self.eigvecs = eigvecs
+
+        self.has_bias = has_bias
 
     def __repr__(self):
-        return f"RadialMatch({self.mu}, {self.lambd_2}, {self.ranges})"
+        return f"RadialMatch({self.mu}, {self.eigvals}, {self.eigvecs})"
 
     @classmethod
-    def random(
-        cls,
-        ranges: np.ndarray,
-        lambd_2_gen: Callable[
-            [np.ndarray],
-            # TODO Extract this
-            np.ndarray] = lambda r: np.repeat(100, r.shape[0]**2).reshape(
-                (r.shape[0], r.shape[0])),
-        rng: np.random.Generator = np.random.default_rng()):
+    def random(cls, ranges: np.ndarray, has_bias=True, ci=0.2, random_state=None):
         """
-        Based on [PDF p. 256] but slightly different:
-
-        * We allow multi-dimensional inputs (he only does ``D_X = 1``).
-        * We do not introduce helper parameters (for now).
-        * We only roughly try to mimic the ranges of mutation used by him.
-        * We clip both lambd_2 and mu values to the respective dimension's range.
-
-        This is basically what (Butz, 2005, “Kernel-based, ellipsoidal
-        conditions in the real-valued XCS classifier system”) but with soft
-        boundaries (i.e. every classifier matches everywhere, even if only
-        slightly), that is, without a threshold parameter. Also, we evolve
-        ``(sigma**-1)**2`` directly.
-
-        :param ranges: The value ranges for each dimension of the problem
-            considered (a matrix of shape ``(mu.shape[0], 2)``).
-        :param lambd_2_gen: Generator for deriving values for lambd_2 for each
-            dimension from ``ranges``. The default is to simply use a value of
-            ``100`` for each dimension (which is pretty arbitrary).
+        Parameters
+        ----------
+        ranges : array of shape ``(X_D, 2)``
+            A value range pair per input dimension. We assume that ranges never
+            contains an entry for a bias column.
+        has_bias : bool
+            Whether a bias column is included in the input. For matching, this
+            means that we ignore the first column (as it is assumed to be the
+            bias column and that is assumed to always be matched). Note that if
+            ``has_bias``, then ``ranges.shape[0] = X.shape[1] - 1`` as ranges
+            never contains an entry for a bias column.
+        ci : float in `(0, 1)`
+            Ratio of samples expected to fall into one standard deviation (i.e.
+            how wide the resulting ellipsoid is).
         """
         D_X, _ = ranges.shape
         assert _ == 2
-        return RadialMatch(
-            mu=rng.uniform(low=ranges[:, [0]].reshape((-1)),
-                           high=ranges[:, [1]].reshape((-1)),
-                           size=D_X),
-            # NOTE rng.uniform(…, size=(D_X, D_X)) does not work in general. Has
-            # to be problem and especially ranges-dependent.
-            lambd_2=lambd_2_gen(ranges),
-            ranges=ranges,
-            rng=rng)
 
-    def mutate(self):
-        self.mu = np.clip(
-            self.rng.normal(
-                loc=self.mu,
-                # This was chosen to be similar to [PDF p. 228], where mutation
-                # is a normal with scale being a tenth of the value range.
-                scale=0.01 * np.sum(self.ranges * np.array([-1, 1]), 1)),
-            # clip to each dimension's range
-            self.ranges[:, [0]].reshape((-1)),
-            self.ranges[:, [1]].reshape((-1)))
-        # TODO Is there a way to do this better for the multi-dim case?
-        # This is just exactly how Drugowitsch does it [PDF p. 228].
-        b_k = - 10 * np.log10(np.sqrt(1 / self.lambd_2))
-        b_k_ = b_k
-        b_k = np.clip(self.rng.normal(
-            loc=b_k,
-            scale=5,
-            size=b_k.shape), 0, 50)
-        lambd_2_ = self.lambd_2
-        self.lambd_2 = self.rng.normal(
-            loc=self.lambd_2,
-            # TODO This was chosen relatively arbitrary (but motivated by [PDF
-            # p. 228])
-            scale=0.005 * np.sum(self.ranges * np.array([-1, 1]), 1),
-            size=self.lambd_2.shape)
-        return self
+        _check_dimensions(D_X)
 
-    def match(self, X: np.ndarray):
+        random_state = check_random_state(random_state)
+
+        mu = random_state.uniform(low=ranges[:, [0]].reshape((-1)),
+                                  high=ranges[:, [1]].reshape((-1)),
+                                  size=D_X)
+
+        # If this were a ball, then ``r`` would be its radius.
+        r = radius_for_ci(n=D_X, ci=ci)
+
+        # The index of the eigenvalue that is used to balance the eigenvalue
+        # product in the end.
+        i0 = random_state.randint(0, D_X)
+
+        # Draw ``D_X - 1`` eigenvalues, each from a uniform distribution with
+        # expected value ``r``.
+        rs = random_state.uniform(r - r / 2, r + r / 2, size=D_X - 1)
+        # Balance eigenvalues such that, in the end, ``r**D_X =
+        # np.prod(eigvals)`` (i.e. the ellipsoid has the same volume as a ball
+        # with radius ``r`` had).
+        r0 = r**D_X / np.prod(rs)
+        rs = np.insert(rs, i0, r0)
+        # Eigenvalues are the square of the radii.
+        eigvals = rs**2
+
+        # TODO Unsure: Do I need to use the special orthogonal group here (i.e.
+        # enforce det = +1)?
+        # TODO Yes, I think we indeed need this since this way the length of the
+        # vectors is 1??
+        eigvecs = st.special_ortho_group.rvs(dim=D_X, random_state=None)
+        # eigvecs = st.ortho_group.rvs(dim=D_X, random_state=None)
+
+        # TODO May need to use range somehow (eigenvalues seem pretty large for
+        # [-1, 1] currently).
+
+        return RadialMatch(mu=mu, eigvals=eigvals, eigvecs=eigvecs)
+
+    def match(self, X: np.ndarray) -> np.ndarray:
         """
-        We vectorize the following (i.e. feed the whole input through at once)::
+        Compute matching vector for the given input.
 
-            for n in range(len(X)):
-                M[n] = np.exp(-0.5 * (x - mu) @ lambd_2 @ (x - mu))
+        If ``self.has_bias``, we expect inputs to contain a bias column (which
+        is always matched) and thus remove the first column beforehand.
 
-        :param X: input matrix (N × D_X)
-        :returns: matching vector (N) of this matching function (i.e. of this
-            classifier)
+        Parameters
+        ----------
+        X : array of shape ``(N, D_X)``
+            Input matrix.
+
+        Returns
+        -------
+        array of shape ``(N)``
+            Matching vector of this matching function for the given input.
         """
-        mu_ = np.broadcast_to(self.mu, X.shape)
-        delta = X - mu_
-        # We have to clip this so we don't return 0 here (0 should never be
-        # returned because every match function matches everywhere at least a
-        # little bit). Also, we clip from above such that this never returns a
-        # value larger than 1 (it's a probability, after all).
-        m_min = np.log(np.finfo(None).tiny)
-        # TODO The maximum negative number might be different than simply the
-        # negation of the minimum positive number.
-        m_max = -np.finfo(None).tiny
-        # NOTE The negative sign in front of 0.5 is not in Drugowitsch's (8.10)
-        # [PDF p. 256].  However it can be found e.g. in (Butz et al.,
-        # Kernel-based, ellipsoidal conditions in the real-valued XCS classifier
-        # system, 2005) and seems reasonable: With delta -> 0, we want to have m
-        # -> 1 and without the negative sign, it may be that m > 1.
-        m = np.clip(-0.5 * np.sum(delta.T * (self.lambd_2 @ delta.T), 0),
-                    m_min, m_max)
-        return np.exp(m)[:, np.newaxis]
+        if self.has_bias:
+            X = X.T[1:].T
 
-    def plot(self, ax, **kwargs):
-        if self.mu.shape == (1, ):
-            l = self.ranges[:,[0]].reshape(1)
-            h = self.ranges[:,[1]].reshape(1)
-            X = np.arange(l, h, 0.01)[:, np.newaxis]
-            M = self.match(X)
-            ax.plot(X, M, **kwargs)
-            ax.axvline(self.mu, color=kwargs["color"])
-        else:
-            raise Exception(
-                "Can only plot one-dimensional RadialMatch objects")
+        return self._match_wo_bias(X)
 
+    def _covariance(self):
+        """
+        This matching function's covariance matrix.
+        """
+        return self.eigvecs @ np.diag(self.eigvals) @ np.linalg.inv(
+            self.eigvecs)
 
-def individual(ranges: np.ndarray, k: int, rng: np.random.Generator):
-    """
-    Individuals are simply lists of matching functions (the length of the list
-    is the number of classifiers, the matching functions specify their
-    localization).
-    """
-    return [RadialMatch.random(ranges, rng=rng) for i in range(k)]
+    def _match_wo_bias(self, X: np.ndarray) -> np.ndarray:
+        """
+        Matching function but assume the bias column to not be part of the
+        input.
+
+        Parameters
+        ----------
+        X : array of shape ``(N, D_X)``
+            Input matrix.
+
+        Returns
+        -------
+        array of shape ``(N,)``
+            Matching vector
+        """
+        # NOTE I could work directly on Lambda instead of on Sigma (and then use
+        # det(Sigma) = 1 / det(Lambda)). But is that more efficient than SciPy?
+        # I doubt it.
+        #
+        # Lambda = self._covariance()
+        # det_Sigma = 1 / np.linalg.det(Lambda)
+        # X_mu = X - self.mu
+        # # The ``np.sum`` is a vectorization of ``(X_mu[n].T @ Lambda @
+        # # X_mu[n])`` for all ``n``.
+        # m = np.exp(-0.5 * np.sum((X_mu @ Lambda) * X_mu, axis=1))
+        # m = m / (np.sqrt(2 * np.pi)**self.D_X * det_Sigma)
+
+        # Construct covariance matrix.
+        Sigma = self._covariance()
+
+        # I'm pretty certain that using SciPy is more efficient than writing it
+        # in Python.
+        m = st.multivariate_normal(mean=self.mu, cov=Sigma).pdf(X)
+
+        # SciPy is too smart. If ``X`` only contains one example, then
+        # ``st.multivariate_normal`` returns a float (instead of an array).
+        if len(X) == 1:
+            m = np.array([m])
+
+        # ``m`` can be zero (when it shouldn't be ever) due to floating point
+        # problems.
+        m = np.clip(m, a_min=np.finfo(None).tiny, a_max=1)
+
+        return m[:,np.newaxis]
