@@ -16,7 +16,7 @@ def match1ds(draw, has_bias_column=True):
     b = draw(st.floats(min_value=0, max_value=50))
     return RadialMatch1D(a=a,
                          b=b,
-                         ranges=(-1, 1),
+                         ranges=np.array([[-1, 1]]),
                          has_bias_column=has_bias_column)
 
 

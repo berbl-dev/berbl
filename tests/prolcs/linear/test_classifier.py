@@ -11,6 +11,10 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.linear_model import LinearRegression
 
 
+# TODO Expand to n-dim radial matching. Currently this is only for
+# one-dimensional data (possibly with a bias column)
+
+
 @st.composite
 def Xs(draw, N=10, D_X=1, bias_column=True):
     X = draw(
