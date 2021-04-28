@@ -169,9 +169,6 @@ class MixingLaplace(Mixing):
                 # We only log and break when we're at the best KLRG value of the
                 # current oscillation.
                 if (KLRG <= KLRGs).all():
-                    State().oscillation_count += 1
-                    mlflow.log_metric("algorithm.oscillations.occurred", 1,
-                                      State().step)
                     break
 
             KLRGs[j] = KLRG
