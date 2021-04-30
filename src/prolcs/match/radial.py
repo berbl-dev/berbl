@@ -3,6 +3,7 @@
 
 import numpy as np  # type: ignore
 import scipy.stats as st  # type: ignore
+import scipy.special as sp  # type: ignore
 from ..utils import radius_for_ci
 from sklearn.utils import check_random_state  # type: ignore
 
@@ -18,8 +19,11 @@ class RadialMatch():
     Important: The very first column is always matched as we expect it to be a
     bias column.
     """
-    def __init__(self, mu: np.ndarray, eigvals: np.ndarray,
-                 eigvecs: np.ndarray, has_bias=True):
+    def __init__(self,
+                 mu: np.ndarray,
+                 eigvals: np.ndarray,
+                 eigvecs: np.ndarray,
+                 has_bias=True):
         """
         Parameters
         ----------
@@ -47,8 +51,17 @@ class RadialMatch():
         return f"RadialMatch({self.mu}, {self.eigvals}, {self.eigvecs})"
 
     @classmethod
-    def random(cls, ranges: np.ndarray, has_bias=True, ci=0.2, random_state=None):
+    def random_ball(cls,
+                    ranges: np.ndarray,
+                    has_bias=True,
+                    cover_confidence=0.5,
+                    coverage=0.2,
+                    random_state=None):
         """
+        A randomly positioned (fixed size) ball-shaped (i.e. not a general
+        ellipsoid) matching function covering a given fraction of the input
+        space.
+
         Parameters
         ----------
         ranges : array of shape ``(X_D, 2)``
@@ -60,9 +73,13 @@ class RadialMatch():
             bias column and that is assumed to always be matched). Note that if
             ``has_bias``, then ``ranges.shape[0] = X.shape[1] - 1`` as ranges
             never contains an entry for a bias column.
-        ci : float in `(0, 1)`
-            Ratio of samples expected to fall into one standard deviation (i.e.
-            how wide the resulting ellipsoid is).
+        cover_confidence : float in ``(0, 1)``
+            The amount of probability mass around the mean of our Gaussian
+            matching distribution that we see as being covered by the matching
+            function.
+        coverage : float in ``(0, 1)``
+            Fraction of the input space volume that is to be covered by the
+            matching function. (See also: ``cover_confidence``.)
         """
         D_X, _ = ranges.shape
         assert _ == 2
@@ -75,33 +92,25 @@ class RadialMatch():
                                   high=ranges[:, [1]].reshape((-1)),
                                   size=D_X)
 
-        # If this were a ball, then ``r`` would be its radius.
-        r = radius_for_ci(n=D_X, ci=ci)
+        # Input space volume.
+        V = np.prod(np.diff(ranges))
 
-        # The index of the eigenvalue that is used to balance the eigenvalue
-        # product in the end.
-        i0 = random_state.randint(0, D_X)
+        r = radius_for_ci(n=D_X, ci=cover_confidence)
 
-        # Draw ``D_X - 1`` eigenvalues, each from a uniform distribution with
-        # expected value ``r``.
-        rs = random_state.uniform(r - r / 2, r + r / 2, size=D_X - 1)
-        # Balance eigenvalues such that, in the end, ``r**D_X =
-        # np.prod(eigvals)`` (i.e. the ellipsoid has the same volume as a ball
-        # with radius ``r`` had).
-        r0 = r**D_X / np.prod(rs)
-        rs = np.insert(rs, i0, r0)
-        # Eigenvalues are the square of the radii.
-        eigvals = rs**2
+        # sigma^n.
+        sigma_n = coverage * V * sp.gamma(D_X / 2 + 1) / (np.pi**(D_X / 2)
+                                                          * r**D_X)
+        # Draw nth root to get sigma.
+        sigma = sigma_n**(1./D_X)
 
-        # TODO Unsure: Do I need to use the special orthogonal group here (i.e.
-        # enforce det = +1)?
-        # TODO Yes, I think we indeed need this since this way the length of the
-        # vectors is 1??
-        eigvecs = st.special_ortho_group.rvs(dim=D_X, random_state=None)
-        # eigvecs = st.ortho_group.rvs(dim=D_X, random_state=None)
+        # Eigenvalues are the squares of the sigmas.
+        eigvals = np.repeat(sigma**2, D_X)
 
-        # TODO May need to use range somehow (eigenvalues seem pretty large for
-        # [-1, 1] currently).
+        # Due to the equal extent of all eigenvalues, the value of the
+        # eigenvectors doesn't play a role at first. However, it *does* play a
+        # role where we started when we begin to apply evolutionary operators on
+        # these and the eigenvalues!
+        eigvecs = st.special_ortho_group.rvs(dim=D_X, random_state=random_state)
 
         return RadialMatch(mu=mu, eigvals=eigvals, eigvecs=eigvecs)
 
@@ -177,4 +186,4 @@ class RadialMatch():
         # problems.
         m = np.clip(m, a_min=np.finfo(None).tiny, a_max=1)
 
-        return m[:,np.newaxis]
+        return m[:, np.newaxis]

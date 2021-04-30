@@ -37,7 +37,7 @@ def dims_and_Xs_and_matchs(draw, N=10, bias_column=True, unique=True):
     if bias_column:
         ranges = ranges[1:]
     seed = draw(seeds())
-    match = RadialMatch.random(ranges=ranges, random_state=seed)
+    match = RadialMatch.random_ball(ranges=ranges, random_state=seed)
     return D_X, X, match
 
 
@@ -67,7 +67,7 @@ def test_match_prob_bounds(dXm):
 @given(dimensions(), seeds())
 def test_random_eigvals_gt_0(D_X, seed):
     ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random(ranges=ranges,
+    rmatch = RadialMatch.random_ball(ranges=ranges,
                                 has_bias=False,
                                 random_state=seed)
     assert np.all(rmatch.eigvals > 0), f"Eigenvalues not > 0: {eigvals}"
@@ -84,7 +84,7 @@ def test_match_mu_is_mode(dim_and_epsilon, seed):
     """
     D_X, epsilon = dim_and_epsilon
     ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random(ranges=ranges, random_state=seed)
+    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
     # TODO Consider using check_array in match, add_bias
     X = add_bias(np.array([rmatch.mu]))
     m = rmatch.match(X)
@@ -101,7 +101,7 @@ def test_match_mu_is_mode(dim_and_epsilon, seed):
 @given(dimensions(), seeds())
 def test_match_not_at_mu(D_X, seed):
     ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random(ranges=ranges, random_state=seed)
+    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
     X = add_bias(np.array([rmatch.mu - 1e-2]))
     m = rmatch.match(X)
     assert np.all(m <= 1), f"Does match with >= 100% at non-mode point: {m}"
@@ -110,7 +110,7 @@ def test_match_not_at_mu(D_X, seed):
 @given(dimensions(), seeds())
 def test_match_symmetric_covariance(D_X, seed):
     ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random(ranges=ranges, random_state=seed)
+    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
     cov = rmatch._covariance()
     assert np.allclose(cov, cov.T), f"Covariance matrix is not symmetrical"
 
