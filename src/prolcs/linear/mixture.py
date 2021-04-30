@@ -14,11 +14,10 @@ from .mixing_laplace import MixingLaplace
 
 class Mixture():
     def __init__(self,
-                 n_cls=10,
-                 match_class=RadialMatch,
                  ranges=None,
                  add_bias=True,
                  matchs: List = None,
+                 init=None,
                  phi=None,
                  fit_mixing="bouchard",
                  random_state=None,
@@ -29,12 +28,6 @@ class Mixture():
 
         Parameters
         ----------
-        n_cls
-            Generate ``n_cls`` many random classifiers (using ``random_state``)
-            with class ``match_class``. If ``n_cls`` is given, ``matchs`` must
-            be ``None``.
-        match_class
-            See ``n_cls``.
         ranges : array of shape ``(X_D, 2)``
             A value range pair per input dimension.
         add_bias : bool
@@ -44,6 +37,9 @@ class Mixture():
             attribute) defining the structure of this mixture. If given,
             ``n_cls`` and ``match_class`` are not used to generate classifiers
             randomly.
+        init : callable receiving a ``RandomState``
+            Distribution over lists of matching functions from which one such
+            list is drawn.
         phi
             mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
             default LCS mixing feature matrix based on ``phi(x) = 1``
@@ -56,23 +52,16 @@ class Mixture():
             ``Classifier``.
         """
 
-        self.n_cls = n_cls
-        self.match_class = match_class
         self.ranges = ranges
         self.add_bias = add_bias
         self.matchs = matchs
+        self.init = init
         self.phi = phi
         self.fit_mixing = fit_mixing
         self.random_state = random_state
+        # TODO Should probably validate these kwargs because otherwise we don't
+        # notice when something is used the wrong way.
         self.__kwargs = kwargs
-
-    def _random_matchs(self, n_cls, match_class, ranges, has_bias,
-                       random_state):
-        return [
-            match_class.random(ranges,
-                               has_bias=has_bias,
-                               random_state=random_state) for i in range(n_cls)
-        ]
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         """
@@ -90,20 +79,14 @@ class Mixture():
 
         random_state = check_random_state(self.random_state)
 
-        if (self.matchs is None and self.n_cls is not None
-                and self.match_class is not None):
-            self.matchs_ = self._random_matchs(n_cls=self.n_cls,
-                                               match_class=self.match_class,
-                                               ranges=self.ranges,
-                                               has_bias=self.add_bias,
-                                               random_state=random_state)
+        if self.matchs is None and self.init is not None:
+            self.matchs_ = self.init(random_state=random_state)
         elif self.matchs is not None:
             self.matchs_ = self.matchs
         else:
             raise ValueError(
-                f"If matchs isn't given, must provide at least n_cls, "
-                f"match_class and ranges and these are {self.n_cls}, "
-                f"{self.match_class} and {self.ranges}")
+                f"If matchs isn't given, must provide init which isn't given "
+                f"either.")
 
         self.K_ = len(self.matchs_)
         _, self.D_X_ = X.shape

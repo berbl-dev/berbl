@@ -8,6 +8,32 @@ from ..utils import radius_for_ci
 from sklearn.utils import check_random_state  # type: ignore
 
 
+# TODO Add support for initially centering means on training data
+def random_balls(n, **kwargs):
+    """
+    Parameters
+    ----------
+    n : positive int
+        How many random ``RadialMatch`` instances to generate.
+    **kwargs
+        Passed through to ``RadialMatch.random_ball``. The only exception is
+        ``random_state`` which is expected as a parameter by the returned
+        function.
+
+    Returns
+    -------
+    callable expecting a ``RandomState``
+        A distribution over ``n``-length lists of ``RadialMatch.random_ball``s.
+    """
+    def p(random_state):
+        return [
+            RadialMatch.random_ball(random_state=random_state, **kwargs)
+            for _ in range(n)
+        ]
+
+    return p
+
+
 def _check_dimensions(D_X):
     assert D_X > 1, f"Dimensionality {D_X} not suitable for RadialMatch"
 
@@ -20,7 +46,7 @@ class RadialMatch():
     bias column.
     """
     def __init__(self,
-                 mu: np.ndarray,
+                 mean: np.ndarray,
                  eigvals: np.ndarray,
                  eigvecs: np.ndarray,
                  has_bias=True):
@@ -28,19 +54,19 @@ class RadialMatch():
         Parameters
         ----------
 
-        mu : array
+        mean : array
              Position of the Gaussian.
         eigvals : array
             Eigenvalues of the Gaussian's precision matrix.
         eigvecs : array
             Eigenvectors of the Gaussian's precision matrix.
         """
-        self.D_X = mu.shape[0]
+        self.D_X = mean.shape[0]
         _check_dimensions(self.D_X)
 
-        assert mu.shape[0] == eigvals.shape[0]
-        assert mu.shape[0] == eigvecs.shape[0]
-        self.mu = mu
+        assert mean.shape[0] == eigvals.shape[0]
+        assert mean.shape[0] == eigvecs.shape[0]
+        self.mean = mean
 
         self.eigvals = eigvals
         self.eigvecs = eigvecs
@@ -48,7 +74,7 @@ class RadialMatch():
         self.has_bias = has_bias
 
     def __repr__(self):
-        return f"RadialMatch({self.mu}, {self.eigvals}, {self.eigvecs})"
+        return f"RadialMatch({self.mean}, {self.eigvals}, {self.eigvecs})"
 
     @classmethod
     def random_ball(cls,
@@ -88,7 +114,7 @@ class RadialMatch():
 
         random_state = check_random_state(random_state)
 
-        mu = random_state.uniform(low=ranges[:, [0]].reshape((-1)),
+        mean = random_state.uniform(low=ranges[:, [0]].reshape((-1)),
                                   high=ranges[:, [1]].reshape((-1)),
                                   size=D_X)
 
@@ -101,7 +127,7 @@ class RadialMatch():
         sigma_n = coverage * V * sp.gamma(D_X / 2 + 1) / (np.pi**(D_X / 2)
                                                           * r**D_X)
         # Draw nth root to get sigma.
-        sigma = sigma_n**(1./D_X)
+        sigma = sigma_n**(1. / D_X)
 
         # Eigenvalues are the squares of the sigmas.
         eigvals = np.repeat(sigma**2, D_X)
@@ -110,9 +136,10 @@ class RadialMatch():
         # eigenvectors doesn't play a role at first. However, it *does* play a
         # role where we started when we begin to apply evolutionary operators on
         # these and the eigenvalues!
-        eigvecs = st.special_ortho_group.rvs(dim=D_X, random_state=random_state)
+        eigvecs = st.special_ortho_group.rvs(dim=D_X,
+                                             random_state=random_state)
 
-        return RadialMatch(mu=mu, eigvals=eigvals, eigvecs=eigvecs)
+        return RadialMatch(mean=mean, eigvals=eigvals, eigvecs=eigvecs)
 
     def match(self, X: np.ndarray) -> np.ndarray:
         """
@@ -164,7 +191,7 @@ class RadialMatch():
         #
         # Lambda = self._covariance()
         # det_Sigma = 1 / np.linalg.det(Lambda)
-        # X_mu = X - self.mu
+        # X_mu = X - self.mean
         # # The ``np.sum`` is a vectorization of ``(X_mu[n].T @ Lambda @
         # # X_mu[n])`` for all ``n``.
         # m = np.exp(-0.5 * np.sum((X_mu @ Lambda) * X_mu, axis=1))
@@ -175,7 +202,7 @@ class RadialMatch():
 
         # I'm pretty certain that using SciPy is more efficient than writing it
         # in Python.
-        m = st.multivariate_normal(mean=self.mu, cov=Sigma).pdf(X)
+        m = st.multivariate_normal(mean=self.mean, cov=Sigma).pdf(X)
 
         # SciPy is too smart. If ``X`` only contains one example, then
         # ``st.multivariate_normal`` returns a float (instead of an array).
