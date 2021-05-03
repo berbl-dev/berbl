@@ -8,6 +8,16 @@ from sklearn.utils import check_random_state  # type: ignore
 import scipy.optimize as so  # type: ignore
 
 
+def randseed(random_state: np.random.RandomState):
+    """
+    Sometimes we need to generate a new random seed from a ``RandomState`` due
+    to different APIs (e.g. NumPy wants the new rng API, scikit-learn uses the
+    legacy NumPy ``RandomState`` API, DEAP uses ``random.random``).
+    """
+    # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
+    return random_state.randint(2**32 - 1)
+
+
 def logstartstop(f):
     """
     Simple decorator for adding stdout prints when the given callable is called

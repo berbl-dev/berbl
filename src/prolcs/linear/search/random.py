@@ -3,7 +3,7 @@ from prolcs.linear.mixture import Mixture
 from prolcs.match.radial1d import RadialMatch1D
 from prolcs.match.radial import RadialMatch
 from prolcs.logging import log_
-from ...utils import get_ranges
+from ...utils import get_ranges, randseed
 from sklearn.utils import check_random_state  # type: ignore
 
 
@@ -59,7 +59,7 @@ class RandomSearch:
         for iter in range(self.n_iter):
 
             # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
-            seed = random_state.randint(2**32 - 1)
+            seed = randseed(random_state)
             ranges = get_ranges(X)
             # Create.
             mixture = Mixture(ranges=ranges,
