@@ -74,9 +74,9 @@ def test_random_eigvals_gt_0(D_X, seed):
 
 
 @given(dims_and_epsilons(), seeds())
-def test_match_mu_is_mode(dim_and_epsilon, seed):
+def test_match_mean_is_mode(dim_and_epsilon, seed):
     """
-    We check whether matching value at `x = rmatch.mu` is larger than matching
+    We check whether matching value at `x = rmatch.mean` is larger than matching
     values a short distance away.
 
     Note that we currently only check larger/lower values on the diagonal ``f(x)
@@ -86,23 +86,23 @@ def test_match_mu_is_mode(dim_and_epsilon, seed):
     ranges = np.repeat([[-1, 1]], D_X, axis=0)
     rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
     # TODO Consider using check_array in match, add_bias
-    X = add_bias(np.array([rmatch.mu]))
+    X = add_bias(np.array([rmatch.mean]))
     m = rmatch.match(X)
-    Xe1 = add_bias(np.array([rmatch.mu]) - epsilon)
+    Xe1 = add_bias(np.array([rmatch.mean]) - epsilon)
     me1 = rmatch.match(Xe1)
-    Xe2 = add_bias(np.array([rmatch.mu]) + epsilon)
+    Xe2 = add_bias(np.array([rmatch.mean]) + epsilon)
     me2 = rmatch.match(Xe2)
     assert np.all(
-        me1 < m), f"Distribution mode is not at mu: {m[0]} < {me1[0]}"
+        me1 < m), f"Distribution mode is not at mean: {m[0]} < {me1[0]}"
     assert np.all(
-        me2 < m), f"Distribution mode is not at mu: {m[0]} < {me2[0]}"
+        me2 < m), f"Distribution mode is not at mean: {m[0]} < {me2[0]}"
 
 
 @given(dimensions(), seeds())
-def test_match_not_at_mu(D_X, seed):
+def test_match_not_at_mean(D_X, seed):
     ranges = np.repeat([[-1, 1]], D_X, axis=0)
     rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
-    X = add_bias(np.array([rmatch.mu - 1e-2]))
+    X = add_bias(np.array([rmatch.mean - 1e-2]))
     m = rmatch.match(X)
     assert np.all(m <= 1), f"Does match with >= 100% at non-mode point: {m}"
 
