@@ -95,7 +95,7 @@ class Model():
         # due to selecting 9 ∈ [0, 10] being equal to selecting 1 ∈ [0, 10]).
         K_b_ = random_state.randint(low=1, high=K_a + K_b)
         # This way we might be able to maintain current individual sizes on average.
-        # K_b_ = int(np.clip(np.random.normal(loc=K_a), a_min=1, a_max=K_a + K_b))
+        # K_b_ = int(np.clip(random_state.normal(loc=K_a), a_min=1, a_max=K_a + K_b))
         M_b_ = []
         for k in range(K_b_):
             i = random_state.randint(low=0, high=len(M_a_))
