@@ -4,6 +4,7 @@ import numpy as np  # type: ignore
 from hypothesis import given  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
 from prolcs.match.radial import RadialMatch
+import prolcs.match.radial as radial
 from prolcs.utils import add_bias, get_ranges
 
 
@@ -68,8 +69,8 @@ def test_match_prob_bounds(dXm):
 def test_random_eigvals_gt_0(D_X, seed):
     ranges = np.repeat([[-1, 1]], D_X, axis=0)
     rmatch = RadialMatch.random_ball(ranges=ranges,
-                                has_bias=False,
-                                random_state=seed)
+                                     has_bias=False,
+                                     random_state=seed)
     assert np.all(rmatch.eigvals > 0), f"Eigenvalues not > 0: {eigvals}"
 
 
@@ -113,6 +114,20 @@ def test_match_symmetric_covariance(D_X, seed):
     rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
     cov = rmatch._covariance()
     assert np.allclose(cov, cov.T), f"Covariance matrix is not symmetrical"
+
+
+@given(dimensions(), seeds())
+def test_match_mutate_positive_definite(D_X, seed):
+    """
+    A radial basis function–based matching function's covariance matrix has to
+    stay positive definite under mutation.
+    """
+    ranges = np.repeat([[-1, 1]], D_X, axis=0)
+    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
+    rmatch_ = radial.mutate(rmatch, seed)
+    cov = rmatch_._covariance()
+    assert np.all(np.linalg.eigvals(cov) > 0
+                  ), f"Covariance matrix not positive definite after mutation"
 
 
 # TODO Test whether we match >80% of uniformly distributed samples using random

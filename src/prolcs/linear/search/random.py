@@ -61,9 +61,11 @@ class RandomSearch:
             # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
             seed = random_state.randint(2**32 - 1)
             ranges = get_ranges(X)
+            # Create.
             mixture = Mixture(ranges=ranges,
                               random_state=seed,
                               **self.__kwargs)
+            # Evaluate.
             mixture.fit(X, y)
 
             if self.mixture_ is None or mixture.p_M_D_ > self.mixture_.p_M_D_:

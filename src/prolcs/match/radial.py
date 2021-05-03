@@ -1,6 +1,7 @@
 # TODO Check for standard deviation (sigma) vs variance (sigma**2) vs inverse of
 # those
 
+from typing import List
 import numpy as np  # type: ignore
 import scipy.stats as st  # type: ignore
 import scipy.special as sp  # type: ignore
@@ -115,8 +116,8 @@ class RadialMatch():
         random_state = check_random_state(random_state)
 
         mean = random_state.uniform(low=ranges[:, [0]].reshape((-1)),
-                                  high=ranges[:, [1]].reshape((-1)),
-                                  size=D_X)
+                                    high=ranges[:, [1]].reshape((-1)),
+                                    size=D_X)
 
         # Input space volume.
         V = np.prod(np.diff(ranges))
@@ -214,3 +215,70 @@ class RadialMatch():
         m = np.clip(m, a_min=np.finfo(None).tiny, a_max=1)
 
         return m[:, np.newaxis]
+
+
+def mutate_list(matchs: List[RadialMatch], MUTPB,
+                random_state: np.random.RandomState):
+    """
+    This is performed in-place.
+
+    [PDF p. 256]
+
+    Returns
+    -------
+    RadialMatch
+        The input object which has been modified in-place.
+    """
+    random_state = check_random_state(random_state)
+
+    if MUTPB is None:
+        MUTPB = 1 / len(matchs)
+
+    for match in matchs:
+        if random_state.random() < MUTPB:
+            mutate(match, random_state)
+
+    return matchs
+
+
+def mutate(match: RadialMatch, random_state: np.random.RandomState):
+    """
+    Mutates the given RadialMatch in-place.
+
+    [PDF p. 256]
+
+    Returns
+    -------
+    RadialMatch
+        The input object which has been modified in-place.
+    """
+    random_state = check_random_state(random_state)
+
+    D_X = len(match.eigvecs)
+    match.eigvals += random_state.random(size=match.eigvals.shape)
+
+    # Choose plane regarding which to rotate.
+    i1, i2 = tuple(
+        random_state.choice(list(range(len(match.eigvecs))),
+                            size=2,
+                            replace=False))
+    v1, v2 = match.eigvecs[i1], match.eigvecs[i2]
+
+    # Angle in degrees, then get radian.
+    angle = 10
+    angle = angle * 2 * np.pi / 360
+
+    # Calculate rotation matrix.
+    V = np.outer(v1, v1) + np.outer(v2, v2)
+    W = np.outer(v1, v2) - np.outer(v2, v1)
+    R = np.identity(D_X) + (np.cos(angle) - 1) * V + np.sin(angle) * W
+
+    # Rotate eigenvectors.
+    match.eigvecs = R @ match.eigvecs
+
+    # Fulfilled.
+    # assert np.all(
+    #     np.isclose(match.eigvecs @ match.eigvecs.T,
+    #                np.identity(D_X))), match.eigvecs @ match.eigvecs.T
+
+    return match
