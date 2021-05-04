@@ -140,7 +140,10 @@ class RadialMatch():
         eigvecs = st.special_ortho_group.rvs(dim=D_X,
                                              random_state=random_state)
 
-        return RadialMatch(mean=mean, eigvals=eigvals, eigvecs=eigvecs)
+        return RadialMatch(mean=mean,
+                           eigvals=eigvals,
+                           eigvecs=eigvecs,
+                           has_bias=has_bias)
 
     def match(self, X: np.ndarray) -> np.ndarray:
         """
