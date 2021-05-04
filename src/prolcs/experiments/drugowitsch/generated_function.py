@@ -11,7 +11,7 @@ from prolcs.drugowitsch.hyperparams import HParams
 from prolcs.drugowitsch.state import State
 from prolcs.logging import log_
 from prolcs.drugowitsch.init import make_init
-from prolcs.match.radial1d import RadialMatch1D
+from prolcs.match.radial1d_drugowitsch import RadialMatch1D
 from prolcs.utils import add_bias
 from sklearn.utils import check_random_state  # type: ignore
 

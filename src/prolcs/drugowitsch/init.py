@@ -1,7 +1,7 @@
 import numpy as np
 from ..common import phi_standard
 from .model import Model
-from ..match.radial1d import RadialMatch1D
+from ..match.radial1d_drugowitsch import RadialMatch1D
 from ..utils import get_ranges
 
 

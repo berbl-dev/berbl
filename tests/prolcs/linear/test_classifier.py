@@ -5,7 +5,7 @@ from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
 from prolcs.allmatch import AllMatch
 from prolcs.linear.classifier import Classifier
-from prolcs.match.radial1d import RadialMatch1D
+from prolcs.match.radial1d_drugowitsch import RadialMatch1D
 from prolcs.utils import add_bias
 from sklearn.metrics import mean_absolute_error
 from sklearn.linear_model import LinearRegression

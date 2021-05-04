@@ -5,6 +5,31 @@ import scipy.special  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
 
+def randoms(n, **kwargs):
+    """
+    Parameters
+    ----------
+    n : positive int
+        How many random ``RadialMatch1D`` instances to generate.
+    **kwargs
+        Passed through to ``RadialMatch1D.random``. The only exception is
+        ``random_state`` which is expected as a parameter by the returned
+        function.
+
+    Returns
+    -------
+    callable expecting a ``RandomState``
+        A distribution over ``n``-length lists of ``RadialMatch.random_ball``s.
+    """
+    def p(random_state):
+        return [
+            RadialMatch1D.random(random_state=random_state, **kwargs)
+            for _ in range(n)
+        ]
+
+    return p
+
+
 class RadialMatch1D():
     def __init__(self,
                  *,

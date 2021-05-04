@@ -8,6 +8,7 @@ from prolcs.experiments.drugowitsch.generated_function import generate
 from prolcs.linear.search.random import RandomSearch
 from prolcs.logging import log_
 from prolcs.utils import add_bias
+from prolcs.match.radial1d_drugowitsch import randoms
 from sklearn import metrics  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 

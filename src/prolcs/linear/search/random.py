@@ -1,6 +1,6 @@
 import numpy as np  # type: ignore
 from prolcs.linear.mixture import Mixture
-from prolcs.match.radial1d import RadialMatch1D
+from prolcs.match.radial1d_drugowitsch import RadialMatch1D
 from prolcs.match.radial import RadialMatch
 from prolcs.logging import log_
 from ...utils import get_ranges, randseed
