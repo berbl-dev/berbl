@@ -189,23 +189,30 @@ class RadialMatch():
         array of shape ``(N,)``
             Matching vector
         """
-        # NOTE I could work directly on Lambda instead of on Sigma (and then use
-        # det(Sigma) = 1 / det(Lambda)). But is that more efficient than SciPy?
-        # I doubt it.
+        # NOTE The following is a faster version (factor 5 for D_X = 30) but may
+        # cause numerical issues as no care at all regarding those is taken.
+        # Therefore we'll stick with the slower but hopefully safer version.
         #
-        # Lambda = self._covariance()
+        # Construct inverse covariance matrix.
+        # Lambda = self._inv_covariance()
         # det_Sigma = 1 / np.linalg.det(Lambda)
         # X_mu = X - self.mean
         # # The ``np.sum`` is a vectorization of ``(X_mu[n].T @ Lambda @
         # # X_mu[n])`` for all ``n``.
         # m = np.exp(-0.5 * np.sum((X_mu @ Lambda) * X_mu, axis=1))
+        # # The usual normalization factor.
         # m = m / (np.sqrt(2 * np.pi)**self.D_X * det_Sigma)
+        # # ``m`` can be zero (when it shouldn't be ever) due to floating point
+        # # problems.
+        # m = np.clip(m, a_min=np.finfo(None).tiny, a_max=1)
+        # return m[:, np.newaxis]
 
-        # Construct covariance matrix.
         Sigma = self._covariance()
 
-        # I'm pretty certain that using SciPy is more efficient than writing it
-        # in Python.
+        # TODO Performance: May be better if we used one of the private
+        # functions of multivariate_normal (and then have this object not store
+        # the covariance but the precision matrix to get around the costly
+        # inversion).
         m = st.multivariate_normal(mean=self.mean, cov=Sigma).pdf(X)
 
         # SciPy is too smart. If ``X`` only contains one example, then
