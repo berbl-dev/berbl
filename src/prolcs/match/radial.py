@@ -211,12 +211,14 @@ class RadialMatch():
         # m = np.clip(m, a_min=np.finfo(None).tiny, a_max=1)
         # return m[:, np.newaxis]
 
-        Sigma = self._covariance()
-
         # TODO Performance: May be better if we used one of the private
         # functions of multivariate_normal (and then have this object not store
         # the covariance but the precision matrix to get around the costly
         # inversion).
+        # TODO Performance: Or use the logpdf formula directly from
+        # https://github.com/scipy/scipy/blob/v1.6.3/scipy/stats/_multivariate.py#L452
+        # TODO Performance: Or implement myself, see previous paragraph
+        Sigma = self._covariance()
         m = st.multivariate_normal(mean=self.mean, cov=Sigma).pdf(X)
 
         # SciPy is too smart. If ``X`` only contains one example, then
