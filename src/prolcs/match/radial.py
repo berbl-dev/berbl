@@ -35,16 +35,17 @@ def random_balls(n, **kwargs):
     return p
 
 
-def _check_dimensions(D_X):
+def _check_input_dim(mean, has_bias):
+    D_X = mean.shape[0] + 1
+    if has_bias:
+        D_X += 1
     assert D_X > 1, f"Dimensionality {D_X} not suitable for RadialMatch"
+    return D_X
 
 
 class RadialMatch():
     """
     Radial basis function–based matching for dimensions greater than 1.
-
-    Important: The very first column is always matched as we expect it to be a
-    bias column.
     """
     def __init__(self,
                  mean: np.ndarray,
@@ -61,9 +62,14 @@ class RadialMatch():
             Eigenvalues of the Gaussian's precision matrix.
         eigvecs : array
             Eigenvectors of the Gaussian's precision matrix.
+        has_bias : bool
+            Whether the input data's first column is expected to be an all-ones
+            bias column that is always matched. If this is the case, then input
+            data's dimensionality is expected to be ``mean.shape[0] + 1`` (i.e.
+            ``mean``, ``eigvals`` and ``eigvecs`` don't have entries regarding
+            the bias columns).
         """
-        self.D_X = mean.shape[0]
-        _check_dimensions(self.D_X)
+        self.D_X = _check_input_dim(mean, has_bias)
 
         assert mean.shape[0] == eigvals.shape[0]
         assert mean.shape[0] == eigvecs.shape[0]
@@ -91,15 +97,15 @@ class RadialMatch():
 
         Parameters
         ----------
-        ranges : array of shape ``(X_D, 2)``
-            A value range pair per input dimension. We assume that ranges never
-            contains an entry for a bias column.
+        ranges : array of shape ``(D_X, 2)``
+            A value range pair per input dimension. We assume that ``ranges``
+            never contains an entry for a bias column (see ``has_bias``).
         has_bias : bool
             Whether a bias column is included in the input. For matching, this
             means that we ignore the first column (as it is assumed to be the
             bias column and that is assumed to always be matched). Note that if
-            ``has_bias``, then ``ranges.shape[0] = X.shape[1] - 1`` as ranges
-            never contains an entry for a bias column.
+            ``has_bias``, then ``ranges.shape[0] = X.shape[1] - 1 = D_X - 1`` as
+            ranges never contains an entry for a bias column.
         cover_confidence : float in ``(0, 1)``
             The amount of probability mass around the mean of our Gaussian
             matching distribution that we see as being covered by the matching
@@ -108,10 +114,8 @@ class RadialMatch():
             Fraction of the input space volume that is to be covered by the
             matching function. (See also: ``cover_confidence``.)
         """
-        D_X, _ = ranges.shape
-        assert _ == 2
-
-        _check_dimensions(D_X)
+        assert ranges.shape[1] == 2
+        D_X = _check_input_dim(ranges[:, [0]], has_bias)
 
         random_state = check_random_state(random_state)
 

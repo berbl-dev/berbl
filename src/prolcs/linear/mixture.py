@@ -156,9 +156,6 @@ class Mixture():
         """
         check_is_fitted(self)
 
-        if self.add_bias:
-            X = add_bias(X)
-
         N, _ = X.shape
         D_y, D_X = self.classifiers_[0].W_.shape
 
@@ -168,6 +165,11 @@ class Mixture():
             raise NotImplementedError("phi is not None in Mixing")
 
         y = self.predicts(X)
+
+        # After having called ``predicts``, add the bias term (``predicts`` also
+        # adds the bias term internally).
+        if self.add_bias:
+            X = add_bias(X)
 
         y_var = np.zeros((self.K_, N, D_y))
         for k in range(self.K_):
