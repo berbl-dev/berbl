@@ -165,8 +165,7 @@ class RadialMatch1D():
         m = np.clip(-0.5 / self.sigma_2() * (X - self.mu())**2, m_min, m_max)
         return np.exp(m)
 
-    def plot(self, ax, **kwargs):
-        l, u = self.ranges[0][0], self.ranges[0][1]
+    def plot(self, l, u, ax, **kwargs):
         X = np.arange(l, u, 0.01)[:, np.newaxis]
         M = self._match_wo_bias(X)
         ax.plot(X, M, **kwargs)

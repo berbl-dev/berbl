@@ -63,6 +63,7 @@ stdenv.mkDerivation rec {
         # doesn't find it at runtime (whereas ipython does, actually?!).
         azure-storage-blob
         click
+        deap
         hypothesis
         matplotlib
         mlflowPatched
