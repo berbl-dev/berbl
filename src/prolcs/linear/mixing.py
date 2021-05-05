@@ -62,7 +62,7 @@ class Mixing:
         else:
             raise NotImplementedError("phi is not None in Mixing")
 
-        M = matching_matrix([cl.match for cl in self.CLS], X)
+        M = np.hstack([cl.m_ for cl in self.CLS])
 
         _, self.D_X_ = X.shape
         _, self.D_y_ = y.shape
@@ -163,6 +163,9 @@ class Mixing:
         else:
             raise NotImplementedError("phi is not None in Mixing")
 
+        # TODO When predicting (which uses this mixing method), I currently
+        # calculate M twice, once when matching for each classifier and once in
+        # mixing (see same comment in Mixture).
         M = matching_matrix([cl.match for cl in self.CLS], X)
 
         return self._mixing(M, Phi, self.V_)

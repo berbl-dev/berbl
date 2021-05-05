@@ -2,7 +2,6 @@ import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
-from ..common import matching_matrix
 from .mixing import Mixing
 
 
@@ -34,7 +33,7 @@ class MixingLaplace(Mixing):
         else:
             raise NotImplementedError("phi is not None in Mixing")
 
-        M = matching_matrix([cl.match for cl in self.CLS], X)
+        M = np.hstack([cl.m_ for cl in self.CLS])
 
         _, self.D_X_ = X.shape
         _, self.D_y_ = y.shape

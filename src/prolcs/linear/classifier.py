@@ -51,12 +51,12 @@ class Classifier():
         Fits this classifier to the provided data.
         """
 
-        m = self.match.match(X)
+        self.m_ = self.match.match(X)
 
         N, self.D_X_ = X.shape
         N, self.D_y_ = y.shape
-        X_ = X * np.sqrt(m)
-        y_ = y * np.sqrt(m)
+        X_ = X * np.sqrt(self.m_)
+        y_ = y * np.sqrt(self.m_)
 
         self.a_alpha_, self.b_alpha_ = self.A_ALPHA, self.B_ALPHA
         self.a_tau_, self.b_tau_ = self.A_TAU, self.B_TAU
@@ -81,7 +81,7 @@ class Classifier():
             self.Lambda_1_ = np.linalg.pinv(self.Lambda_)
             self.W_ = y_.T @ X_ @ self.Lambda_1_
             # TODO This seems to be constant and should be outside the loop
-            self.a_tau_ = self.A_TAU + 0.5 * np.sum(m)
+            self.a_tau_ = self.A_TAU + 0.5 * np.sum(self.m_)
             self.b_tau_ = self.B_TAU + 1 / (2 * self.D_y_) * (
                 np.sum(y_ * y_) - np.sum(self.W_ * (self.W_ @ self.Lambda_)))
             E_tau_tau = self.a_tau_ / self.b_tau_
@@ -95,7 +95,7 @@ class Classifier():
                 # Substitute r by m in order to train classifiers independently
                 # (see [PDF p. 219]). After having trained the mixing model
                 # we finally evaluate the classifier using r=R[:,[k]] though.
-                r=m)
+                r=self.m_)
             delta_L_q = self.L_q_ - L_q_prev
 
         return self

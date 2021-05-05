@@ -173,6 +173,8 @@ class Mixture():
         for k in range(self.K_):
             y_var[k] = self.classifiers_[k].predict_var(X)
 
+        # TODO I currently calculate M twice, once when matching for each
+        # classifier and once in mixing.
         G_ = self.mixing_.mixing(X).T  # K × N
 
         # For each classifier's prediction, we weigh every dimension of the
