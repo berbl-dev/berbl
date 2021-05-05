@@ -233,30 +233,43 @@ class RadialMatch():
         return m[:, np.newaxis]
 
 
-def mutate_list(matchs: List[RadialMatch], MUTPB,
-                random_state: np.random.RandomState):
+# TODO Extract this to search.ga module
+def mutate_list(mupb=None):
     """
-    This is performed in-place.
+    Create a mutation operator based on a probability of mutating each allel.
 
     [PDF p. 256]
+
+    Parameters
+    ----------
+    mupb : float in [0, 1]
+        Amount of alleles to mutate (alleles chosen randomly). If ``None``,
+        mutate one allele on average.
+
 
     Returns
     -------
     RadialMatch
         The input object which has been modified in-place.
     """
-    random_state = check_random_state(random_state)
+    def f(matchs: List[RadialMatch], random_state: np.random.RandomState):
+        random_state = check_random_state(random_state)
 
-    if MUTPB is None:
-        MUTPB = 1 / len(matchs)
+        if mupb is None:
+            p = 1 / len(matchs)
+        else:
+            p = mupb
 
-    for match in matchs:
-        if random_state.random() < MUTPB:
-            mutate(match, random_state)
+        for match in matchs:
+            if random_state.random() < p:
+                mutate(match, random_state)
 
-    return matchs
+        return matchs
+
+    return f
 
 
+# TODO Extract this to search.ga module
 def mutate(match: RadialMatch, random_state: np.random.RandomState):
     """
     Mutates the given RadialMatch in-place.

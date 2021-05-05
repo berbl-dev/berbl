@@ -14,10 +14,9 @@ from .mixing_laplace import MixingLaplace
 
 class Mixture():
     def __init__(self,
+                 matchs: List,
                  ranges=None,
                  add_bias=True,
-                 matchs: List = None,
-                 init=None,
                  phi=None,
                  fit_mixing="bouchard",
                  random_state=None,
@@ -37,9 +36,6 @@ class Mixture():
             attribute) defining the structure of this mixture. If given,
             ``n_cls`` and ``match_class`` are not used to generate classifiers
             randomly.
-        init : callable receiving a ``RandomState``
-            Distribution over lists of matching functions from which one such
-            list is drawn.
         phi
             mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
             default LCS mixing feature matrix based on ``phi(x) = 1``
@@ -55,7 +51,6 @@ class Mixture():
         self.ranges = ranges
         self.add_bias = add_bias
         self.matchs = matchs
-        self.init = init
         self.phi = phi
         self.fit_mixing = fit_mixing
         self.random_state = random_state
@@ -79,16 +74,7 @@ class Mixture():
 
         random_state = check_random_state(self.random_state)
 
-        if self.matchs is None and self.init is not None:
-            self.matchs_ = self.init(random_state=random_state)
-        elif self.matchs is not None:
-            self.matchs_ = self.matchs
-        else:
-            raise ValueError(
-                f"If matchs isn't given, must provide init which isn't given "
-                f"either.")
-
-        self.K_ = len(self.matchs_)
+        self.K_ = len(self.matchs)
         _, self.D_X_ = X.shape
         _, self.D_y_ = y.shape
 
@@ -96,7 +82,7 @@ class Mixture():
         #
         # “When fit is called, any previous call to fit should be ignored.”
         self.classifiers_ = list(
-            map(lambda m: Classifier(m, **self.__kwargs), self.matchs_))
+            map(lambda m: Classifier(m, **self.__kwargs), self.matchs))
         for k in range(self.K_):
             self.classifiers_[k].fit(X, y)
 
