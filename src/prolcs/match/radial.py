@@ -36,10 +36,25 @@ def random_balls(n, **kwargs):
 
 
 def _check_input_dim(mean, has_bias):
-    D_X = mean.shape[0] + 1
+    """
+    Checks the given vector and `has_bias` flag for being suitable for
+    `RadialMatch`.
+
+    As of now, if the resulting covariance matrices etc. had dimensionality 1,
+    `RadialMatch` cannot be used.
+
+    Returns
+    -------
+    int
+        the real input dimensionality ``D_X`` (i.e. the expected ``X.shape[1]``
+        including bias columns).
+    """
+    D_X = mean.shape[0]
     if has_bias:
         D_X += 1
-    assert D_X > 1, f"Dimensionality {D_X} not suitable for RadialMatch"
+    assert ((not has_bias and D_X > 1)
+            or (has_bias and
+                D_X > 2)), f"Dimensionality {D_X} not suitable for RadialMatch"
     return D_X
 
 
@@ -115,33 +130,38 @@ class RadialMatch():
             matching function. (See also: ``cover_confidence``.)
         """
         assert ranges.shape[1] == 2
+
         D_X = _check_input_dim(ranges[:, [0]], has_bias)
+
+        # Bias columns do not take part in matching so we adjust by subtracting
+        # 1 if a bias column is expected to be part of the input.
+        D_X_adj = D_X - has_bias
 
         random_state = check_random_state(random_state)
 
         mean = random_state.uniform(low=ranges[:, [0]].reshape((-1)),
                                     high=ranges[:, [1]].reshape((-1)),
-                                    size=D_X)
+                                    size=D_X_adj)
 
         # Input space volume.
         V = np.prod(np.diff(ranges))
 
-        r = radius_for_ci(n=D_X, ci=cover_confidence)
+        r = radius_for_ci(n=D_X_adj, ci=cover_confidence)
 
         # sigma^n.
-        sigma_n = coverage * V * sp.gamma(D_X / 2 + 1) / (np.pi**(D_X / 2)
-                                                          * r**D_X)
+        sigma_n = coverage * V * sp.gamma(D_X_adj / 2 + 1) / (
+            np.pi**(D_X_adj / 2) * r**D_X_adj)
         # Draw nth root to get sigma.
-        sigma = sigma_n**(1. / D_X)
+        sigma = sigma_n**(1. / D_X_adj)
 
         # Eigenvalues are the squares of the sigmas.
-        eigvals = np.repeat(sigma**2, D_X)
+        eigvals = np.repeat(sigma**2, D_X_adj)
 
         # Due to the equal extent of all eigenvalues, the value of the
         # eigenvectors doesn't play a role at first. However, it *does* play a
         # role where we started when we begin to apply evolutionary operators on
         # these and the eigenvalues!
-        eigvecs = st.special_ortho_group.rvs(dim=D_X,
+        eigvecs = st.special_ortho_group.rvs(dim=D_X_adj,
                                              random_state=random_state)
 
         return RadialMatch(mean=mean,
@@ -283,7 +303,6 @@ def mutate(match: RadialMatch, random_state: np.random.RandomState):
     """
     random_state = check_random_state(random_state)
 
-    D_X = len(match.eigvecs)
     match.eigvals += random_state.random(size=match.eigvals.shape)
 
     # Choose plane regarding which to rotate.
