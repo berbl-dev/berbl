@@ -1,9 +1,9 @@
 # import pytest  # type: ignore
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
-from hypothesis import given  # type: ignore
+from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
-from prolcs.match.radial import RadialMatch
+from prolcs.match.radial import RadialMatch, _rotate
 import prolcs.match.radial as radial
 from prolcs.utils import add_bias, get_ranges
 
@@ -128,6 +128,31 @@ def test_match_mutate_positive_definite(D_X, seed):
     cov = rmatch_._covariance()
     assert np.all(np.linalg.eigvals(cov) > 0
                   ), f"Covariance matrix not positive definite after mutation"
+
+
+@st.composite
+def dims_and_idx(draw):
+    D_X = draw(dimensions())
+    i1 = draw(st.integers(min_value=0, max_value=D_X - 1))
+    i2 = draw(
+        st.integers(min_value=0, max_value=D_X - 1).filter(lambda i: i != i1))
+    return D_X, i1, i2
+
+
+@given(dims_and_idx(), Xs(), seeds())
+@settings(deadline=None)
+def test_rotate_eigvecs_180(dii, X, seed):
+    """
+    Rotating by 180° doesn't change radial-basis function–based match functions.
+    """
+    D_X, i1, i2 = dii
+    ranges = np.repeat([[-1, 1]], D_X, axis=0)
+    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
+    eigvecs_ = _rotate(rmatch.eigvecs, 180, i1, i2)
+    rmatch_ = RadialMatch(mean=rmatch.mean,
+                          eigvals=rmatch.eigvals,
+                          eigvecs=eigvecs_)
+    assert np.allclose(rmatch.match(X), rmatch_.match(X))
 
 
 # TODO Test whether we match >80% of uniformly distributed samples using random

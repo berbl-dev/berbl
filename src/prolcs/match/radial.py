@@ -291,24 +291,40 @@ def mutate(match: RadialMatch, random_state: np.random.RandomState):
         random_state.choice(list(range(len(match.eigvecs))),
                             size=2,
                             replace=False))
-    v1, v2 = match.eigvecs[i1], match.eigvecs[i2]
 
     # Angle in degrees, then get radian.
     raise NotImplementedError("Angle is fixed right now, need distribution")
     angle = 10
+
+    match.eigvecs = _rotate(match.eigvecs, angle)
+
+    return match
+
+
+def _rotate(eigvecs: np.ndarray, angle: float, i1, i2):
+    """
+    Parameters
+    ----------
+    eigvecs : array
+        Array of eigenvectors to rotate.
+    angle : float
+        Angle (in degree) to rotate by.
+    i1, i2 : int
+        Indices of the eigenvectors which create the plane regarding which to
+        rotate.
+    """
+    D_X_adj = len(eigvecs)
+
+    v1, v2 = eigvecs[i1], eigvecs[i2]
+
     angle = angle * 2 * np.pi / 360
 
     # Calculate rotation matrix.
     V = np.outer(v1, v1) + np.outer(v2, v2)
     W = np.outer(v1, v2) - np.outer(v2, v1)
-    R = np.identity(D_X) + (np.cos(angle) - 1) * V + np.sin(angle) * W
+    R = np.identity(D_X_adj) + (np.cos(angle) - 1) * V + np.sin(angle) * W
 
     # Rotate eigenvectors.
-    match.eigvecs = R @ match.eigvecs
+    eigvecs = R @ eigvecs
 
-    # Fulfilled.
-    # assert np.all(
-    #     np.isclose(match.eigvecs @ match.eigvecs.T,
-    #                np.identity(D_X))), match.eigvecs @ match.eigvecs.T
-
-    return match
+    return eigvecs
