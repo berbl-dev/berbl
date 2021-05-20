@@ -1,11 +1,13 @@
 # import pytest  # type: ignore
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
+import prolcs.match.radial as radial
+import scipy.stats as sst
 from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
-from prolcs.match.radial import RadialMatch, _rotate
-import prolcs.match.radial as radial
-from prolcs.utils import add_bias, get_ranges
+from prolcs.match.radial import RadialMatch, _rotate, mutate
+from prolcs.utils import add_bias, get_ranges, radius_for_ci, ranges_vol
+from sklearn.utils import check_random_state  # type: ignore
 
 
 @st.composite
@@ -153,6 +155,29 @@ def test_rotate_eigvecs_180(dii, X, seed):
                           eigvals=rmatch.eigvals,
                           eigvecs=eigvecs_)
     assert np.allclose(rmatch.match(X), rmatch_.match(X))
+
+
+@given(dimensions(), seeds())
+def test_eigvals_same_order_as_eigvecs(D_X, seed):
+    ranges = np.repeat([[-1, 1]], D_X, axis=0)
+    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
+    cov = rmatch._covariance()
+    for l, v in zip(rmatch.eigvals, rmatch.eigvecs):
+        assert np.allclose(cov @ v, l * v)
+    for l, v in zip(rmatch.eigvals, rmatch.eigvecs.T):
+        assert np.allclose(cov @ v, l * v)
+
+
+@given(dimensions(), st.floats(min_value=0.01, max_value=0.99),
+       st.floats(min_value=0.01, max_value=0.99), seeds())
+def test_volume_after_random_init(D_X, cover_confidence, coverage, seed):
+    ranges = np.repeat([[-1, 1]], D_X, axis=0)
+    rmatch = RadialMatch.random_ball(ranges=ranges,
+                                     cover_confidence=cover_confidence,
+                                     coverage=coverage,
+                                     random_state=seed)
+    vol = rmatch.covered_vol(cover_confidence)
+    assert np.isclose(vol, coverage * ranges_vol(ranges))
 
 
 # TODO Test whether we match >80% of uniformly distributed samples using random

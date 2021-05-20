@@ -135,6 +135,39 @@ def radius_for_ci(n=3, ci=0.5):
     # SciPy's inverse of the *lower* incomplete gamma function:
     # https://de.wikipedia.org/wiki/Mehrdimensionale_Normalverteilung
     return np.sqrt(2 * sp.gammaincinv(n / 2, ci))
+    # NOTE We could also use chi2.ppf instead; the result is the same.
 
 
 radius_for_ci_ = np.vectorize(radius_for_ci)
+
+
+def ball_vol(r: float, n: int):
+    """
+    Volume of an n-ball with the given radius.
+
+    Parameters
+    ----------
+    r : float
+        Radius.
+    n : int
+        Dimensionality.
+    """
+    return np.pi**(n / 2) / sp.gamma(n/2 + 1) * r**n
+
+
+def ellipsoid_vol(rs: np.ndarray, n: int):
+    """
+    Volume of an ellipsoid with the given radii.
+
+    Parameters
+    ----------
+    rs : array of shape ``(n)``
+        Radius.
+    n : int
+        Dimensionality.
+    """
+    return np.pi**(n / 2) / sp.gamma(n/2 + 1) * np.prod(rs)
+
+
+def ranges_vol(ranges):
+    return np.prod(np.diff(ranges))

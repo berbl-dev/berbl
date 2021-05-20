@@ -2,11 +2,13 @@
 # those
 
 from typing import List
+
 import numpy as np  # type: ignore
-import scipy.stats as st  # type: ignore
 import scipy.special as sp  # type: ignore
-from ..utils import radius_for_ci
+import scipy.stats as st  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
+
+from ..utils import ellipsoid_vol, radius_for_ci, ranges_vol
 
 
 # TODO Add support for initially centering means on training data
@@ -86,6 +88,10 @@ class RadialMatch():
         """
         self.D_X = _check_input_dim(mean, has_bias)
 
+        # Bias columns do not take part in matching so we adjust by subtracting
+        # 1 if a bias column is expected to be part of the input.
+        self.D_X_adj = self.D_X - has_bias
+
         assert mean.shape[0] == eigvals.shape[0]
         assert mean.shape[0] == eigvecs.shape[0]
         self.mean = mean
@@ -144,18 +150,17 @@ class RadialMatch():
                                     size=D_X_adj)
 
         # Input space volume.
-        V = np.prod(np.diff(ranges))
+        V = ranges_vol(ranges)
 
-        r = radius_for_ci(n=D_X_adj, ci=cover_confidence)
+        # Radius.
+        r = (coverage * V * sp.gamma(D_X_adj / 2 + 1) /
+             (np.pi**(D_X_adj / 2)))**(1 / D_X_adj)
 
-        # sigma^n.
-        sigma_n = coverage * V * sp.gamma(D_X_adj / 2 + 1) / (
-            np.pi**(D_X_adj / 2) * r**D_X_adj)
-        # Draw nth root to get sigma.
-        sigma = sigma_n**(1. / D_X_adj)
+        # Ellipsoid matrix factor.
+        lambd = r**2 / radius_for_ci(n=D_X_adj, ci=cover_confidence)
 
-        # Eigenvalues are the squares of the sigmas.
-        eigvals = np.repeat(sigma**2, D_X_adj)
+        # Eigenvalues are simply the ellipsoid matrix factors.
+        eigvals = np.repeat(lambd, D_X_adj)
 
         # Due to the equal extent of all eigenvalues, the value of the
         # eigenvectors doesn't play a role at first. However, it *does* play a
@@ -164,6 +169,8 @@ class RadialMatch():
         eigvecs = st.special_ortho_group.rvs(dim=D_X_adj,
                                              random_state=random_state)
 
+        # TODO Since I restrict input space I could (or, maybe, must?)
+        # normalize matching distribution function regarding that?
         return RadialMatch(mean=mean,
                            eigvals=eigvals,
                            eigvecs=eigvecs,
@@ -195,8 +202,9 @@ class RadialMatch():
         """
         This matching function's covariance matrix.
         """
-        return self.eigvecs @ np.diag(self.eigvals) @ np.linalg.inv(
-            self.eigvecs)
+        # The inverse of the eigenvector matrix is actually always its transpose
+        # due to orthonormality.
+        return self.eigvecs @ np.diag(self.eigvals) @ self.eigvecs.T
 
     def _match_wo_bias(self, X: np.ndarray) -> np.ndarray:
         """
@@ -251,6 +259,21 @@ class RadialMatch():
         m = np.clip(m, a_min=np.finfo(None).tiny, a_max=1)
 
         return m[:, np.newaxis]
+
+    def covered_vol(self, cover_confidence=0.5):
+        """
+        The volume covered by this matching function.
+
+        Parameters
+        ----------
+        cover_confidence : float in ``(0, 1)``
+            The amount of probability mass around the mean of our Gaussian
+            matching distribution that we see as being covered by the matching
+            function.
+        """
+        rs = np.sqrt(
+            radius_for_ci(ci=cover_confidence, n=self.D_X_adj) * self.eigvals)
+        return ellipsoid_vol(rs=rs, n=self.D_X_adj)
 
 
 # TODO Extract this to search.ga module
