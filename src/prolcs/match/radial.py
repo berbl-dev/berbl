@@ -5,7 +5,7 @@ from typing import List
 
 import numpy as np  # type: ignore
 import scipy.special as sp  # type: ignore
-import scipy.stats as st  # type: ignore
+import scipy.stats as sst  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
 from ..utils import ellipsoid_vol, radius_for_ci, ranges_vol
@@ -157,7 +157,7 @@ class RadialMatch():
              (np.pi**(D_X_adj / 2)))**(1 / D_X_adj)
 
         # Ellipsoid matrix factor.
-        lambd = r**2 / radius_for_ci(n=D_X_adj, ci=cover_confidence)
+        lambd = r**2 / sst.chi2.ppf(cover_confidence, D_X_adj)
 
         # Eigenvalues are simply the ellipsoid matrix factors.
         eigvals = np.repeat(lambd, D_X_adj)
@@ -166,8 +166,8 @@ class RadialMatch():
         # eigenvectors doesn't play a role at first. However, it *does* play a
         # role where we started when we begin to apply evolutionary operators on
         # these and the eigenvalues!
-        eigvecs = st.special_ortho_group.rvs(dim=D_X_adj,
-                                             random_state=random_state)
+        eigvecs = sst.special_ortho_group.rvs(dim=D_X_adj,
+                                              random_state=random_state)
 
         # TODO Since I restrict input space I could (or, maybe, must?)
         # normalize matching distribution function regarding that?
@@ -247,10 +247,10 @@ class RadialMatch():
         # https://github.com/scipy/scipy/blob/v1.6.3/scipy/stats/_multivariate.py#L452
         # TODO Performance: Or implement myself, see previous paragraph
         Sigma = self._covariance()
-        m = st.multivariate_normal(mean=self.mean, cov=Sigma).pdf(X)
+        m = sst.multivariate_normal(mean=self.mean, cov=Sigma).pdf(X)
 
         # SciPy is too smart. If ``X`` only contains one example, then
-        # ``st.multivariate_normal`` returns a float (instead of an array).
+        # ``sst.multivariate_normal`` returns a float (instead of an array).
         if len(X) == 1:
             m = np.array([m])
 
