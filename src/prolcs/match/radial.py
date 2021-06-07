@@ -345,6 +345,8 @@ def mutate(match: RadialMatch, random_state: np.random.RandomState):
 
 def _rotate(eigvecs: np.ndarray, angle: float, i1, i2):
     """
+    Rotates the given array of orthonormal eigenvectors by the given angle.
+
     Parameters
     ----------
     eigvecs : array
@@ -359,6 +361,7 @@ def _rotate(eigvecs: np.ndarray, angle: float, i1, i2):
 
     v1, v2 = eigvecs[i1], eigvecs[i2]
 
+    # Angle is in degrees, thus get radian.
     angle = angle * 2 * np.pi / 360
 
     # Calculate rotation matrix.
