@@ -6,7 +6,7 @@ import scipy.stats as sst
 from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
 from prolcs.match.radial import RadialMatch, _rotate, mutate
-from prolcs.utils import add_bias, get_ranges, radius_for_ci, ranges_vol
+from prolcs.utils import add_bias, radius_for_ci, space_vol
 from sklearn.utils import check_random_state  # type: ignore
 
 
@@ -22,25 +22,27 @@ def seeds(draw):
 
 
 @st.composite
-def Xs(draw, N=10, D_X=1, bias_column=True, unique=True):
+def Xs(draw, N=10, D_X=1, has_bias=True, unique=True):
+    """
+    Input values normalized to ``[-1, 1]^D_X``.
+    """
     X = draw(
         arrays(np.float64, (N, D_X),
                elements=st.floats(min_value=-1, max_value=1),
                unique=unique))
-    if bias_column:
+    if has_bias:
         X = add_bias(X)
     return X
 
 
 @st.composite
-def dims_and_Xs_and_matchs(draw, N=10, bias_column=True, unique=True):
+def dims_and_Xs_and_matchs(draw, N=10, has_bias=True, unique=True):
     D_X = draw(dimensions())
-    X = draw(Xs(N=N, D_X=D_X, bias_column=bias_column, unique=unique))
-    ranges = get_ranges(X)
-    if bias_column:
-        ranges = ranges[1:]
+    X = draw(Xs(N=N, D_X=D_X, has_bias=has_bias, unique=unique))
     seed = draw(seeds())
-    match = RadialMatch.random_ball(ranges=ranges, random_state=seed)
+    match = RadialMatch.random_ball(D_X=D_X + has_bias,
+                                    has_bias=has_bias,
+                                    random_state=seed)
     return D_X, X, match
 
 
@@ -67,11 +69,10 @@ def test_match_prob_bounds(dXm):
     assert np.all(m <= 1)
 
 
-@given(dimensions(), seeds())
-def test_random_eigvals_gt_0(D_X, seed):
-    ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random_ball(ranges=ranges,
-                                     has_bias=False,
+@given(dimensions(), st.booleans(), seeds())
+def test_random_eigvals_gt_0(D_X, has_bias, seed):
+    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+                                     has_bias=has_bias,
                                      random_state=seed)
     assert np.all(rmatch.eigvals > 0), f"Eigenvalues not > 0: {eigvals}"
 
@@ -86,8 +87,10 @@ def test_match_mean_is_mode(dim_and_epsilon, seed):
     = x`` since we use the same epsilon value in each dimension.
     """
     D_X, epsilon = dim_and_epsilon
-    ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
+    # +1 due to has_bias=True.
+    rmatch = RadialMatch.random_ball(D_X=D_X + 1,
+                                     has_bias=True,
+                                     random_state=seed)
     # TODO Consider using check_array in match, add_bias
     X = add_bias(np.array([rmatch.mean]))
     m = rmatch.match(X)
@@ -101,66 +104,80 @@ def test_match_mean_is_mode(dim_and_epsilon, seed):
         me2 < m), f"Distribution mode is not at mean: {m[0]} < {me2[0]}"
 
 
-@given(dimensions(), seeds())
-def test_match_not_at_mean(D_X, seed):
-    ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
-    X = add_bias(np.array([rmatch.mean - 1e-2]))
+@given(dimensions(), st.booleans(), seeds())
+def test_match_not_at_mean(D_X, has_bias, seed):
+    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+                                     has_bias=has_bias,
+                                     random_state=seed)
+    if has_bias:
+        X = add_bias(np.array([rmatch.mean - 1e-2]))
+    else:
+        X = np.array([rmatch.mean - 1e-2])
     m = rmatch.match(X)
     assert np.all(m <= 1), f"Does match with >= 100% at non-mode point: {m}"
 
 
-@given(dimensions(), seeds())
-def test_match_symmetric_covariance(D_X, seed):
-    ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
+@given(dimensions(), st.booleans(), seeds())
+def test_match_symmetric_covariance(D_X, has_bias, seed):
+    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+                                     has_bias=has_bias,
+                                     random_state=seed)
     cov = rmatch._covariance()
     assert np.allclose(cov, cov.T), f"Covariance matrix is not symmetrical"
 
 
-@given(dimensions(), seeds())
-def test_match_mutate_positive_definite(D_X, seed):
+@given(dimensions(), st.booleans(), seeds())
+def test_match_mutate_positive_definite(D_X, has_bias, seed):
     """
     A radial basis function–based matching function's covariance matrix has to
     stay positive definite under mutation.
     """
-    ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
-    rmatch_ = radial.mutate(rmatch, seed)
+    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+                                     has_bias=has_bias,
+                                     cover_confidence=0.5,
+                                     random_state=seed)
+    rmatch_ = radial.mutate(rmatch,
+                            vol=0.1 * rmatch.covered_vol(cover_confidence=0.5),
+                            cover_confidence=0.5,
+                            random_state=seed)
     cov = rmatch_._covariance()
     assert np.all(np.linalg.eigvals(cov) > 0
                   ), f"Covariance matrix not positive definite after mutation"
 
 
 @st.composite
-def dims_and_idx(draw):
+def dims_and_idx_and_Xs(draw, N=10, unique=True):
     D_X = draw(dimensions())
     i1 = draw(st.integers(min_value=0, max_value=D_X - 1))
     i2 = draw(
         st.integers(min_value=0, max_value=D_X - 1).filter(lambda i: i != i1))
-    return D_X, i1, i2
+    X = draw(Xs(N=N, D_X=D_X, has_bias=False, unique=unique))
+    return D_X, i1, i2, X
 
 
-@given(dims_and_idx(), Xs(), seeds())
+@given(dims_and_idx_and_Xs(), seeds())
 @settings(deadline=None)
-def test_rotate_eigvecs_180(dii, X, seed):
+def test_rotate_eigvecs_180(diix, seed):
     """
     Rotating by 180° doesn't change radial-basis function–based match functions.
     """
-    D_X, i1, i2 = dii
-    ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
+    D_X, i1, i2, X = diix
+    rmatch = RadialMatch.random_ball(D_X=D_X,
+                                     has_bias=False,
+                                     random_state=seed)
     eigvecs_ = _rotate(rmatch.eigvecs, 180, i1, i2)
     rmatch_ = RadialMatch(mean=rmatch.mean,
+                          has_bias=False,
                           eigvals=rmatch.eigvals,
                           eigvecs=eigvecs_)
     assert np.allclose(rmatch.match(X), rmatch_.match(X))
 
 
-@given(dimensions(), seeds())
-def test_eigvals_same_order_as_eigvecs(D_X, seed):
-    ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random_ball(ranges=ranges, random_state=seed)
+@given(dimensions(), seeds(), st.booleans())
+def test_eigvals_same_order_as_eigvecs(D_X, has_bias, seed):
+    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+                                     has_bias=has_bias,
+                                     random_state=seed)
     cov = rmatch._covariance()
     for l, v in zip(rmatch.eigvals, rmatch.eigvecs):
         assert np.allclose(cov @ v, l * v)
@@ -168,17 +185,101 @@ def test_eigvals_same_order_as_eigvecs(D_X, seed):
         assert np.allclose(cov @ v, l * v)
 
 
-@given(dimensions(), st.floats(min_value=0.01, max_value=0.99),
+@given(dimensions(), st.booleans(), st.floats(min_value=0.01, max_value=0.99),
        st.floats(min_value=0.01, max_value=0.99), seeds())
-def test_volume_after_random_init(D_X, cover_confidence, coverage, seed):
-    ranges = np.repeat([[-1, 1]], D_X, axis=0)
-    rmatch = RadialMatch.random_ball(ranges=ranges,
+def test_volume_after_random_init(D_X, has_bias, cover_confidence, coverage,
+                                  seed):
+    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+                                     has_bias=has_bias,
                                      cover_confidence=cover_confidence,
                                      coverage=coverage,
                                      random_state=seed)
     vol = rmatch.covered_vol(cover_confidence)
-    assert np.isclose(vol, coverage * ranges_vol(ranges))
+    assert np.isclose(vol, coverage * space_vol(D_X))
 
 
-# TODO Test whether we match >80% of uniformly distributed samples using random
-# init (when random init has been implemented).
+@given(
+    arrays(np.float64, (10, ),
+           elements=st.floats(min_value=0.5,
+                              max_value=1e10,
+                              exclude_min=True,
+                              allow_infinity=False,
+                              allow_nan=False)),
+    st.floats(min_value=0.01, max_value=0.99),
+    st.floats(min_value=0.01, max_value=0.99),
+    st.floats(min_value=0.01, max_value=0.99), seeds())
+def test_volume_after__stretch(eigvals, cover_confidence, pvol, scale, seed):
+    vol = radial._covered_vol(eigvals, cover_confidence)
+    eigvals_ = radial._stretch(eigvals,
+                               vol=pvol * vol,
+                               scale=0.1,
+                               cover_confidence=cover_confidence,
+                               random_state=check_random_state(seed))
+    vol_ = radial._covered_vol(eigvals_, cover_confidence)
+
+    assert np.isclose(np.abs(vol - vol_), pvol * vol)
+
+
+@given(dimensions(), st.floats(min_value=0.01, max_value=0.99),
+       st.floats(min_value=0.01, max_value=1.),
+       st.floats(min_value=0.01, max_value=0.99), seeds())
+def test_volume_after_mutate_large_enough(D_X, cover_confidence, coverage,
+                                          pvol, seed):
+    """
+    When the volume is large enough and we can use the normal mutation (without
+    clipping or anything).
+    """
+    rmatch = RadialMatch.random_ball(D_X=D_X + 1,
+                                     has_bias=True,
+                                     cover_confidence=cover_confidence,
+                                     coverage=coverage,
+                                     random_state=seed)
+    vol = rmatch.covered_vol(cover_confidence)
+    delta_vol = pvol * vol
+    mutate(rmatch,
+           cover_confidence=cover_confidence,
+           vol=delta_vol,
+           random_state=seed + 1)
+
+    vol_ = rmatch.covered_vol(cover_confidence)
+
+    assert np.isclose(np.abs(vol - vol_), delta_vol)
+
+
+@given(dimensions(), st.floats(min_value=0.01, max_value=0.99))
+def chiinv_is_incgammainv(n, confidence):
+    # def test_chiinv_is_incgammainv(n, confidence):
+    r1 = radius_for_ci(n, confidence)
+    r2 = np.sqrt(sst.chi2.ppf(confidence, n))
+    assert r1 == r2
+
+
+def plot_rotation():
+    # # This is just for trying it out, should extract.
+    # def plot_rotation():
+    seed = 1
+    D_X = 2
+    random_state = check_random_state(seed)
+    rmatch = RadialMatch.random_ball(D_X=D_X,
+                                     random_state=random_state,
+                                     has_bias=False)
+    import matplotlib.pyplot as plt
+    x = np.arange(-1, 1, 0.01)
+    y = np.arange(-1, 1, 0.01)
+    z = np.zeros((len(x), len(y)))
+    rmatch.eigvals[0] += 1
+    print(rmatch.eigvecs)
+    for i in range(10):
+        # https://stackoverflow.com/questions/1208118/
+        for i in range(len(x)):
+            for j in range(len(y)):
+                X = np.array([[x[i], y[j]]])
+                z[i][j] = rmatch.match(X)[0][0]
+        # z = rmatch.match(X)
+        # breakpoint()
+        h = plt.contourf(x, y, z)
+        plt.show()
+        rmatch = mutate(rmatch, random_state=random_state)
+        print(rmatch.eigvecs)
+        print(rmatch.eigvecs.T)
+        print(np.linalg.inv(rmatch.eigvecs))

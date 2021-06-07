@@ -8,7 +8,7 @@ import scipy.special as sp  # type: ignore
 import scipy.stats as sst  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
-from ..utils import ellipsoid_vol, radius_for_ci, ranges_vol
+from ..utils import ellipsoid_vol, radius_for_ci, space_vol
 
 
 # TODO Add support for initially centering means on training data
@@ -37,7 +37,7 @@ def random_balls(n, **kwargs):
     return p
 
 
-def _check_input_dim(mean, has_bias):
+def _check_input_dim(D_X: int, has_bias: bool):
     """
     Checks the given vector and `has_bias` flag for being suitable for
     `RadialMatch`.
@@ -45,19 +45,23 @@ def _check_input_dim(mean, has_bias):
     As of now, if the resulting covariance matrices etc. had dimensionality 1,
     `RadialMatch` cannot be used.
 
+    Parameters
+    ----------
+    D_X : int
+        Dimensionality to check.
+    has_bias : bool
+        Whether a bias column is expected (and thus the first column is to be
+        ignored during matching).
+
     Returns
     -------
     int
-        the real input dimensionality ``D_X`` (i.e. the expected ``X.shape[1]``
-        including bias columns).
+        the adjusted input dimensionality ``D_X_adj`` (i.e. the expected
+        ``X.shape[1]`` excluding bias columns).
     """
-    D_X = mean.shape[0]
-    if has_bias:
-        D_X += 1
-    assert ((not has_bias and D_X > 1)
-            or (has_bias and
-                D_X > 2)), f"Dimensionality {D_X} not suitable for RadialMatch"
-    return D_X
+    D_X_adj = D_X - has_bias
+    assert D_X_adj > 1, f"Dimensionality {D_X} not suitable for RadialMatch"
+    return D_X_adj
 
 
 class RadialMatch():
@@ -85,12 +89,13 @@ class RadialMatch():
             data's dimensionality is expected to be ``mean.shape[0] + 1`` (i.e.
             ``mean``, ``eigvals`` and ``eigvecs`` don't have entries regarding
             the bias columns).
-        """
-        self.D_X = _check_input_dim(mean, has_bias)
 
-        # Bias columns do not take part in matching so we adjust by subtracting
-        # 1 if a bias column is expected to be part of the input.
-        self.D_X_adj = self.D_X - has_bias
+            *Careful!* This differs from ``random_ball`` where the ``D_X``
+            argument *includes* the bias column.
+        """
+        # This is not *that* nice, summing with ``has_bias`` here, but what can
+        # you do.
+        self.D_X_adj = _check_input_dim(mean.shape[0] + has_bias, has_bias)
 
         assert mean.shape[0] == eigvals.shape[0]
         assert mean.shape[0] == eigvecs.shape[0]
@@ -106,27 +111,26 @@ class RadialMatch():
 
     @classmethod
     def random_ball(cls,
-                    ranges: np.ndarray,
-                    has_bias=True,
-                    cover_confidence=0.5,
-                    coverage=0.2,
+                    D_X: int,
+                    has_bias: bool=True,
+                    cover_confidence: float=0.5,
+                    coverage: float=0.2,
                     random_state=None):
         """
         A randomly positioned (fixed size) ball-shaped (i.e. not a general
         ellipsoid) matching function covering a given fraction of the input
-        space.
+        space. Input space is assumed to be ``[-1, 1]^D_X`` (i.e. normalized).
 
         Parameters
         ----------
-        ranges : array of shape ``(D_X, 2)``
-            A value range pair per input dimension. We assume that ``ranges``
-            never contains an entry for a bias column (see ``has_bias``).
+        D_X : int ``> 1``
+            Dimensionality of the input expected by this matching function
+            (*including* the bias column, which differs from ``__init__`` whose
+            arguments do *not* include the bias column).
         has_bias : bool
             Whether a bias column is included in the input. For matching, this
             means that we ignore the first column (as it is assumed to be the
-            bias column and that is assumed to always be matched). Note that if
-            ``has_bias``, then ``ranges.shape[0] = X.shape[1] - 1 = D_X - 1`` as
-            ranges never contains an entry for a bias column.
+            bias column and that is assumed to always be matched).
         cover_confidence : float in ``(0, 1)``
             The amount of probability mass around the mean of our Gaussian
             matching distribution that we see as being covered by the matching
@@ -135,22 +139,17 @@ class RadialMatch():
             Fraction of the input space volume that is to be covered by the
             matching function. (See also: ``cover_confidence``.)
         """
-        assert ranges.shape[1] == 2
-
-        D_X = _check_input_dim(ranges[:, [0]], has_bias)
-
-        # Bias columns do not take part in matching so we adjust by subtracting
-        # 1 if a bias column is expected to be part of the input.
-        D_X_adj = D_X - has_bias
+        D_X_adj = _check_input_dim(D_X, has_bias)
 
         random_state = check_random_state(random_state)
 
-        mean = random_state.uniform(low=ranges[:, [0]].reshape((-1)),
-                                    high=ranges[:, [1]].reshape((-1)),
-                                    size=D_X_adj)
+        high = np.ones(D_X_adj)
+        low = high - 2
+        mean = random_state.uniform(low=low, high=high, size=D_X_adj)
 
-        # Input space volume.
-        V = ranges_vol(ranges)
+        # Input space volume. Assumes input space to be ``[-1, 1]^D_X`` (i.e.
+        # normalized).
+        V = space_vol(D_X_adj)
 
         # Radius.
         r = (coverage * V * sp.gamma(D_X_adj / 2 + 1) /
@@ -271,9 +270,21 @@ class RadialMatch():
             matching distribution that we see as being covered by the matching
             function.
         """
-        rs = np.sqrt(
-            radius_for_ci(ci=cover_confidence, n=self.D_X_adj) * self.eigvals)
-        return ellipsoid_vol(rs=rs, n=self.D_X_adj)
+        return _covered_vol(self.eigvals, cover_confidence=cover_confidence)
+
+
+def _covered_vol(eigvals, cover_confidence=0.5):
+    """
+    The volume covered by an ellipsoid based on the given eigenvalues.
+
+    Parameters
+    ----------
+    cover_confidence : float in ``(0, 1)``
+        The amount of mass around the ellipsoid center we see as being covered.
+    """
+    # The ellipsoids radii.
+    rs = np.sqrt(sst.chi2.ppf(cover_confidence, len(eigvals)) * eigvals)
+    return ellipsoid_vol(rs=rs, n=len(eigvals))
 
 
 # TODO Extract this to search.ga module
@@ -295,6 +306,7 @@ def mutate_list(mupb=None):
     RadialMatch
         The input object which has been modified in-place.
     """
+    raise NotImplementedError("Need to adjust the call to mutate()")
     def f(matchs: List[RadialMatch], random_state: np.random.RandomState):
         random_state = check_random_state(random_state)
 
@@ -312,12 +324,28 @@ def mutate_list(mupb=None):
     return f
 
 
-# TODO Extract this to search.ga module
-def mutate(match: RadialMatch, random_state: np.random.RandomState):
+def mutate(match: RadialMatch,
+           random_state: np.random.RandomState,
+           cover_confidence: float,
+           vol: float,
+           pscale: float = 0.1):
     """
-    Mutates the given RadialMatch in-place.
+    Mutates the given ``RadialMatch`` in-place.
 
-    [PDF p. 256]
+    Parameters
+    ----------
+    match : ``RadialMatch`` object
+        The ``RadialMatch`` object to mutate.
+    cover_confidence : float in ``(0, 1)``
+        The amount of mass around the ellipsoid center we see as being covered.
+    vol : float
+        Volume to add (or remove, in 50% of cases).
+    pscale : float
+        How strongly the extent of each of the ellipsoid's principal axes should
+        be altered in expectation, in percent of their current value (i.e. the
+        product of this with their respective current extent is used as the
+        standard deviation for a normal distribution around their current
+        extent).
 
     Returns
     -------
@@ -326,21 +354,88 @@ def mutate(match: RadialMatch, random_state: np.random.RandomState):
     """
     random_state = check_random_state(random_state)
 
-    match.eigvals += random_state.random(size=match.eigvals.shape)
+    match.eigvals = _stretch(match.eigvals,
+                             vol=vol,
+                             scale=pscale,
+                             cover_confidence=cover_confidence,
+                             random_state=random_state)
 
     # Choose plane regarding which to rotate.
+    #
+    # First, rank all eigenvalues, largest rank to the lowest one and make ranks
+    # non-zero (eigenvectors and eigenvalues are in the same order).
+    ranks = np.argsort(- match.eigvals) + 1
+    # TODO Maybe use a more elaborate scheme rather than using the ranks 1:1 for
+    # the weights. E.g. p*(1 - p)**rank or similar.
+    # Normalize distribution.
+    weights = ranks / np.sum(ranks)
     i1, i2 = tuple(
         random_state.choice(list(range(len(match.eigvecs))),
                             size=2,
-                            replace=False))
+                            replace=False,
+                            p=weights))
 
-    # Angle in degrees, then get radian.
-    raise NotImplementedError("Angle is fixed right now, need distribution")
-    angle = 10
+    # Note: There is a little bit of thought behind the average angle of 18 °;
+    # it's not entirely arbitrary (although almost entirely).
+    # TODO Provide proper formal background for average rotation angle
+    angle = random_state.normal(loc=18, scale=18)
+    sign = 1 if random_state.random() < 0.5 else -1
+    angle = sign * angle
 
-    match.eigvecs = _rotate(match.eigvecs, angle)
+    match.eigvecs = _rotate(match.eigvecs, angle, i1, i2)
 
     return match
+
+
+def _stretch(eigvals: np.ndarray, vol: float, scale: float,
+             cover_confidence: float, random_state: np.random.RandomState):
+    r"""
+    Parameters
+    ----------
+    eigvals : array of shape ``(D_X_adj)``
+        The eigenvalues to stretch.
+    vol : float
+        The covered volume we want to add/remove (50/50).
+    scale : float
+        All but one eigenvalue is assigned a new value based on the old value
+        using a normal distribution:
+
+        .. math:: \lambda_\text{new} = \mathcal{N}(\lambda, \lambda * \text{scale})
+
+    cover_confidence : float in ``(0, 1)``
+        The amount of mass around the ellipsoid center we see as being covered.
+    """
+    n = eigvals.shape[0]
+
+    # Whether we add or delete the given volume.
+    sign = 1 if random_state.random() < 0.5 else -1
+
+    # The index of the eigenvalue that is used to balance the eigenvalue
+    # product in the end.
+    i0 = random_state.randint(0, n)
+
+    # Draw ``n`` eigenvalues (one too many for simplicity's sake).
+    # TODO We need something better than ``eigvals * scale``, see notes.
+    eigvals_ = random_state.normal(loc=eigvals, scale=eigvals * scale)
+
+    # “Delete” entry we want to replace in the next steps (1 is neutral wrt
+    # multiplication).
+    eigvals_[i0] = 1
+
+    # Balance eigenvalues such that, in the end, the volume increased or
+    # decreased by the specified amount.
+    n = len(eigvals)
+    eigval_0 = np.prod(np.sqrt(eigvals))
+    eigval_0 += (
+        sign * vol * sp.gamma(n / 2 + 1) /
+        (np.pi**(n / 2) * np.sqrt(sst.chi2.ppf(cover_confidence, n))**n))
+    # assert eigval_0_ == eigval_0
+    eigval_0 **= 2
+    eigval_0 *= 1 / np.prod(eigvals_)
+
+    eigvals_[i0] = eigval_0
+
+    return eigvals_
 
 
 def _rotate(eigvecs: np.ndarray, angle: float, i1, i2):

@@ -171,3 +171,9 @@ def ellipsoid_vol(rs: np.ndarray, n: int):
 
 def ranges_vol(ranges):
     return np.prod(np.diff(ranges))
+
+def space_vol(dim):
+    """
+    The volume of an ``[-1, 1]^dim`` space.
+    """
+    return 2.**dim
