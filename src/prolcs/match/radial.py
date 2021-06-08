@@ -37,7 +37,7 @@ def random_balls(n, **kwargs):
     return p
 
 
-def _check_input_dim(D_X: int, has_bias: bool):
+def _check_input_dim(dX: int, has_bias: bool):
     """
     Checks the given vector and `has_bias` flag for being suitable for
     `RadialMatch`.
@@ -47,7 +47,7 @@ def _check_input_dim(D_X: int, has_bias: bool):
 
     Parameters
     ----------
-    D_X : int
+    dX : int
         Dimensionality to check.
     has_bias : bool
         Whether a bias column is expected (and thus the first column is to be
@@ -56,12 +56,12 @@ def _check_input_dim(D_X: int, has_bias: bool):
     Returns
     -------
     int
-        the adjusted input dimensionality ``D_X_adj`` (i.e. the expected
+        the adjusted input dimensionality ``dX - has_bias`` (i.e. the expected
         ``X.shape[1]`` excluding bias columns).
     """
-    D_X_adj = D_X - has_bias
-    assert D_X_adj > 1, f"Dimensionality {D_X} not suitable for RadialMatch"
-    return D_X_adj
+    dX = dX - has_bias
+    assert dX > 1, f"Dimensionality {dX} not suitable for RadialMatch"
+    return dX
 
 
 class RadialMatch():
@@ -95,7 +95,7 @@ class RadialMatch():
         """
         # This is not *that* nice, summing with ``has_bias`` here, but what can
         # you do.
-        self.D_X_adj = _check_input_dim(mean.shape[0] + has_bias, has_bias)
+        self.dX = _check_input_dim(mean.shape[0] + has_bias, has_bias)
 
         assert mean.shape[0] == eigvals.shape[0]
         assert mean.shape[0] == eigvecs.shape[0]
@@ -111,26 +111,21 @@ class RadialMatch():
 
     @classmethod
     def random_ball(cls,
-                    D_X: int,
-                    has_bias: bool=True,
-                    cover_confidence: float=0.5,
-                    coverage: float=0.2,
+                    dX: int,
+                    cover_confidence: float = 0.5,
+                    coverage: float = 0.2,
+                    has_bias: bool = True,
                     random_state=None):
         """
         A randomly positioned (fixed size) ball-shaped (i.e. not a general
         ellipsoid) matching function covering a given fraction of the input
-        space. Input space is assumed to be ``[-1, 1]^D_X`` (i.e. normalized).
+        space. Input space is assumed to be ``[-1, 1]^dX`` (i.e. normalized).
 
         Parameters
         ----------
-        D_X : int ``> 1``
+        dX : int ``> 1``
             Dimensionality of the input expected by this matching function
-            (*including* the bias column, which differs from ``__init__`` whose
-            arguments do *not* include the bias column).
-        has_bias : bool
-            Whether a bias column is included in the input. For matching, this
-            means that we ignore the first column (as it is assumed to be the
-            bias column and that is assumed to always be matched).
+            (*not including* the bias column).
         cover_confidence : float in ``(0, 1)``
             The amount of probability mass around the mean of our Gaussian
             matching distribution that we see as being covered by the matching
@@ -138,34 +133,43 @@ class RadialMatch():
         coverage : float in ``(0, 1)``
             Fraction of the input space volume that is to be covered by the
             matching function. (See also: ``cover_confidence``.)
+        has_bias : bool
+            Whether a bias column is included in the input. For matching, this
+            means that we ignore the first column (as it is assumed to be the
+            bias column and that is assumed to always be matched). Note that the
+            default is to internally add a bias column which means that this
+            should probably be left true.
         """
-        D_X_adj = _check_input_dim(D_X, has_bias)
+        if not has_bias:
+            print("Warning: has_bias is False when it should probably be True")
+
+        _check_input_dim(dX + has_bias, has_bias)
 
         random_state = check_random_state(random_state)
 
-        high = np.ones(D_X_adj)
+        high = np.ones(dX)
         low = high - 2
-        mean = random_state.uniform(low=low, high=high, size=D_X_adj)
+        mean = random_state.uniform(low=low, high=high, size=dX)
 
-        # Input space volume. Assumes input space to be ``[-1, 1]^D_X`` (i.e.
+        # Input space volume. Assumes input space to be ``[-1, 1]^DdX.e.
         # normalized).
-        V = space_vol(D_X_adj)
+        V = space_vol(dX)
 
         # Radius.
-        r = (coverage * V * sp.gamma(D_X_adj / 2 + 1) /
-             (np.pi**(D_X_adj / 2)))**(1 / D_X_adj)
+        r = (coverage * V * sp.gamma(dX / 2 + 1) /
+             (np.pi**(dX / 2)))**(1 / dX)
 
         # Ellipsoid matrix factor.
-        lambd = r**2 / sst.chi2.ppf(cover_confidence, D_X_adj)
+        lambd = r**2 / sst.chi2.ppf(cover_confidence, dX)
 
         # Eigenvalues are simply the ellipsoid matrix factors.
-        eigvals = np.repeat(lambd, D_X_adj)
+        eigvals = np.repeat(lambd, dX)
 
         # Due to the equal extent of all eigenvalues, the value of the
         # eigenvectors doesn't play a role at first. However, it *does* play a
         # role where we started when we begin to apply evolutionary operators on
         # these and the eigenvalues!
-        eigvecs = sst.special_ortho_group.rvs(dim=D_X_adj,
+        eigvecs = sst.special_ortho_group.rvs(dim=dX,
                                               random_state=random_state)
 
         # TODO Since I restrict input space I could (or, maybe, must?)
@@ -184,7 +188,7 @@ class RadialMatch():
 
         Parameters
         ----------
-        X : array of shape ``(N, D_X)``
+        X : array of shape ``(N, self.dX + self.has_bias)``
             Input matrix.
 
         Returns
@@ -212,7 +216,7 @@ class RadialMatch():
 
         Parameters
         ----------
-        X : array of shape ``(N, D_X)``
+        X : array of shape ``(N, self.dX)``
             Input matrix.
 
         Returns
