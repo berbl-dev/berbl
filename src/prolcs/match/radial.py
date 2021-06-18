@@ -292,7 +292,7 @@ def _covered_vol(eigvals, cover_confidence=0.5):
 
 
 # TODO Extract this to search.ga module
-def mutate_list(mupb=None):
+def mutate_list(mupb=None, volstd=0.01, cover_confidence=0.5, pscale=0.1):
     """
     Create a mutation operator based on a probability of mutating each allel.
 
@@ -303,14 +303,17 @@ def mutate_list(mupb=None):
     mupb : float in [0, 1]
         Amount of alleles to mutate (alleles chosen randomly). If ``None``,
         mutate one allele on average.
-
+    cover_confidence : float in ``(0, 1)``
+        Used to compute the volume to change (see ``RadialMatch.covered_vol``),
+        passed through to ``mutate``.
+    pscale : float
+        Passed through to ``mutate``.
 
     Returns
     -------
     RadialMatch
         The input object which has been modified in-place.
     """
-    raise NotImplementedError("Need to adjust the call to mutate()")
     def f(matchs: List[RadialMatch], random_state: np.random.RandomState):
         random_state = check_random_state(random_state)
 
@@ -321,7 +324,11 @@ def mutate_list(mupb=None):
 
         for match in matchs:
             if random_state.random() < p:
-                mutate(match, random_state)
+                mutate(match=match,
+                       random_state=random_state,
+                       cover_confidence=cover_confidence,
+                       volstd=volstd,
+                       pscale=pscale)
 
         return matchs
 
@@ -331,10 +338,10 @@ def mutate_list(mupb=None):
 def mutate(match: RadialMatch,
            random_state: np.random.RandomState,
            cover_confidence: float,
-           vol: float,
+           volstd: float,
            pscale: float = 0.1):
     """
-    Mutates the given ``RadialMatch`` in-place.
+    Mutates the given ``RadialMatch`` in-place (undirected).
 
     Parameters
     ----------
@@ -342,8 +349,9 @@ def mutate(match: RadialMatch,
         The ``RadialMatch`` object to mutate.
     cover_confidence : float in ``(0, 1)``
         The amount of mass around the ellipsoid center we see as being covered.
-    vol : float
-        Volume to add (or remove, in 50% of cases).
+    volstd : float
+        Standard deviation for altering the volume using a normal distribution
+        (mean is the current volume).
     pscale : float
         How strongly the extent of each of the ellipsoid's principal axes should
         be altered in expectation, in percent of their current value (i.e. the
@@ -358,8 +366,12 @@ def mutate(match: RadialMatch,
     """
     random_state = check_random_state(random_state)
 
+    vol_old = match.covered_vol(cover_confidence)
+    vol_new = np.clip(random_state.normal(loc=vol_old, scale=volstd), a_min=0, a_max=np.inf)
+    vol_diff = vol_old - vol_new
+
     match.eigvals = _stretch(match.eigvals,
-                             vol=vol,
+                             voldiff=vol_diff,
                              scale=pscale,
                              cover_confidence=cover_confidence,
                              random_state=random_state)
@@ -368,7 +380,7 @@ def mutate(match: RadialMatch,
     #
     # First, rank all eigenvalues, largest rank to the lowest one and make ranks
     # non-zero (eigenvectors and eigenvalues are in the same order).
-    ranks = np.argsort(- match.eigvals) + 1
+    ranks = np.argsort(-match.eigvals) + 1
     # TODO Maybe use a more elaborate scheme rather than using the ranks 1:1 for
     # the weights. E.g. p*(1 - p)**rank or similar.
     # Normalize distribution.
@@ -391,15 +403,16 @@ def mutate(match: RadialMatch,
     return match
 
 
-def _stretch(eigvals: np.ndarray, vol: float, scale: float,
+def _stretch(eigvals: np.ndarray, voldiff: float, scale: float,
              cover_confidence: float, random_state: np.random.RandomState):
     r"""
     Parameters
     ----------
     eigvals : array of shape ``(dX,)``
         The eigenvalues to stretch.
-    vol : float
-        The covered volume we want to add/remove (50/50).
+    voldiff : float
+        The covered volume we want to add (may be negative to remove volume).
+        Note that no checks on the size of this volume are performed.
     scale : float
         All but one eigenvalue is assigned a new value based on the old value
         using a normal distribution:
@@ -410,9 +423,6 @@ def _stretch(eigvals: np.ndarray, vol: float, scale: float,
         The amount of mass around the ellipsoid center we see as being covered.
     """
     n = eigvals.shape[0]
-
-    # Whether we add or delete the given volume.
-    sign = 1 if random_state.random() < 0.5 else -1
 
     # The index of the eigenvalue that is used to balance the eigenvalue
     # product in the end.
@@ -426,12 +436,12 @@ def _stretch(eigvals: np.ndarray, vol: float, scale: float,
     # multiplication).
     eigvals_[i0] = 1
 
-    # Balance eigenvalues such that, in the end, the volume increased or
-    # decreased by the specified amount.
+    # Balance eigenvalues such that, in the end, the volume changed by the
+    # specified amount.
     n = len(eigvals)
     eigval_0 = np.prod(np.sqrt(eigvals))
     eigval_0 += (
-        sign * vol * sp.gamma(n / 2 + 1) /
+        voldiff * sp.gamma(n / 2 + 1) /
         (np.pi**(n / 2) * np.sqrt(sst.chi2.ppf(cover_confidence, n))**n))
     # assert eigval_0_ == eigval_0
     eigval_0 **= 2
