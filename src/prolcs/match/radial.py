@@ -396,7 +396,7 @@ def _stretch(eigvals: np.ndarray, vol: float, scale: float,
     r"""
     Parameters
     ----------
-    eigvals : array of shape ``(D_X_adj)``
+    eigvals : array of shape ``(dX,)``
         The eigenvalues to stretch.
     vol : float
         The covered volume we want to add/remove (50/50).
@@ -456,7 +456,7 @@ def _rotate(eigvecs: np.ndarray, angle: float, i1, i2):
         Indices of the eigenvectors which create the plane regarding which to
         rotate.
     """
-    D_X_adj = len(eigvecs)
+    dX = len(eigvecs)
 
     v1, v2 = eigvecs[i1], eigvecs[i2]
 
@@ -466,7 +466,7 @@ def _rotate(eigvecs: np.ndarray, angle: float, i1, i2):
     # Calculate rotation matrix.
     V = np.outer(v1, v1) + np.outer(v2, v2)
     W = np.outer(v1, v2) - np.outer(v2, v1)
-    R = np.identity(D_X_adj) + (np.cos(angle) - 1) * V + np.sin(angle) * W
+    R = np.identity(dX) + (np.cos(angle) - 1) * V + np.sin(angle) * W
 
     # Rotate eigenvectors.
     eigvecs = R @ eigvecs
