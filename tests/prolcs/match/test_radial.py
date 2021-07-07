@@ -22,12 +22,12 @@ def seeds(draw):
 
 
 @st.composite
-def Xs(draw, N=10, D_X=1, has_bias=True, unique=True):
+def Xs(draw, N=10, dX=1, has_bias=True, unique=True):
     """
-    Input values normalized to ``[-1, 1]^D_X``.
+    Input values normalized to ``[-1, 1]^dX``.
     """
     X = draw(
-        arrays(np.float64, (N, D_X),
+        arrays(np.float64, (N, dX),
                elements=st.floats(min_value=-1, max_value=1),
                unique=unique))
     if has_bias:
@@ -37,22 +37,22 @@ def Xs(draw, N=10, D_X=1, has_bias=True, unique=True):
 
 @st.composite
 def dims_and_Xs_and_matchs(draw, N=10, has_bias=True, unique=True):
-    D_X = draw(dimensions())
-    X = draw(Xs(N=N, D_X=D_X, has_bias=has_bias, unique=unique))
+    dX = draw(dimensions())
+    X = draw(Xs(N=N, dX=dX, has_bias=has_bias, unique=unique))
     seed = draw(seeds())
-    match = RadialMatch.random_ball(D_X=D_X + has_bias,
+    match = RadialMatch.random_ball(dX=dX,
                                     has_bias=has_bias,
                                     random_state=seed)
-    return D_X, X, match
+    return dX, X, match
 
 
 @st.composite
 def dims_and_epsilons(draw):
-    D_X = draw(dimensions())
+    dX = draw(dimensions())
     epsilon = draw(
-        arrays(np.float64, (D_X, ),
+        arrays(np.float64, (dX, ),
                elements=st.floats(min_value=1e-5, max_value=1)))
-    return D_X, epsilon
+    return dX, epsilon
 
 
 @given(dims_and_Xs_and_matchs())
@@ -70,8 +70,8 @@ def test_match_prob_bounds(dXm):
 
 
 @given(dimensions(), st.booleans(), seeds())
-def test_random_eigvals_gt_0(D_X, has_bias, seed):
-    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+def test_random_eigvals_gt_0(dX, has_bias, seed):
+    rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=has_bias,
                                      random_state=seed)
     assert np.all(rmatch.eigvals > 0), f"Eigenvalues not > 0: {eigvals}"
@@ -86,9 +86,9 @@ def test_match_mean_is_mode(dim_and_epsilon, seed):
     Note that we currently only check larger/lower values on the diagonal ``f(x)
     = x`` since we use the same epsilon value in each dimension.
     """
-    D_X, epsilon = dim_and_epsilon
+    dX, epsilon = dim_and_epsilon
     # +1 due to has_bias=True.
-    rmatch = RadialMatch.random_ball(D_X=D_X + 1,
+    rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=True,
                                      random_state=seed)
     # TODO Consider using check_array in match, add_bias
@@ -105,8 +105,8 @@ def test_match_mean_is_mode(dim_and_epsilon, seed):
 
 
 @given(dimensions(), st.booleans(), seeds())
-def test_match_not_at_mean(D_X, has_bias, seed):
-    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+def test_match_not_at_mean(dX, has_bias, seed):
+    rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=has_bias,
                                      random_state=seed)
     if has_bias:
@@ -118,8 +118,8 @@ def test_match_not_at_mean(D_X, has_bias, seed):
 
 
 @given(dimensions(), st.booleans(), seeds())
-def test_match_symmetric_covariance(D_X, has_bias, seed):
-    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+def test_match_symmetric_covariance(dX, has_bias, seed):
+    rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=has_bias,
                                      random_state=seed)
     cov = rmatch._covariance()
@@ -127,12 +127,13 @@ def test_match_symmetric_covariance(D_X, has_bias, seed):
 
 
 @given(dimensions(), st.booleans(), seeds())
-def test_match_mutate_positive_definite(D_X, has_bias, seed):
+def test_match_mutate_positive_definite(dX, has_bias, seed):
     """
     A radial basis function–based matching function's covariance matrix has to
     stay positive definite under mutation.
     """
-    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+    raise NotImplementedError("Needs overhaul due to volstd")
+    rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=has_bias,
                                      cover_confidence=0.5,
                                      random_state=seed)
@@ -147,12 +148,12 @@ def test_match_mutate_positive_definite(D_X, has_bias, seed):
 
 @st.composite
 def dims_and_idx_and_Xs(draw, N=10, unique=True):
-    D_X = draw(dimensions())
-    i1 = draw(st.integers(min_value=0, max_value=D_X - 1))
+    dX = draw(dimensions())
+    i1 = draw(st.integers(min_value=0, max_value=dX - 1))
     i2 = draw(
-        st.integers(min_value=0, max_value=D_X - 1).filter(lambda i: i != i1))
-    X = draw(Xs(N=N, D_X=D_X, has_bias=False, unique=unique))
-    return D_X, i1, i2, X
+        st.integers(min_value=0, max_value=dX - 1).filter(lambda i: i != i1))
+    X = draw(Xs(N=N, dX=dX, has_bias=False, unique=unique))
+    return dX, i1, i2, X
 
 
 @given(dims_and_idx_and_Xs(), seeds())
@@ -161,8 +162,8 @@ def test_rotate_eigvecs_180(diix, seed):
     """
     Rotating by 180° doesn't change radial-basis function–based match functions.
     """
-    D_X, i1, i2, X = diix
-    rmatch = RadialMatch.random_ball(D_X=D_X,
+    dX, i1, i2, X = diix
+    rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=False,
                                      random_state=seed)
     eigvecs_ = _rotate(rmatch.eigvecs, 180, i1, i2)
@@ -174,8 +175,8 @@ def test_rotate_eigvecs_180(diix, seed):
 
 
 @given(dimensions(), seeds(), st.booleans())
-def test_eigvals_same_order_as_eigvecs(D_X, has_bias, seed):
-    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+def test_eigvals_same_order_as_eigvecs(dX, has_bias, seed):
+    rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=has_bias,
                                      random_state=seed)
     cov = rmatch._covariance()
@@ -187,15 +188,15 @@ def test_eigvals_same_order_as_eigvecs(D_X, has_bias, seed):
 
 @given(dimensions(), st.booleans(), st.floats(min_value=0.01, max_value=0.99),
        st.floats(min_value=0.01, max_value=0.99), seeds())
-def test_volume_after_random_init(D_X, has_bias, cover_confidence, coverage,
+def test_volume_after_random_init(dX, has_bias, cover_confidence, coverage,
                                   seed):
-    rmatch = RadialMatch.random_ball(D_X=D_X + has_bias,
+    rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=has_bias,
                                      cover_confidence=cover_confidence,
                                      coverage=coverage,
                                      random_state=seed)
     vol = rmatch.covered_vol(cover_confidence)
-    assert np.isclose(vol, coverage * space_vol(D_X))
+    assert np.isclose(vol, coverage * space_vol(dX))
 
 
 @given(
@@ -209,6 +210,7 @@ def test_volume_after_random_init(D_X, has_bias, cover_confidence, coverage,
     st.floats(min_value=0.01, max_value=0.99),
     st.floats(min_value=0.01, max_value=0.99), seeds())
 def test_volume_after__stretch(eigvals, cover_confidence, pvol, scale, seed):
+    raise NotImplementedError("Needs overhaul due to voldiff")
     vol = radial._covered_vol(eigvals, cover_confidence)
     eigvals_ = radial._stretch(eigvals,
                                vol=pvol * vol,
@@ -223,13 +225,14 @@ def test_volume_after__stretch(eigvals, cover_confidence, pvol, scale, seed):
 @given(dimensions(), st.floats(min_value=0.01, max_value=0.99),
        st.floats(min_value=0.01, max_value=1.),
        st.floats(min_value=0.01, max_value=0.99), seeds())
-def test_volume_after_mutate_large_enough(D_X, cover_confidence, coverage,
+def test_volume_after_mutate_large_enough(dX, cover_confidence, coverage,
                                           pvol, seed):
     """
     When the volume is large enough and we can use the normal mutation (without
     clipping or anything).
     """
-    rmatch = RadialMatch.random_ball(D_X=D_X + 1,
+    raise NotImplementedError("Needs overhaul due to volstd")
+    rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=True,
                                      cover_confidence=cover_confidence,
                                      coverage=coverage,
@@ -258,9 +261,9 @@ def plot_rotation():
     # # This is just for trying it out, should extract.
     # def plot_rotation():
     seed = 1
-    D_X = 2
+    dX = 2
     random_state = check_random_state(seed)
-    rmatch = RadialMatch.random_ball(D_X=D_X,
+    rmatch = RadialMatch.random_ball(dX=dX,
                                      random_state=random_state,
                                      has_bias=False)
     import matplotlib.pyplot as plt
