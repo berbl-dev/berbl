@@ -107,7 +107,9 @@ class RadialMatch():
         self.has_bias = has_bias
 
     def __repr__(self):
-        return f"RadialMatch({self.mean}, {self.eigvals}, {self.eigvecs})"
+        return (
+            f"RadialMatch({tostring(self.mean)}, {tostring(self.eigvals)}, "
+            f"{tostring(self.eigvecs)}, {repr(self.has_bias)})")
 
     @classmethod
     def random_ball(cls,
@@ -482,3 +484,8 @@ def _rotate(eigvecs: np.ndarray, angle: float, i1, i2):
     eigvecs = R @ eigvecs
 
     return eigvecs
+
+
+def tostring(a):
+    return ("np.array(" + np.array2string(
+        a, separator=",", max_line_width=np.inf, threshold=None) + ")")
