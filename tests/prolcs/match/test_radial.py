@@ -78,6 +78,7 @@ def test_random_eigvals_gt_0(dX, has_bias, seed):
 
 
 @given(dims_and_epsilons(), seeds())
+@settings(deadline=None)
 def test_match_mean_is_mode(dim_and_epsilon, seed):
     """
     We check whether matching value at `x = rmatch.mean` is larger than matching
@@ -88,9 +89,7 @@ def test_match_mean_is_mode(dim_and_epsilon, seed):
     """
     dX, epsilon = dim_and_epsilon
     # +1 due to has_bias=True.
-    rmatch = RadialMatch.random_ball(dX=dX,
-                                     has_bias=True,
-                                     random_state=seed)
+    rmatch = RadialMatch.random_ball(dX=dX, has_bias=True, random_state=seed)
     # TODO Consider using check_array in match, add_bias
     X = add_bias(np.array([rmatch.mean]))
     m = rmatch.match(X)
@@ -126,19 +125,20 @@ def test_match_symmetric_covariance(dX, has_bias, seed):
     assert np.allclose(cov, cov.T), f"Covariance matrix is not symmetrical"
 
 
-@given(dimensions(), st.booleans(), seeds())
-def test_match_mutate_positive_definite(dX, has_bias, seed):
+@given(dimensions(), st.booleans(), st.floats(min_value=0.01, max_value=0.99),
+       seeds())
+def test_match_mutate_positive_definite(dX, has_bias, volstdfactor, seed):
     """
     A radial basis function–based matching function's covariance matrix has to
     stay positive definite under mutation.
     """
-    raise NotImplementedError("Needs overhaul due to volstd")
     rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=has_bias,
                                      cover_confidence=0.5,
                                      random_state=seed)
     rmatch_ = radial.mutate(rmatch,
-                            vol=0.1 * rmatch.covered_vol(cover_confidence=0.5),
+                            volstd=volstdfactor
+                            * rmatch.covered_vol(cover_confidence=0.5),
                             cover_confidence=0.5,
                             random_state=seed)
     cov = rmatch_._covariance()
@@ -163,9 +163,7 @@ def test_rotate_eigvecs_180(diix, seed):
     Rotating by 180° doesn't change radial-basis function–based match functions.
     """
     dX, i1, i2, X = diix
-    rmatch = RadialMatch.random_ball(dX=dX,
-                                     has_bias=False,
-                                     random_state=seed)
+    rmatch = RadialMatch.random_ball(dX=dX, has_bias=False, random_state=seed)
     eigvecs_ = _rotate(rmatch.eigvecs, 180, i1, i2)
     rmatch_ = RadialMatch(mean=rmatch.mean,
                           has_bias=False,
@@ -207,46 +205,66 @@ def test_volume_after_random_init(dX, has_bias, cover_confidence, coverage,
                               allow_infinity=False,
                               allow_nan=False)),
     st.floats(min_value=0.01, max_value=0.99),
-    st.floats(min_value=0.01, max_value=0.99),
+    st.floats(min_value=-0.99, max_value=0.99),
     st.floats(min_value=0.01, max_value=0.99), seeds())
+@settings(deadline=None)
 def test_volume_after__stretch(eigvals, cover_confidence, pvol, scale, seed):
-    raise NotImplementedError("Needs overhaul due to voldiff")
     vol = radial._covered_vol(eigvals, cover_confidence)
+    voldiff = pvol * vol
     eigvals_ = radial._stretch(eigvals,
-                               vol=pvol * vol,
-                               scale=0.1,
+                               voldiff=voldiff,
+                               scale=scale,
                                cover_confidence=cover_confidence,
                                random_state=check_random_state(seed))
     vol_ = radial._covered_vol(eigvals_, cover_confidence)
+    voldiff_ = vol_ - vol
+    assert np.isclose(voldiff, voldiff_, atol=1e-7, rtol=1e-7)
 
-    assert np.isclose(np.abs(vol - vol_), pvol * vol)
+
+@given(
+    arrays(np.float64, (10, ),
+           elements=st.floats(min_value=0.5,
+                              max_value=1e10,
+                              exclude_min=True,
+                              allow_infinity=False,
+                              allow_nan=False)),
+    st.floats(min_value=0.01, max_value=0.99),
+    st.floats(min_value=-0.99, max_value=0.99),
+    st.floats(min_value=0.01, max_value=0.99), seeds())
+@settings(deadline=None)
+def test_isnan_after__stretch(eigvals, cover_confidence, pvol, scale, seed):
+    vol = radial._covered_vol(eigvals, cover_confidence)
+    voldiff = pvol * vol
+    eigvals_ = radial._stretch(eigvals,
+                               voldiff=voldiff,
+                               scale=scale,
+                               cover_confidence=cover_confidence,
+                               random_state=check_random_state(seed))
+    assert not np.any(np.isnan(eigvals_))
 
 
 @given(dimensions(), st.floats(min_value=0.01, max_value=0.99),
        st.floats(min_value=0.01, max_value=1.),
        st.floats(min_value=0.01, max_value=0.99), seeds())
-def test_volume_after_mutate_large_enough(dX, cover_confidence, coverage,
-                                          pvol, seed):
+def test_volume_after_mutate_large_enough(dX, cover_confidence, coverage, pvol,
+                                          seed):
     """
     When the volume is large enough and we can use the normal mutation (without
     clipping or anything).
     """
-    raise NotImplementedError("Needs overhaul due to volstd")
     rmatch = RadialMatch.random_ball(dX=dX,
                                      has_bias=True,
                                      cover_confidence=cover_confidence,
                                      coverage=coverage,
                                      random_state=seed)
-    vol = rmatch.covered_vol(cover_confidence)
-    delta_vol = pvol * vol
     mutate(rmatch,
            cover_confidence=cover_confidence,
-           vol=delta_vol,
+           volstd=pvol,
            random_state=seed + 1)
 
     vol_ = rmatch.covered_vol(cover_confidence)
 
-    assert np.isclose(np.abs(vol - vol_), delta_vol)
+    assert vol_ > 0.01
 
 
 @given(dimensions(), st.floats(min_value=0.01, max_value=0.99))
