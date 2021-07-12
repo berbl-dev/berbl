@@ -5,10 +5,9 @@ from sklearn.utils import check_consistent_length  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 
-from ..match.radial import RadialMatch
+from ..utils import add_bias
 from .classifier import Classifier
 from .mixing import Mixing
-from ..utils import add_bias
 from .mixing_laplace import MixingLaplace
 
 
@@ -113,6 +112,8 @@ class Mixture():
                 X, y, r=self.mixing_.R_[:, [k]])
         self.L_M_q_ = self.mixing_.L_M_q_
         self.L_q_ = np.sum(self.L_C_q_) + self.L_M_q_
+        # TODO Replace this with volume-dependent formula (e.g. the one from the
+        # book s.t. p(K) = \exp(-V) V^K/K!).
         self.ln_p_M_ = -np.log(float(np.math.factorial(
             self.K_)))  # (7.3), i.e. p_M \propto 1/K
         self.p_M_D_ = self.L_q_ + self.ln_p_M_

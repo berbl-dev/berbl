@@ -1,4 +1,3 @@
-# TODO Performance: Do many things in place instead of allocating new memory
 """
 Module implementing the algorithm presented in ‘Design and Analysis of Learning
 Classifier Systems – A Probabilistic Approach’ by Jan Drugowitsch.
@@ -32,8 +31,6 @@ The only deviations from the book are:
 Within the code, comments referring to “LCSBookCode” refer to `Jan Drugowitsch's
 code <https://github.com/jdrugo/LCSBookCode>`_.
 """
-import os
-import sys
 from typing import *
 
 import mlflow
@@ -667,8 +664,8 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     L_M1q = K * (-ss.gammaln(HParams().A_BETA)
                  + HParams().A_BETA * np.log(HParams().B_BETA))
     # TODO Performance: LCSBookCode vectorized this
-    # TODO Performance: ss.gammaln(a_beta[k]) is constant throughout the loop in the calling
-    # function
+    # TODO Performance: ss.gammaln(a_beta[k]) is constant throughout the loop in
+    # the calling function
     for k in range(K):
         # NOTE this is just the negated form of the update two lines prior?
         L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])

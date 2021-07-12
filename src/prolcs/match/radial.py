@@ -158,8 +158,7 @@ class RadialMatch():
         V = space_vol(dX)
 
         # Radius.
-        r = (coverage * V * sp.gamma(dX / 2 + 1) /
-             (np.pi**(dX / 2)))**(1 / dX)
+        r = (coverage * V * sp.gamma(dX / 2 + 1) / (np.pi**(dX / 2)))**(1 / dX)
 
         # Ellipsoid matrix factor.
         lambd = r**2 / sst.chi2.ppf(cover_confidence, dX)
