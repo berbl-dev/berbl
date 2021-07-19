@@ -5,7 +5,7 @@ from deap import base, creator, tools
 from prolcs.linear.mixture import Mixture
 from prolcs.utils import add_bias, randseed, space_vol
 from sklearn.utils import check_random_state  # type: ignore
-from sklearn.utils.validation import check_is_fitted # type: ignore
+from sklearn.utils.validation import check_is_fitted  # type: ignore
 
 from .. import Search
 
@@ -31,9 +31,14 @@ class GADrugowitsch(Search):
                  n_iter=250,
                  tournsize=5,
                  random_state=None,
-                 add_bias=True,
-                 **kwargs):
+                 add_bias=True):
         """
+        Model training hyperparameters can be changed by assigning values to the
+        fields of ``HParams()``; e.g. ``HParams().A_ALPHA = 1e-2``. This might
+        seem ugly (and it certainly is), but, this way, we are able to keep the
+        signatures in prolcs.literal.__init__.py clean and very close to the
+        algorithmic description.
+
         Parameters
         ----------
         pop_size : int
@@ -48,9 +53,6 @@ class GADrugowitsch(Search):
             Tournament size.
         random_state : NumPy (legacy) ``RandomState``
             Due to scikit-learn compatibility, we use NumPy's legacy API.
-        **kwargs
-            Any other keyword parameters are passed through to ``Mixture``,
-            ``Classifier`` and ``Mixing``.
         """
         self.toolbox = toolbox
         self.pop_size = pop_size
@@ -60,7 +62,6 @@ class GADrugowitsch(Search):
         self.tournsize = tournsize
         self.random_state = random_state
         self.add_bias = add_bias
-        self.__kwargs = kwargs
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         random_state = check_random_state(self.random_state)
@@ -77,7 +78,7 @@ class GADrugowitsch(Search):
         self.elitist_ = tools.HallOfFame(1)
         self.elitist_.update(self.pop_)
 
-        # TODO now line by line check this with drugowitsch's description
+        # TODO Line by line check this with Drugowitsch's description
         for i in range(self.n_iter):
             elitist = self.elitist_[0]
             print(
@@ -109,7 +110,9 @@ class GADrugowitsch(Search):
                     del c.fitness.values
 
                 invalids = [ind for ind in offspring if not ind.fitness.valid]
-                fitnesses = [self.toolbox.evaluate(ind, X, y) for ind in invalids]
+                fitnesses = [
+                    self.toolbox.evaluate(ind, X, y) for ind in invalids
+                ]
                 for ind, fit in zip(invalids, fitnesses):
                     ind.fitness.values = fit
 
@@ -118,7 +121,6 @@ class GADrugowitsch(Search):
             self.pop_[:] = pop_new
             self.elitist_.update(self.pop_)
 
-        # TODO compute and store last model
         return self
 
     def predict_mean_var(self, X):
