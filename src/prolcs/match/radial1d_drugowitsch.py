@@ -1,33 +1,9 @@
 from typing import *
 
+from deap import base, creator, tools
 import numpy as np  # type: ignore
 import scipy.special  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
-
-
-def randoms(n, **kwargs):
-    """
-    Parameters
-    ----------
-    n : positive int
-        How many random ``RadialMatch1D`` instances to generate.
-    **kwargs
-        Passed through to ``RadialMatch1D.random``. The only exception is
-        ``random_state`` which is expected as a parameter by the returned
-        function.
-
-    Returns
-    -------
-    callable expecting a ``RandomState``
-        A distribution over ``n``-length lists of ``RadialMatch.random_ball``s.
-    """
-    def p(random_state):
-        return [
-            RadialMatch1D.random(random_state=random_state, **kwargs)
-            for _ in range(n)
-        ]
-
-    return p
 
 
 class RadialMatch1D():
@@ -37,11 +13,12 @@ class RadialMatch1D():
                  b: float = None,
                  mu: float = None,
                  sigma_2: float = None,
-                 ranges: np.ndarray = np.array([[-np.inf, np.inf]]),
-                 has_bias_column=True):
+                 has_bias=True):
         """
         ``self.match`` is a radial basis function–based matching function as
         defined in Drugowitsch's book [PDF p. 256].
+
+        Data is assumed to lie within ``[-1, 1]``.
 
         :param a: Evolving parameter from which the position of the Gaussian is
             inferred (``0 <= a <= 100``). [PDF p. 256]
@@ -52,22 +29,19 @@ class RadialMatch1D():
             Gaussian is inferred (``0 <= b <= 50``). See ``a``.
         :param mu: Position of the Gaussian. See ``a``.
         :param sigma_2: Standard deviation. See ``a``.
-        :param ranges: The value range of the problem considered. If ``None``,
-            use ``(-inf, inf)``.
-        :param has_bias_column: Whether to expect 2D data where we always match
-            the first dimension (e.g. because it is all ones as a bias to
-            implicitly fit the intercept).
+        :param has_bias: Whether to expect 2D data where we always match the
+            first dimension (e.g. because it is all ones as a bias to implicitly
+            fit the intercept).
         """
-        self.ranges = ranges
-        self.has_bias_column = has_bias_column
+        self.has_bias = has_bias
+
+        # Data is assumed to lie within [-1, 1]
+        self._l, self._u = -1, 1
 
         if a is not None and mu is None:
             self.a = a
         elif a is None and mu is not None:
-            assert np.isfinite(
-                ranges).all(), "If specifying mu, ranges need to be finite"
-            l, u = self.ranges[0][0], self.ranges[0][1]
-            self.a = 100 * (mu - l) / (u - l)
+            self.a = 100 * (mu - self._l) / (self._u - self._l)
         else:
             raise ValueError("Exactly one of a and mu has to be given")
 
@@ -82,29 +56,25 @@ class RadialMatch1D():
             raise ValueError("Exactly one of b and sigma_2 has to be given")
 
     def __repr__(self):
-        return (
-            f"RadialMatch1D(mu={self.mu()},sigma_2={self.sigma_2()},"
-            f"ranges={self.ranges},has_bias_column={self.has_bias_column})")
+        return (f"RadialMatch1D(mu={self.mu()},sigma_2={self.sigma_2()},"
+                f"has_bias={self.has_bias})")
 
     def mu(self):
-        l, u = self.ranges[0][0], self.ranges[0][1]
-        return l + (u - l) * self.a / 100
+        # The original text assumes inputs to be normalized.
+        l, u = -1, 1
+        return self._l + (self._u - self._l) * self.a / 100
 
     def sigma_2(self):
         return 10**(-self.b / 10)
 
     @classmethod
-    def random(cls, ranges: Tuple[float, float],
-               random_state: np.random.RandomState):
+    def random(cls, random_state: np.random.RandomState):
         """
         [PDF p. 256]
-
-        :param ranges: The input values' range
         """
         random_state = check_random_state(random_state)
         return RadialMatch1D(a=random_state.uniform(0, 100),
-                             b=random_state.uniform(0, 50),
-                             ranges=ranges)
+                             b=random_state.uniform(0, 50))
 
     def mutate(self, random_state: np.random.RandomState):
         """
@@ -117,12 +87,12 @@ class RadialMatch1D():
     def match(self, X: np.ndarray):
         """
         Compute matching vector for given input. Depending on whether the input
-        is expected to have a bias column (see attribute
-        ``self.has_bias_column``), remove that beforehand.
+        is expected to have a bias column (see attribute ``self.has_bias``),
+        remove that beforehand.
 
         Parameters
         ----------
-        X : array of shape ``(N, 1)`` or ``(N, 2)`` if ``self.has_bias_column``
+        X : array of shape ``(N, 1)`` or ``(N, 2)`` if ``self.has_bias``
             Input matrix.
 
         Returns
@@ -131,9 +101,9 @@ class RadialMatch1D():
             Matching vector of this matching function for the given input.
         """
 
-        if self.has_bias_column:
+        if self.has_bias:
             assert X.shape[
-                1] == 2, f"X should have shape 2 but has {X.shape[1]}"
+                1] == 2, f"X should have 2 columns but has {X.shape[1]}"
             X = X.T[1:].T
 
         return self._match_wo_bias(X)

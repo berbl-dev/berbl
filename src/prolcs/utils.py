@@ -1,6 +1,7 @@
 from functools import wraps
 from time import asctime, localtime, time
 
+import random
 import numpy as np  # type: ignore
 import scipy.stats as st  # type: ignore
 import scipy.special as sp  # type: ignore
@@ -16,6 +17,17 @@ def randseed(random_state: np.random.RandomState):
     """
     # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
     return random_state.randint(2**32 - 1)
+
+def randseed_legacy():
+    """
+    Sometimes we need to generate a new random seed for a ``RandomState`` from
+    the standard random library due to different APIs (e.g. NumPy wants the new
+    rng API, scikit-learn uses the legacy NumPy ``RandomState`` API, DEAP uses
+    ``random.random``).
+    """
+    # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
+    return random.randint(0, 2**32 - 1)
+
 
 
 def logstartstop(f):

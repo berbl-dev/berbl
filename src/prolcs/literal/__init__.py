@@ -2,11 +2,11 @@
 Module implementing the algorithm presented in ‘Design and Analysis of Learning
 Classifier Systems – A Probabilistic Approach’ by Jan Drugowitsch.
 
-This implementation intentionially does break with several Python conventions
+This implementation intentionally does break with several Python conventions
 (e.g. PEP8 regarding variable naming) in order to stay as close as possible to
 the formulation of the algorithm in aforementioned work.
 
-The only deviations from the book are:
+The only identified deviations from the book are:
 * ``model_probability`` returns L(q) - ln K! instead of L(q) + ln K! as the
   latter is presumably a typographical error in the book (the corresponding
   formula in Section 7 uses ``-`` as well, which seems to be correct).
@@ -38,9 +38,9 @@ import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
 
+from ..common import matching_matrix
 from ..utils import add_bias
 from .hyperparams import HParams
-from .model import Model
 from .state import State
 
 # Underflows may occur in many places, e.g. if X contains values very close to
@@ -49,15 +49,19 @@ from .state import State
 np.seterr(all="raise", under="warn")
 
 
-def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
-                      Phi: np.ndarray, exp_min: float, ln_max: float):
+def model_probability(matchs: List,
+                      X: np.ndarray,
+                      Y: np.ndarray,
+                      Phi: np.ndarray,
+                      exp_min: float = np.log(np.finfo(None).tiny),
+                      ln_max: float = np.log(np.finfo(None).max)):
     """
     [PDF p. 235]
 
     Note that this deviates from [PDF p. 235] in that we return ``L(q) - ln K!``
     instead of ``L(q) + ln K!`` because the latter is not consistent with (7.3).
 
-    We also first augment X by a bias term within this function.
+    Note that we don't augment X by a bias term within this function.
 
     We also compute the matching matrix within this function instead of
     providing it to it (this way we can return a complete trained model
@@ -75,14 +79,9 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
     :returns: model
     """
     N, _ = X.shape
-    K = model.size()
+    K = len(matchs)
 
-    # Get the matching matrix before we augment X.
-    M = model.matching_matrix(X)
-
-    # Augment X by a bias term. [PDF p. 113] assumes that input is always
-    # augmented with a single constant element. We simply enforce that here.
-    X = add_bias(X)
+    M = matching_matrix(matchs, X)
 
     W = [None] * K
     Lambda_1 = [None] * K
@@ -123,21 +122,22 @@ def model_probability(model: Model, X: np.ndarray, Y: np.ndarray,
         np.math.factorial(K)))  # (7.3), i.e. p_M \propto 1/K
     p_M_D = L_q + ln_p_M
 
-    return model.fitted(p_M_D=p_M_D,
-                        W=W,
-                        Lambda_1=Lambda_1,
-                        a_tau=a_tau,
-                        b_tau=b_tau,
-                        a_alpha=a_alpha,
-                        b_alpha=b_alpha,
-                        V=V,
-                        Lambda_V_1=Lambda_V_1,
-                        a_beta=a_beta,
-                        b_beta=b_beta,
-                        L_q=L_q,
-                        ln_p_M=ln_p_M,
-                        L_k_q=L_k_q,
-                        L_M_q=L_M_q)
+    return p_M_D, {
+        "W": W,
+        "Lambda_1": Lambda_1,
+        "a_tau": a_tau,
+        "b_tau": b_tau,
+        "a_alpha": a_alpha,
+        "b_alpha": b_alpha,
+        "V": V,
+        "Lambda_V_1": Lambda_V_1,
+        "a_beta": a_beta,
+        "b_beta": b_beta,
+        "L_q": L_q,
+        "ln_p_M": ln_p_M,
+        "L_k_q": L_k_q,
+        "L_M_q": L_M_q
+    }
 
 
 def train_classifier(m_k, X, Y):
@@ -161,8 +161,10 @@ def train_classifier(m_k, X, Y):
     # This is constant; Drugowitsch nevertheless puts it into the while loop
     # (probably for readability).
     a_alpha_k = HParams().A_ALPHA + D_X * D_Y / 2
-    # Drugowitsch reaches convergence usually after 3-4 iterations [PDF p. 237].
     i = 0
+    # Drugowitsch reaches convergence usually after 3-4 iterations [PDF p. 237].
+    # NOTE Deviation from the original text since we add a maximum number of
+    # iterations (see module doc string).
     while delta_L_k_q > HParams().DELTA_S_L_K_Q and i < HParams().MAX_ITER_CLS:
         i += 1
         # print(f"train_classifier: {delta_L_k_q} > {DELTA_S_L_K_Q}")
@@ -299,8 +301,7 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     # of shape (N, D_V).
     G = Phi @ V
 
-    # This quasi never happens (at least for the run I checked it did not). That
-    # run also oscillated so this is probably not the source.
+    # This clip is sometimes required.
     G = np.clip(G, HParams().EXP_MIN, HParams().LN_MAX - np.log(K))
 
     G = np.exp(G) * M
@@ -394,9 +395,8 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     KLRG = np.inf
     delta_KLRG = HParams().DELTA_S_KLRG + 1
     i = 0
-    mlflow.log_metric("algorithm.oscillations.occurred", 0, State().step)
-    KLRGs = np.repeat(-np.inf, 10)
-    j = 0
+    # NOTE Deviation from the original text since we add a maximum number of
+    # iterations (see module doc string).
     while delta_KLRG > HParams().DELTA_S_KLRG and i < HParams(
     ).MAX_ITER_MIXING:
         i += 1
@@ -440,25 +440,13 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
             # divergence (other than is stated in the book).
             KLRG = np.sum(
                 R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
-        # This fixes(?) some numerical problems.
+        # This presumably fixes(?) some numerical problems.
         if KLRG > 0 and np.isclose(KLRG, 0):
             print(
                 "Warning: Kullback-Leibler divergence ever so slightly less than zero, fixing"
             )
             KLRG = 0
         assert KLRG <= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
-
-        if KLRG in KLRGs and KLRG != KLRG_prev:
-            # We only log and break when we're at the best KLRG value of the
-            # current oscillation.
-            if (KLRG <= KLRGs).all():
-                State().oscillation_count += 1
-                mlflow.log_metric("algorithm.oscillations.occurred", 1,
-                                  State().step)
-                break
-
-        KLRGs[j] = KLRG
-        j = (j + 1) % 10
 
         delta_KLRG = np.abs(KLRG_prev - KLRG)
 

@@ -1,6 +1,7 @@
 from typing import *
 
 import numpy as np  # type: ignore
+from deap import tools
 
 
 def phi_standard(X: np.ndarray):
@@ -16,7 +17,7 @@ def phi_standard(X: np.ndarray):
     return np.ones((N, 1))
 
 
-def matching_matrix(ind: List, X: np.ndarray):
+def matching_matrix(matchs: List, X: np.ndarray):
     """
     :param ind: an individual for which the matching matrix is returned
     :param X: input matrix (N × D_X)
@@ -24,4 +25,13 @@ def matching_matrix(ind: List, X: np.ndarray):
     :returns: matching matrix (N × K)
     """
     # TODO Can we maybe vectorize this?
-    return np.hstack(list(map(lambda m: m.match(X), ind)))
+    return np.hstack([m.match(X) for m in matchs])
+
+
+def initRepeat_binom(container, func, n, p, random_state, kmin=1, kmax=100):
+    """
+    Alternative to `deap.tools.initRepeat` that samples individual sizes from a
+    binomial distribution B(n, p).
+    """
+    size = np.clip(random_state.binomial(n, p), kmin, kmax)
+    return tools.initRepeat(container, func, size)
