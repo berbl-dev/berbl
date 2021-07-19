@@ -442,9 +442,6 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                 R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
         # This presumably fixes(?) some numerical problems.
         if KLRG > 0 and np.isclose(KLRG, 0):
-            print(
-                "Warning: Kullback-Leibler divergence ever so slightly less than zero, fixing"
-            )
             KLRG = 0
         assert KLRG <= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
 
