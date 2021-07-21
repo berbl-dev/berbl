@@ -26,15 +26,13 @@ class Mixture():
 
         Parameters
         ----------
-        ranges : array of shape ``(X_D, 2)``
-            A value range pair per input dimension.
-        add_bias : bool
-            Whether to add an all-ones bias column to the input data.
         matchs
             A list of matching functions (i.e. objects implementing a ``match``
             attribute) defining the structure of this mixture. If given,
             ``n_cls`` and ``match_class`` are not used to generate classifiers
             randomly.
+        add_bias : bool
+            Whether to add an all-ones bias column to the input data.
         phi
             mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
             default LCS mixing feature matrix based on ``phi(x) = 1``
@@ -47,9 +45,9 @@ class Mixture():
             ``Classifier``.
         """
 
+        self.matchs = matchs
         self.ranges = ranges
         self.add_bias = add_bias
-        self.matchs = matchs
         self.phi = phi
         self.fit_mixing = fit_mixing
         self.random_state = random_state
@@ -162,8 +160,6 @@ class Mixture():
         for k in range(self.K_):
             y_var[k] = self.classifiers_[k].predict_var(X)
 
-        # TODO I currently calculate M twice, once when matching for each
-        # classifier and once in mixing.
         G_ = self.mixing_.mixing(X).T  # K × N
 
         # For each classifier's prediction, we weigh every dimension of the
