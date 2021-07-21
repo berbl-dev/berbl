@@ -4,17 +4,38 @@ import numpy as np  # type: ignore
 from deap import tools
 
 
-def phi_standard(X: np.ndarray):
+def check_phi(phi, X: np.ndarray):
     """
-    The input data's mixing feature matrix usually employed by LCSs, i.e. a
-    mixing feature vector of ``phi(x) = 1`` for each sample ``x``.
+    Given a mixing feature mapping ``phi``, compute the mixing feature matrix
+    ``Phi``.
 
-    :param X: input data as an ``(N, D_X)`` matrix
+    If ``phi`` is ``None``, use the default LCS mixing feature mapping, i.e. a
+    mixing feature vector of ``phi(x) = 1`` for each data point ``x``.
 
-    :returns: all-ones mixing feature matrix ``(N, 1)``
+    Parameters
+    ----------
+    phi : callable receiving ``X`` or ``None``
+        Mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
+        default LCS mixing feature matrix based on ``phi(x) = 1``.
+    X : array of shape (N, D_X)
+        Input matrix.
+
+    Returns
+    -------
+    Phi : array of shape (N, D_V)
+        Mixing feature matrix.
     """
-    N, D_X = X.shape
-    return np.ones((N, 1))
+    # NOTE This is named like this in order to stay close to sklearn's naming
+    # scheme (e.g. check_random_state etc.).
+
+    N, _ = X.shape
+
+    if phi is None:
+        Phi = np.ones((N, 1))
+    else:
+        Phi = phi(X)
+
+    return Phi
 
 
 def matching_matrix(matchs: List, X: np.ndarray):

@@ -1,5 +1,4 @@
 import numpy as np
-from prolcs.common import phi_standard
 from prolcs.drugowitsch.model import Model
 from prolcs.drugowitsch.match.radial1d_drugowitsch import RadialMatch1D
 from prolcs.utils import get_ranges
@@ -16,7 +15,7 @@ def _individual(k: int, ranges: np.ndarray,
         RadialMatch1D.random(ranges, random_state=random_state)
         for i in range(k)
     ],
-                 phi=phi_standard)
+                 phi=None)
 
 
 def make_init(n, p, size, kmin=1, kmax=100):

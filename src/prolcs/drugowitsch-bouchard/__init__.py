@@ -302,8 +302,8 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     :returns: mixing matrix (N × K)
     """
     D_V, K = V.shape
-    # If Phi is phi_standard, this simply broadcasts V to a matrix [V, V, V, …]
-    # of shape (N, D_V).
+    # If Phi is standard, this simply broadcasts V to a matrix [V, V, V, …] of
+    # shape (N, D_V).
     G = Phi @ V
 
     # This quasi never happens (at least for the run I checked it did not). That

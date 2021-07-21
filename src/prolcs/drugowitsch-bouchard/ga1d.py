@@ -8,7 +8,7 @@ import scipy.stats as sstats  # type: ignore
 from sklearn.base import BaseEstimator  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
-from ..common import phi_standard
+from ..common import check_phi
 from ..logging import log_
 from .match.radial1d_drugowitsch import RadialMatch1D
 from ..utils import get_ranges
@@ -47,7 +47,7 @@ class DrugowitschGA1D(BaseEstimator):
     def __init__(
             self,
             random_state=None,
-            phi: Callable[[np.ndarray], np.ndarray] = phi_standard,
+            phi: Callable[[np.ndarray], np.ndarray] = None,
             n_iter: int = 250,
             pop_size: int = 20,
             init_avg_ind_size: int = 10,
@@ -197,7 +197,7 @@ class DrugowitschGA1D(BaseEstimator):
         """
         N, D_X = X.shape
 
-        Phi = phi(X)
+        Phi = check_phi(self.phi, X)
 
         # This might seem ugly (and it certainly is), but this way, we are able
         # to keep the signatures in prolcs.drugowitsch.__init__.py clean and

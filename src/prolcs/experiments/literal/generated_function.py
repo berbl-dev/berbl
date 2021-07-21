@@ -5,7 +5,7 @@ import click
 import joblib as jl
 import numpy as np  # type: ignore
 from deap import base, creator, tools
-from prolcs.common import matching_matrix, phi_standard, initRepeat_binom
+from prolcs.common import matching_matrix, check_phi, initRepeat_binom
 from prolcs.literal import mixing
 from prolcs.literal.mixture import Mixture
 from prolcs.literal.hyperparams import HParams
@@ -49,7 +49,7 @@ def generate(n: int = 300,
         X = random_state.random((n, 1))
 
     M = matching_matrix(ms, X)
-    Phi = phi_standard(X)
+    Phi = check_phi(None, X)
 
     W = [
         np.array([0.05, 0.5]),
