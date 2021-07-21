@@ -4,7 +4,7 @@ import numpy as np # type: ignore
 class HParams():
     """
     We use Alex Martelli's Borg pattern for not having to add Drugowitsch's
-    hyperparameters to all signatures.
+    hyper parameters to all signatures.
 
     See `this
     <https://code.activestate.com/recipes/66531-singleton-we-dont-need-no-stinkin-singleton-the-bo/>`_.

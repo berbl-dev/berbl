@@ -2,11 +2,11 @@
 Module implementing the algorithm presented in ‘Design and Analysis of Learning
 Classifier Systems – A Probabilistic Approach’ by Jan Drugowitsch.
 
-This implementation intentionally does break with several Python conventions
+This implementation intentionially does break with several Python conventions
 (e.g. PEP8 regarding variable naming) in order to stay as close as possible to
 the formulation of the algorithm in aforementioned work.
 
-The only identified deviations from the book are:
+The only deviations from the book are:
 * ``model_probability`` returns L(q) - ln K! instead of L(q) + ln K! as the
   latter is presumably a typographical error in the book (the corresponding
   formula in Section 7 uses ``-`` as well, which seems to be correct).
@@ -161,10 +161,10 @@ def train_classifier(m_k, X, Y):
     # This is constant; Drugowitsch nevertheless puts it into the while loop
     # (probably for readability).
     a_alpha_k = HParams().A_ALPHA + D_X * D_Y / 2
-    i = 0
     # Drugowitsch reaches convergence usually after 3-4 iterations [PDF p. 237].
     # NOTE Deviation from the original text since we add a maximum number of
     # iterations (see module doc string).
+    i = 0
     while delta_L_k_q > HParams().DELTA_S_L_K_Q and i < HParams().MAX_ITER_CLS:
         i += 1
         # print(f"train_classifier: {delta_L_k_q} > {DELTA_S_L_K_Q}")
@@ -281,6 +281,8 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
         # abs()”. I guess with approximation he means the use of the Laplace
         # approximation (which may violate the lower bound nature of L_M_q).
         delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
+        # TODO At least once “FloatingPointError: invalid value encountered in
+        # double_scalars”.
     return V, Lambda_V_1, a_beta, b_beta
 
 
@@ -297,11 +299,12 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     :returns: mixing matrix (N × K)
     """
     D_V, K = V.shape
-    # If Phi is phi_standard, this simply broadcasts V to a matrix [V, V, V, …]
-    # of shape (N, D_V).
+    # If Phi is standard, this simply broadcasts V to a matrix [V, V, V, …] of
+    # shape (N, D_V).
     G = Phi @ V
 
-    # This clip is sometimes required.
+    # This quasi never happens (at least for the run I checked it did not). That
+    # run also oscillated so this is probably not the source.
     G = np.clip(G, HParams().EXP_MIN, HParams().LN_MAX - np.log(K))
 
     G = np.exp(G) * M
@@ -440,7 +443,12 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
             # divergence (other than is stated in the book).
             KLRG = np.sum(
                 R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
-        # This presumably fixes(?) some numerical problems.
+            # NOTE Sometimes this raises “FloatingPointError: overflow
+            # encountered in true_divide” (i.e. most probably g / r where 0 < r
+            # < 1e-308, i.e. g / r < -1e308 or g / r > 1e308).  However, the
+            # nan_to_num fixes that anyways (results in inf).
+            # TODO It may not be correct to map inf to 0 here.
+        # This fixes(?) some numerical problems.
         if KLRG > 0 and np.isclose(KLRG, 0):
             KLRG = 0
         assert KLRG <= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
