@@ -275,7 +275,8 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
         # bound might decrease, so we're not checking and need to take the
         # abs()”. I guess with approximation he means the use of the Laplace
         # approximation (which may violate the lower bound nature of L_M_q).
-        delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
+        with np.errstate(invalid="raise"):
+            delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
         # TODO At least once “FloatingPointError: invalid value encountered in
         # double_scalars”.
     return V, Lambda_V_1, a_beta, b_beta
