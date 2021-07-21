@@ -65,6 +65,7 @@ class Classifier():
 
         # Since this is constant, there's no need to put it into the loop.
         self.a_alpha_ = self.A_ALPHA + self.D_X_ * self.D_y_ / 2
+        self.a_tau_ = self.A_TAU + 0.5 * np.sum(self.m_)
 
         iter = 0
         while delta_L_q > self.DELTA_S_L_K_Q and iter < self.MAX_ITER:
@@ -80,8 +81,6 @@ class Classifier():
             # in his own code, Drugowitsch always uses pseudo inverse here.
             self.Lambda_1_ = np.linalg.pinv(self.Lambda_)
             self.W_ = y_.T @ X_ @ self.Lambda_1_
-            # TODO This seems to be constant and should be outside the loop
-            self.a_tau_ = self.A_TAU + 0.5 * np.sum(self.m_)
             self.b_tau_ = self.B_TAU + 1 / (2 * self.D_y_) * (
                 np.sum(y_ * y_) - np.sum(self.W_ * (self.W_ @ self.Lambda_)))
             E_tau_tau = self.a_tau_ / self.b_tau_
