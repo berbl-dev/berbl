@@ -14,7 +14,6 @@ class State():
         "random_state": np.random.RandomState(),
         # Only used to generate step-stamped logging.
         "step": 0,
-        "oscillation_count": 0
     }
 
     def __init__(self):
