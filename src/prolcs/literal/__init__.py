@@ -33,13 +33,11 @@ code <https://github.com/jdrugo/LCSBookCode>`_.
 """
 from typing import *
 
-import mlflow
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
 
 from ..common import matching_matrix
-from ..utils import add_bias
 from .hyperparams import HParams
 from .state import State
 
@@ -58,25 +56,19 @@ def model_probability(matchs: List,
     """
     [PDF p. 235]
 
-    Note that this deviates from [PDF p. 235] in that we return ``L(q) - ln K!``
-    instead of ``L(q) + ln K!`` because the latter is not consistent with (7.3).
-
-    Note that we don't augment X by a bias term within this function.
+    Note that this deviates from [PDF p. 235] in that we return ``p(M | D) =
+    L(q) - ln K!`` instead of ``L(q) + ln K!`` because the latter is not
+    consistent with (7.3).
 
     We also compute the matching matrix within this function instead of
-    providing it to it (this way we can return a complete trained model
-    including its matching functions instead of just having access to the
-    matching information for the given input).
-
-    We also return the model itself and not merely its approximate probability.
-    The model contains a field ``p_M_D`` which holds that value.
+    providing it to it.
 
     :param M: matching matrix (N × K)
     :param X: input matrix (N × D_X)
     :param Y: output matrix (N × D_Y)
     :param Phi: mixing feature matrix (N × D_V)
 
-    :returns: model
+    :returns: two dicts: model metrics and model parameters
     """
     N, _ = X.shape
     K = len(matchs)
@@ -122,7 +114,14 @@ def model_probability(matchs: List,
         np.math.factorial(K)))  # (7.3), i.e. p_M \propto 1/K
     p_M_D = L_q + ln_p_M
 
-    return p_M_D, {
+    return {
+        "p_M_D": p_M_D,
+        "L_q": L_q,
+        "ln_p_M": ln_p_M,
+        "L_k_q": L_k_q,
+        "L_M_q": L_M_q
+    }, {
+        "matchs": matchs,
         "W": W,
         "Lambda_1": Lambda_1,
         "a_tau": a_tau,
@@ -133,10 +132,6 @@ def model_probability(matchs: List,
         "Lambda_V_1": Lambda_V_1,
         "a_beta": a_beta,
         "b_beta": b_beta,
-        "L_q": L_q,
-        "ln_p_M": ln_p_M,
-        "L_k_q": L_k_q,
-        "L_M_q": L_M_q
     }
 
 
