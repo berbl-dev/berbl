@@ -59,7 +59,7 @@ class Mixture():
         Fits this model to the provided data.
 
         :param X: input matrix (N × D_X)
-        :param y: output matrix (N × D_y)
+        :param y: output matrix (N × Dy)
         """
         # TODO Use NumPy style of param dimension descriptions
 
@@ -72,7 +72,7 @@ class Mixture():
 
         self.K_ = len(self.matchs)
         _, self.D_X_ = X.shape
-        _, self.D_y_ = y.shape
+        _, self.Dy_ = y.shape
 
         # Train classifiers.
         #
@@ -136,12 +136,12 @@ class Mixture():
 
         :param X: input vector (N × D_X)
 
-        :returns: mean output vector (N × D_y), variance of output (N × D_y)
+        :returns: mean output vector (N × Dy), variance of output (N × Dy)
         """
         check_is_fitted(self)
 
         N, _ = X.shape
-        D_y, D_X = self.classifiers_[0].W_.shape
+        Dy, D_X = self.classifiers_[0].W_.shape
 
         Phi = check_phi(self.phi, X)
 
@@ -150,27 +150,31 @@ class Mixture():
         if self.add_bias:
             X = add_bias(X)
 
-        y_var = np.zeros((self.K_, N, D_y))
-        for k in range(self.K_):
-            y_var[k] = self.classifiers_[k].predict_var(X)
+        # Collect the independent predictions and variances of each classifier.
+        # We use the definitions of those that do neither perform input checking
+        # nor bias adding to save some time.
+        ys = self._predicts(X)
+        y_vars = self._predict_vars(X)
 
         G_ = self.mixing_.mixing(X).T  # K × N
 
         # For each classifier's prediction, we weigh every dimension of the
         # output vector by the same amount, thus we simply repeat the G values
-        # over D_y.
-        G = G_.reshape(y.shape).repeat(D_y, axis=2)  # K × N × D_y
+        # over Dy.
+        G = G_.reshape(ys.shape).repeat(Dy, axis=2)  # K × N × Dy
 
-        y = np.sum(G * y, axis=0)
+        y = np.sum(G * ys, axis=0)
 
-        var = np.zeros((N, D_y))
+        # 99% sure that the first squared term should be ys and not y.
+        y_var = np.sum(G * (y_vars + ys**2), axis=0) - y**2
+
         # TODO Re-check this for correctness (should(?) probably be the same as
         # the following loop but is not?)
-        y_var = np.sum(G * (y_var + y**2), axis=0) - y**2
+        # var = np.zeros((N, Dy))
         # for n in range(N):
         #     x_ = X[n]
         #     g = G_.T[n]
-        #     for j in range(D_y):
+        #     for j in range(Dy):
         #         for k in range(self.K_):
         #             cl = self.classifiers[k]
         #             var[n][j] += g[k] * (2 * cl.b_tau / (cl.a_tau - 1) *
@@ -188,16 +192,54 @@ class Mixture():
         Returns this model's classifiers' predictions, one by one, without
         mixing them.
 
-        :returns: mean output vectors of each classifier (K × N × D_y)
+        Returns
+        -------
+        array of shape (K, N, Dy)
+            Mean output vectors of each classifier.
         """
         check_is_fitted(self)
 
         if self.add_bias:
             X = add_bias(X)
 
+        return self._predicts(X)
+
+    def _predicts(self, X):
+        """
+        No bias is added and no fitted check is performed.
+        """
         N = len(X)
 
-        y = np.zeros((self.K_, N, self.D_y_))
+        y = np.zeros((self.K_, N, self.Dy_))
         for k in range(self.K_):
             y[k] = self.classifiers_[k].predict(X)
         return y
+
+    def predict_vars(self, X):
+        """
+        Returns this model's classifiers' prediction variance, one by one,
+        without mixing them.
+
+        Returns
+        -------
+        array of shape (K, N)
+            Prediction variances of each classifier.
+        """
+        check_is_fitted(self)
+
+        if self.add_bias:
+            X = add_bias(X)
+
+        return self._predict_vars(X)
+
+    def _predict_vars(self, X):
+        """
+        No bias is added and no fitted check is performed.
+        """
+        N = len(X)
+
+        y_vars = np.zeros((self.K_, N, self.Dy_))
+        for k in range(self.K_):
+            y_vars[k] = self.classifiers_[k].predict_var(X)
+
+        return y_vars
