@@ -7,7 +7,7 @@ import numpy as np  # type: ignore
 from deap import base, creator, tools
 from prolcs.common import matching_matrix, check_phi, initRepeat_binom
 from prolcs.literal import mixing
-from prolcs.literal.mixture import Mixture
+from prolcs.literal.model import Model
 from prolcs.literal.hyperparams import HParams
 from prolcs.literal.state import State
 from prolcs.logging import log_
@@ -130,10 +130,9 @@ def run_experiment(n_iter, seed, show, sample_size):
                          toolbox.genotype)
 
         def _evaluate(genotype, X, y):
-            phenotype = Mixture(matchs=genotype, random_state=random_state)
-            phenotype.fit(X, y)
-            genotype.phenotype = phenotype
-            return (phenotype.p_M_D_, )
+            genotype.phenotype = Model(matchs=genotype,
+                                       random_state=random_state).fit(X, y)
+            return (genotype.phenotype.p_M_D_, )
 
         toolbox.register("evaluate", _evaluate)
 
@@ -143,7 +142,6 @@ def run_experiment(n_iter, seed, show, sample_size):
         estimator = estimator.fit(X, y)
 
         log_("random_state.random", State().random_state.random(), n_iter)
-        log_("algorithm.oscillations.count", State().oscillation_count, n_iter)
 
         # TODO Store the model, you never know when you need it
         # model_file = f"models/Model {seed}.joblib"
