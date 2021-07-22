@@ -15,7 +15,6 @@ from .mixing_laplace import MixingLaplace
 class Mixture():
     def __init__(self,
                  matchs: List,
-                 ranges=None,
                  add_bias=True,
                  phi=None,
                  fit_mixing="bouchard",
@@ -47,7 +46,6 @@ class Mixture():
         """
 
         self.matchs = matchs
-        self.ranges = ranges
         self.add_bias = add_bias
         self.phi = phi
         self.fit_mixing = fit_mixing
