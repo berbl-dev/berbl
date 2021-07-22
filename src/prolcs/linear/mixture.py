@@ -6,6 +6,7 @@ from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 
 from ..utils import add_bias
+from ..common import check_phi
 from .classifier import Classifier
 from .mixing import Mixing
 from .mixing_laplace import MixingLaplace
@@ -144,12 +145,7 @@ class Mixture():
         N, _ = X.shape
         D_y, D_X = self.classifiers_[0].W_.shape
 
-        if self.phi is None:
-            Phi = np.ones((len(X), 1))
-        else:
-            raise NotImplementedError("phi is not None in Mixing")
-
-        y = self.predicts(X)
+        Phi = check_phi(self.phi, X)
 
         # After having called ``predicts``, add the bias term (``predicts`` also
         # adds the bias term internally).
