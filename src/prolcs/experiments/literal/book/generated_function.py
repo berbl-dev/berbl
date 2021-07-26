@@ -6,18 +6,15 @@ import joblib as jl
 import matplotlib.pyplot as plt
 import mlflow
 import numpy as np  # type: ignore
-from deap import creator, tools
-from prolcs.common import initRepeat_binom
 from prolcs.literal.hyperparams import HParams
-from prolcs.literal.model import Model
 from prolcs.literal.state import State
 from prolcs.logging import log_
-from prolcs.match.radial1d_drugowitsch import RadialMatch1D
 from prolcs.search.ga.drugowitsch import GADrugowitsch
-from prolcs.search.operators.drugowitsch import Toolbox
 from prolcs.tasks.book.generated_function import generate
 from sklearn import metrics  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
+
+from .toolbox import Toolbox
 
 np.seterr(all="warn")
 
@@ -43,33 +40,9 @@ def run_experiment(n_iter, seed, show, sample_size):
 
         # TODO Normalize X
 
-        toolbox = Toolbox()
-
         random_state = check_random_state(seed)
 
-        toolbox.register("gene",
-                         RadialMatch1D.random,
-                         random_state=random_state)
-
-        toolbox.register("genotype",
-                         initRepeat_binom,
-                         creator.Genotype,
-                         toolbox.gene,
-                         n=8,
-                         p=0.5,
-                         random_state=random_state)
-
-        toolbox.register("population", tools.initRepeat, list,
-                         toolbox.genotype)
-
-        def _evaluate(genotype, X, y):
-            genotype.phenotype = Model(matchs=genotype,
-                                       random_state=random_state).fit(X, y)
-            return (genotype.phenotype.p_M_D_, )
-
-        toolbox.register("evaluate", _evaluate)
-
-        estimator = GADrugowitsch(toolbox,
+        estimator = GADrugowitsch(Toolbox(random_state=random_state),
                                   n_iter=n_iter,
                                   random_state=random_state)
         estimator = estimator.fit(X, y)
