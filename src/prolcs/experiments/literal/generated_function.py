@@ -2,87 +2,21 @@
 import os
 
 import click
-import joblib as jl
+import matplotlib.pyplot as plt
+import mlflow
 import numpy as np  # type: ignore
-from deap import base, creator, tools
-from prolcs.common import matching_matrix, check_phi, initRepeat_binom
-from prolcs.literal import mixing
-from prolcs.literal.model import Model
+from deap import creator, tools
+from prolcs.common import initRepeat_binom
 from prolcs.literal.hyperparams import HParams
+from prolcs.literal.model import Model
 from prolcs.literal.state import State
 from prolcs.logging import log_
 from prolcs.match.radial1d_drugowitsch import RadialMatch1D
 from prolcs.search.ga.drugowitsch import GADrugowitsch
 from prolcs.search.operators.drugowitsch import Toolbox
-from prolcs.utils import add_bias
+from prolcs.tasks.book.generated_function import generate
 from sklearn import metrics  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
-
-# The individual used in function generation.
-ms = [
-    RadialMatch1D(mu=0.2, sigma_2=0.05, has_bias=False),
-    RadialMatch1D(mu=0.5, sigma_2=0.01, has_bias=False),
-    RadialMatch1D(mu=0.8, sigma_2=0.05, has_bias=False),
-]
-
-np.seterr(all="warn")
-
-
-def generate(n: int = 300,
-             noise=True,
-             X=None,
-             random_state: np.random.RandomState = 0):
-    """
-    [PDF p. 260]
-
-    :param n: The number of samples to generate. Supplying ``X`` overrides this.
-    :param noise: Whether to generate noisy data (the default) or not. The
-        latter may be useful for visualization purposes.
-    :param X: Sample the function at these exact input points (instead of
-        generating ``n`` input points randomly).
-
-    :returns: input and output matrices X (N × 1) and Y (N × 1)
-    """
-    random_state = check_random_state(random_state)
-
-    if X is None:
-        X = random_state.random((n, 1))
-
-    M = matching_matrix(ms, X)
-    Phi = check_phi(None, X)
-
-    W = [
-        np.array([0.05, 0.5]),
-        np.array([2, -4]),
-        np.array([-1.5, 2.5]),
-    ]
-    Lambda_1 = [
-        np.array([0.1]),
-        np.array([0.1]),
-        np.array([0.1]),
-    ]
-    V = np.array([0.5, 1.0, 0.4]).reshape(1, 3)
-
-    G = mixing(M, Phi, V)
-
-    # After matching, augment samples by prepending 1 to enable non-zero
-    # intercepts.
-    X_ = add_bias(X)
-    Y = np.zeros(X.shape)
-    for n in range(len(X)):
-        y = 0
-        for k in range(len(ms)):
-            # sample the three classifiers
-            if noise:
-                y += random_state.normal(loc=G[n][k] * (W[k] @ X_[n]),
-                                         scale=Lambda_1[k])
-            else:
-                y += G[n][k] * (W[k] @ X_[n])
-        Y[n] = y
-
-    # We return the non-augmented samples (because our algorithm augments them
-    # itself).
-    return X, Y
 
 
 @click.command()
@@ -91,10 +25,6 @@ def generate(n: int = 300,
 @click.option("--show/--no-show", type=bool, default=False)
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=300)
 def run_experiment(n_iter, seed, show, sample_size):
-    # We import these packages here so the generate function can be used without
-    # installing them.
-    import matplotlib.pyplot as plt
-    import mlflow
 
     mlflow.set_experiment("literal.generated_function")
     with mlflow.start_run() as run:
