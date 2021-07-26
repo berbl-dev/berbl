@@ -29,7 +29,7 @@ np.seterr(all="warn")
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=300)
 def run_experiment(n_iter, seed, show, sample_size):
 
-    mlflow.set_experiment("literal.book.generated_function")
+    mlflow.set_experiment("book.generated_function.literal")
     with mlflow.start_run() as run:
         mlflow.log_params(HParams().__dict__)
         mlflow.log_param("seed", seed)
