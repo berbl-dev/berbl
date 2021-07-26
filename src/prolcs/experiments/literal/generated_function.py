@@ -106,7 +106,7 @@ def run_experiment(n_iter, seed, show, sample_size):
 
         # generate denoised data as well (for visual reference)
         X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
-        _, Y_denoised = generate(1000, noise=False, X=X_denoised)
+        _, y_denoised = generate(1000, noise=False, X=X_denoised)
 
         # TODO Normalize X
 
@@ -149,13 +149,13 @@ def run_experiment(n_iter, seed, show, sample_size):
         # mlflow.log_artifact(model_file)
 
         # generate test data
-        X_test, Y_test_true = generate(1000, random_state=12345)
+        X_test, y_test_true = generate(1000, random_state=12345)
 
         # make predictions for test data
-        Y_test, var = estimator.predict_mean_var(X_test)
+        y_test, var = estimator.predict_mean_var(X_test)
 
-        mse = metrics.mean_squared_error(Y_test_true, Y_test)
-        r2 = metrics.r2_score(Y_test_true, Y_test)
+        mse = metrics.mean_squared_error(y_test_true, y_test)
+        r2 = metrics.r2_score(y_test_true, y_test)
         log_("elitist.mse", mse, n_iter)
         log_("elitist.r2-score", r2, n_iter)
 
@@ -165,18 +165,18 @@ def run_experiment(n_iter, seed, show, sample_size):
         ax.plot(X.ravel(), y.ravel(), "r+")
 
         # plot denoised input data for visual reference
-        ax.plot(X_denoised.ravel(), Y_denoised.ravel(), "k--")
+        ax.plot(X_denoised.ravel(), y_denoised.ravel(), "k--")
 
         # plot test data
         X_test_ = X_test.ravel()
         perm = np.argsort(X_test_)
         X_test_ = X_test_[perm]
-        Y_test_ = Y_test.ravel()[perm]
+        y_test_ = y_test.ravel()[perm]
         var_ = var.ravel()[perm]
-        ax.plot(X_test_, Y_test_, "b-")
-        ax.plot(X_test_, Y_test_ - var_, "b--", linewidth=0.5)
-        ax.plot(X_test_, Y_test_ + var_, "b--", linewidth=0.5)
-        ax.fill_between(X_test_, Y_test_ - var_, Y_test_ + var_, alpha=0.2)
+        ax.plot(X_test_, y_test_, "b-")
+        ax.plot(X_test_, y_test_ - var_, "b--", linewidth=0.5)
+        ax.plot(X_test_, y_test_ + var_, "b--", linewidth=0.5)
+        ax.fill_between(X_test_, y_test_ - var_, y_test_ + var_, alpha=0.2)
 
         # plot elitist's classifiers
         elitist = estimator.elitist_[0].phenotype
