@@ -5,8 +5,8 @@ from sklearn.utils import check_consistent_length  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 
-from ..utils import add_bias
 from ..common import check_phi, matching_matrix
+from ..utils import add_bias
 from . import mixing, model_probability
 
 

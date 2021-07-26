@@ -1,13 +1,13 @@
+import random
+
 import numpy as np  # type: ignore
-from .. import Search
 from deap import base, creator, tools
 from prolcs.linear.mixture import Mixture
-from prolcs.logging import log_
-from prolcs.match.radial import RadialMatch
-import prolcs.match.radial as radial
-from prolcs.utils import get_ranges, randseed
-import random
+from prolcs.utils import randseed
 from sklearn.utils import check_random_state  # type: ignore
+
+from .. import Search
+
 
 class GADrugowitsch(Search):
     """
@@ -152,7 +152,6 @@ class GADrugowitsch(Search):
                                 random_state=random_state)
         # TODO Make retraining after end unnecessary
         self.mixture_.fit(X, y)
-
 
 def crossover(child1, child2, random_state: np.random.RandomState):
     """
