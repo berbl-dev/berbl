@@ -12,9 +12,6 @@ ms = [
     RadialMatch1D(mu=0.8, sigma_2=0.05, has_bias=False),
 ]
 
-np.seterr(all="warn")
-
-
 def generate(n: int = 300,
              noise=True,
              X=None,

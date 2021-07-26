@@ -18,6 +18,8 @@ from prolcs.tasks.book.generated_function import generate
 from sklearn import metrics  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
+np.seterr(all="warn")
+
 
 @click.command()
 @click.option("-n", "--n_iter", type=click.IntRange(min=1), default=250)
