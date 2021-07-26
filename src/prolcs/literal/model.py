@@ -30,7 +30,7 @@ class Model():
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi
-            mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
+            mixing feature extractor (N × Dx → N × D_V); if ``None`` uses the
             default LCS mixing feature matrix based on ``phi(x) = 1``
         random_state
             See ``n_cls``.
@@ -49,8 +49,8 @@ class Model():
         random_state = check_random_state(self.random_state)
 
         self.K_ = len(self.matchs)
-        _, self.D_X_ = X.shape
-        _, self.D_y_ = y.shape
+        _, self.Dx_ = X.shape
+        _, self.Dy_ = y.shape
 
         Phi = check_phi(self.phi, X)
 
@@ -86,6 +86,57 @@ class Model():
 
     def predict_mean_var(self, X: np.ndarray):
         """
+        Calculates prediction means and variances of the model for the provided
+        inputs.
+        """
+        y = np.zeros((len(X), self.Dy_))
+        y_var = np.zeros((len(X), self.Dy_))
+        for i in range(len(X)):
+            y[i], y_var[i] = self.predict_mean_var1(X[i])
+
+        return y, y_var
+
+    def predict_mean_var1(self, x: np.ndarray):
+        """
+        Calculates prediction mean and variance of the model for the provided
+        input.
+
+        Literal (and inefficient) version given in Drugowitsch's book.
+        """
+        check_is_fitted(self)
+
+        Dy, Dx = self.W_[0].shape
+
+        if self.add_bias:
+            x = np.append(1, x)
+
+        X = np.array([x])
+
+        Phi = check_phi(self.phi, X)
+        M = matching_matrix(self.matchs, X)
+        G = mixing(M, Phi, self.V_)  # shape ((N=1), K)
+        # assert G.shape == (1, self.K_)
+        g = G[0]
+
+        # Mean (7.108).
+        gW = 0
+        for k in range(len(self.W_)):
+            gW += g[k] * self.W_[k]
+        y = gW @ x
+
+        # Variance (7.109).
+        var = np.zeros(Dy)
+        for j in range(Dy):
+            for k in range(self.K_):
+                var[j] += g[k] * (2 * self.b_tau_[k] / (self.a_tau_[k] - 1) *
+                                  (1 + x @ self.Lambda_1_[k] @ x) +
+                                  (self.W_[k][j] @ x)**2)
+            var[j] -= y[j]**2
+
+        return y, var
+
+    def predict_mean_var_(self, X: np.ndarray):
+        """
         [PDF p. 224]
 
         The mean and variance of the predictive density described by this model
@@ -97,16 +148,14 @@ class Model():
         in [118].  Here, we take the variance as a sufficient indicator of the
         prediction’s confidence.” [PDF p. 224]
 
-        :param X: input vector (N × D_X)
+        :param X: input vector (N × Dx)
 
-        :returns: mean output vector (N × D_y), variance of output (N × D_y)
+        :returns: mean output vector (N × Dy), variance of output (N × Dy)
         """
         check_is_fitted(self)
 
         N, _ = X.shape
-        D_y, D_X = self.W_[0].shape
-
-        Phi = check_phi(self.phi, X)
+        Dy, Dx = self.W_[0].shape
 
         if self.add_bias:
             X = add_bias(X)
@@ -114,29 +163,29 @@ class Model():
         # Collect the independent predictions and variances of each classifier.
         # We use the definitions of those that do neither perform input checking
         # nor bias adding to save some time.
-        y = self._predicts(X)
-        y_var = self._predict_vars(X)
+        ys = self._predicts(X)
+        y_vars = self._predict_vars(X)
 
         # Next, mix the predictions.
+        Phi = check_phi(self.phi, X)
         M = matching_matrix(self.matchs, X)
         G_ = mixing(M, Phi, self.V_)
 
         # For each classifier's prediction, we weigh every dimension of the
         # output vector by the same amount, thus we simply repeat the G values
-        # over D_y. TODO Am I sure about this?
-        G = G_.reshape(y.shape).repeat(D_y, axis=2)  # K × N × D_y
+        # over Dy.
+        G = G_.reshape(ys.shape).repeat(Dy, axis=2)  # K × N × Dy
 
-        y = np.sum(G * y, axis=0)
-
-        y_var = np.sum(G * (y_var + y**2), axis=0) - y**2
+        y = np.sum(G * ys, axis=0)
+        y_var = np.sum(G * (y_vars + ys**2), axis=0) - y**2
 
         # TODO Re-check this for correctness (should(?) probably be the same as
         # the following loop but is not?)
-        # var = np.zeros((N, D_y))
+        # var = np.zeros((N, Dy))
         # for n in range(N):
         #     x_ = X[n]
         #     g = G_.T[n]
-        #     for j in range(D_y):
+        #     for j in range(Dy):
         #         for k in range(self.K_):
         #             cl = self.classifiers[k]
         #             var[n][j] += g[k] * (2 * cl.b_tau / (cl.a_tau - 1) *
@@ -156,7 +205,7 @@ class Model():
 
         Returns
         -------
-        array of shape (K, N, D_y)
+        array of shape (K, N, Dy)
             Mean output vectors of each classifier.
         """
         check_is_fitted(self)
@@ -166,14 +215,13 @@ class Model():
 
         return self._predicts(X)
 
-
     def _predicts(self, X):
         """
         No bias is added and no fitted check is performed.
         """
         N = len(X)
 
-        y = np.zeros((self.K_, N, self.D_y_))
+        y = np.zeros((self.K_, N, self.Dy_))
         for k in range(self.K_):
             # A classifier's prediction.
             y[k] = X @ self.W_[k].T
@@ -202,12 +250,11 @@ class Model():
         """
         N = len(X)
 
-        y_var = np.zeros((self.K_, N, self.D_y_))
+        y_var = np.zeros((self.K_, N, self.Dy_))
         for k in range(self.K_):
             # A classifier's prediction variance.
             var = 2 * self.b_tau_[k] / (self.a_tau_[k] - 1) * (
-                1 + np.sum(X * X @ self.Lambda_1_[k], 1))
-            y_var[k] = var.reshape((len(X), self.D_y_)).repeat(self.D_y_,
-                                                               axis=1)
+                1 + np.sum(X * X @ self.Lambda_1_[k], axis=1))
+            y_var[k] = var.reshape((len(X), self.Dy_)).repeat(self.Dy_, axis=1)
 
         return y_var
