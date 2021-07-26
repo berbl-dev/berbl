@@ -1,5 +1,6 @@
 import random
 
+from copy import deepcopy
 import numpy as np  # type: ignore
 from deap import base, creator, tools
 from prolcs.linear.mixture import Mixture
@@ -127,3 +128,13 @@ class GADrugowitsch(Search):
         check_is_fitted(self)
 
         return self.elitist_[0].phenotype.predict_mean_var(X)
+
+    def frozen(self):
+        """
+        Returns a picklable of this object.
+
+        Simply removes the toolbox.
+        """
+        copy = deepcopy(self)
+        del copy.toolbox
+        return copy

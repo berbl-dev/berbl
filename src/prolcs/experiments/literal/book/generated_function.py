@@ -2,6 +2,7 @@
 import os
 
 import click
+import joblib as jl
 import matplotlib.pyplot as plt
 import mlflow
 import numpy as np  # type: ignore
@@ -75,10 +76,10 @@ def run_experiment(n_iter, seed, show, sample_size):
 
         log_("random_state.random", State().random_state.random(), n_iter)
 
-        # TODO Store the model, you never know when you need it
-        # model_file = f"models/Model {seed}.joblib"
-        # jl.dump(estimator, model_file)
-        # mlflow.log_artifact(model_file)
+        # store the model, you never know when you need it
+        model_file = f"models/Model {seed}.joblib"
+        jl.dump(estimator.frozen(), model_file)
+        mlflow.log_artifact(model_file)
 
         # generate test data
         X_test, y_test_true = generate(1000, random_state=12345)
@@ -86,6 +87,7 @@ def run_experiment(n_iter, seed, show, sample_size):
         # make predictions for test data
         y_test, var = estimator.predict_mean_var(X_test)
 
+        # two additional statistics to better gauge solution performance
         mse = metrics.mean_squared_error(y_test_true, y_test)
         r2 = metrics.r2_score(y_test_true, y_test)
         log_("elitist.mse", mse, n_iter)
