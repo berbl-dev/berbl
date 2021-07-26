@@ -26,7 +26,7 @@ from sklearn.utils import check_random_state  # type: ignore
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=300)
 def run_experiment(n_iter, seed, show, sample_size):
 
-    mlflow.set_experiment("literal.generated_function")
+    mlflow.set_experiment("literal.book.generated_function")
     with mlflow.start_run() as run:
         mlflow.log_params(HParams().__dict__)
         mlflow.log_param("seed", seed)
@@ -34,7 +34,7 @@ def run_experiment(n_iter, seed, show, sample_size):
 
         X, y = generate(sample_size)
 
-        # generate denoised data as well (for visual reference)
+        # generate denoised data as well (only for visual reference)
         X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
         _, y_denoised = generate(1000, noise=False, X=X_denoised)
 
