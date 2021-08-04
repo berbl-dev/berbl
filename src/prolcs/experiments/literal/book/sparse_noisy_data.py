@@ -17,9 +17,8 @@ def run_experiment(n_iter, seed, show, sample_size):
     X, y = generate(sample_size)
     X_test, y_test_true = generate(1000, random_state=12345)
 
-    # generate equidistant, denoised data as well (only for visual
-    # reference); note that this doesn't need to be transformed back and
-    # forth
+    # generate equidistant, denoised data as well (only for visual reference);
+    # note that this doesn't need to be transformed back and forth
     X_denoised = np.linspace(0, 4, 100)[:, np.newaxis]
     y_denoised = f(X_denoised, noise_var=0)
 
