@@ -1,19 +1,18 @@
 # TODO Why do I only get a fitness of ~52 instead of Drugowitschs >100?
-import os
 
 import click
 import joblib as jl
-import matplotlib.pyplot as plt
 import mlflow
 import numpy as np  # type: ignore
 from prolcs.literal.hyperparams import HParams
-from prolcs.literal.state import State
 from prolcs.logging import log_
 from prolcs.search.ga.drugowitsch import GADrugowitsch
 from prolcs.tasks.book.generated_function import generate
+from sklearn.preprocessing import StandardScaler
 from sklearn import metrics  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
+from .plot import *
 from .toolbox import Toolbox
 
 np.seterr(all="warn")
@@ -33,12 +32,14 @@ def run_experiment(n_iter, seed, show, sample_size):
         mlflow.log_param("train.size", sample_size)
 
         X, y = generate(sample_size)
+        X_test, y_test_true = generate(1000, random_state=12345)
 
-        # generate denoised data as well (only for visual reference)
-        X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
-        _, y_denoised = generate(1000, noise=False, X=X_denoised)
-
-        # TODO Normalize X
+        scaler_X = StandardScaler()
+        scaler_y = StandardScaler()
+        X = scaler_X.fit_transform(X)
+        X_test = scaler_X.transform(X_test)
+        y = scaler_y.fit_transform(y)
+        y_test_true = scaler_y.transform(y_test_true)
 
         random_state = check_random_state(seed)
 
@@ -47,71 +48,43 @@ def run_experiment(n_iter, seed, show, sample_size):
                                   random_state=random_state)
         estimator = estimator.fit(X, y)
 
-        log_("random_state.random", State().random_state.random(), n_iter)
+        # make predictions for test data
+        y_test, var = estimator.predict_mean_var(X_test)
+
+        # two additional statistics to maybe better gauge solution performance
+        mse = metrics.mean_squared_error(y_test_true, y_test)
+        r2 = metrics.r2_score(y_test_true, y_test)
+        log_("elitist.mse", mse, n_iter)
+        log_("elitist.r2-score", r2, n_iter)
+
+        X = scaler_X.inverse_transform(X)
+        X_test = scaler_X.inverse_transform(X_test)
+        y = scaler_y.inverse_transform(y)
+        y_test = scaler_y.inverse_transform(y_test)
+        var = scaler_y.scale_**2 * var
+
+        # generate equidistant, denoised data as well (only for visual
+        # reference); note that this doesn't need to be transformed back and
+        # forth
+        X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
+        _, y_denoised = generate(1000, noise=False, X=X_denoised)
 
         # store the model, you never know when you need it
         model_file = f"models/Model {seed}.joblib"
         jl.dump(estimator.frozen(), model_file)
         mlflow.log_artifact(model_file)
 
-        # generate test data
-        X_test, y_test_true = generate(1000, random_state=12345)
+        fig, ax = plot_prediction(X=X,
+                                  y=y,
+                                  X_test=X_test,
+                                  y_test=y_test,
+                                  var=var,
+                                  X_denoised=X_denoised,
+                                  y_denoised=y_denoised)
 
-        # make predictions for test data
-        y_test, var = estimator.predict_mean_var(X_test)
-
-        # two additional statistics to better gauge solution performance
-        mse = metrics.mean_squared_error(y_test_true, y_test)
-        r2 = metrics.r2_score(y_test_true, y_test)
-        log_("elitist.mse", mse, n_iter)
-        log_("elitist.r2-score", r2, n_iter)
-
-        fig, ax = plt.subplots()
-
-        # plot input data
-        ax.plot(X.ravel(), y.ravel(), "r+")
-
-        # plot denoised input data for visual reference
-        ax.plot(X_denoised.ravel(), y_denoised.ravel(), "k--")
-
-        # plot test data
-        X_test_ = X_test.ravel()
-        perm = np.argsort(X_test_)
-        X_test_ = X_test_[perm]
-        y_test_ = y_test.ravel()[perm]
-        var_ = var.ravel()[perm]
-        ax.plot(X_test_, y_test_, "b-")
-        ax.plot(X_test_, y_test_ - var_, "b--", linewidth=0.5)
-        ax.plot(X_test_, y_test_ + var_, "b--", linewidth=0.5)
-        ax.fill_between(X_test_, y_test_ - var_, y_test_ + var_, alpha=0.2)
-
-        # plot elitist's classifiers
-        elitist = estimator.elitist_[0].phenotype
-        W = elitist.W_
-        X_test_ = np.hstack([np.ones((len(X_test), 1)), X_test])
-        for k in range(len(W)):
-            ax.plot(X_test.ravel(),
-                    np.sum(W[k] * X_test_, axis=1),
-                    c="grey",
-                    linestyle="-",
-                    linewidth=0.5,
-                    alpha=0.7,
-                    zorder=10)
-
-        # add metadata to plot for ease of use
-        ax.set(
-            title=
-            f"K = {len(W)}, p(M|D) = {elitist.p_M_D_:.2}, mse = {mse:.2}, r2 = {r2:.2}"
-        )
-
-        # store the figure (e.g. so we can run headless)
-        fig_folder = "latest-final-approximations"
-        if not os.path.exists(fig_folder):
-            os.makedirs(fig_folder)
-        fig_file = f"{fig_folder}/Final approximation {seed}.pdf"
-        print(f"Storing final approximation figure in {fig_file}")
-        fig.savefig(fig_file)
-        mlflow.log_artifact(fig_file)
+        plot_cls(estimator, X_test, ax=ax)
+        save_plot(fig, seed)
+        add_title(ax, estimator.size_[0], estimator.p_M_D_[0], mse, r2)
 
         if show:
             plt.show()
