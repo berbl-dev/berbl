@@ -1,7 +1,7 @@
 import os
 
 import matplotlib.pyplot as plt  # type: ignore
-import mlflow # type: ignore
+import mlflow  # type: ignore
 import numpy as np  # type: ignore
 
 
@@ -35,19 +35,23 @@ def plot_prediction(X,
     return fig, ax
 
 
-def plot_cls(estimator, X_test, ax=None):
+def plot_cls(X, y, ax=None):
+    """
+    Parameters
+    ----------
+    X : array of shape (N, 1)
+        Points for which the classifiers made predictions.
+    y : array of shape (K, N, Dy)
+        Predictions of the ``K`` classifiers.
+    """
     if ax is None:
         fig, ax = plt.subplots()
     else:
         fig = None
 
-    # plot elitist's classifiers
-    elitist = estimator.elitist_[0].phenotype
-    W = elitist.W_
-    X_test_ = np.hstack([np.ones((len(X_test), 1)), X_test])
-    for k in range(len(W)):
-        ax.plot(X_test.ravel(),
-                np.sum(W[k] * X_test_, axis=1),
+    for k in range(len(y)):
+        ax.plot(X.ravel(),
+                y[k],
                 c="grey",
                 linestyle="-",
                 linewidth=0.5,
@@ -63,6 +67,7 @@ def add_title(ax, K, p_M_D, mse, r2):
                   f"p(M|D) = {(p_M_D):.2}, "
                   f"mse = {mse:.2}, "
                   f"r2 = {r2:.2}"))
+
 
 def save_plot(fig, seed):
     # store the figure (e.g. so we can run headless)

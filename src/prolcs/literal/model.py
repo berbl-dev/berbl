@@ -222,6 +222,7 @@ class Model():
         N = len(X)
 
         y = np.zeros((self.K_, N, self.Dy_))
+        # TODO Maybe more efficient: np.sum(W[k] * X, axis=1)
         for k in range(self.K_):
             # A classifier's prediction.
             y[k] = X @ self.W_[k].T
