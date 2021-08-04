@@ -129,6 +129,11 @@ class GADrugowitsch(Search):
 
         return self.elitist_[0].phenotype.predict_mean_var(X)
 
+    def predicts(self, X):
+        check_is_fitted(self)
+
+        return self.elitist_[0].phenotype.predicts(X)
+
     def frozen(self):
         """
         Returns a picklable of this object.
