@@ -122,6 +122,9 @@ class GADrugowitsch(Search):
             self.pop_[:] = pop_new
             self.elitist_.update(self.pop_)
 
+        # TODO Doc those
+        self.size_ = [len(i) for i in self.elitist_]
+        self.p_M_D_ = [i.phenotype.p_M_D_ for i in self.elitist_]
         return self
 
     def predict_mean_var(self, X):
