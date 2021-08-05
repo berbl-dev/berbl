@@ -27,10 +27,11 @@ def plot_prediction(X,
     X_test_ = X_test_[perm]
     y_test_ = y_test.ravel()[perm]
     var_ = var.ravel()[perm]
+    std = np.sqrt(var_)
     ax.plot(X_test_, y_test_, "b-")
-    ax.plot(X_test_, y_test_ - var_, "b--", linewidth=0.5)
-    ax.plot(X_test_, y_test_ + var_, "b--", linewidth=0.5)
-    ax.fill_between(X_test_, y_test_ - var_, y_test_ + var_, alpha=0.2)
+    ax.plot(X_test_, y_test_ - std, "b--", linewidth=0.5)
+    ax.plot(X_test_, y_test_ + std, "b--", linewidth=0.5)
+    ax.fill_between(X_test_, y_test_ - std, y_test_ + std, alpha=0.2)
 
     return fig, ax
 
