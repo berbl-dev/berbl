@@ -1,6 +1,9 @@
 #! /usr/bin/env nix-shell
-#! nix-shell -i python -p "python38.withPackages(ps: [click])"
+#! nix-shell -i python -p "python38.withPackages(ps: with ps; [click])"
 
+import os
+import pathlib
+import shutil
 from subprocess import Popen, PIPE, STDOUT
 import tempfile
 
@@ -36,7 +39,11 @@ def run_experiment(n_iter, seed, time, reps, mem, experiment):
 
     job_dir = "/data/oc-compute02/hoffmada/prolcs"
 
-    experiment = "{job_dir}/{experiment}.py"
+    experiment = f"{job_dir}/src/prolcs/experiments/{experiment}.py"
+
+    if not pathlib.Path(experiment).is_file():
+        print("Experiment does not exist. Check path.")
+        exit(1)
 
     sbatch = "\n".join([
         f'#!/usr/bin/env bash',  #
@@ -55,12 +62,26 @@ def run_experiment(n_iter, seed, time, reps, mem, experiment):
     tmp = tempfile.NamedTemporaryFile()
     with open(tmp.name, "w+") as f:
         f.write(sbatch)
-    print(f"Wrote to {tmp.name}.")
+    print(f"Wrote sbatch to {tmp.name}.")
     print()
 
-    p = Popen(["echo", f"{tmp.name}"], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+    p = Popen(["sbatch", f"{tmp.name}"], stdout=PIPE, stdin=PIPE, stderr=PIPE)
     output = p.communicate()
-    print(f"Received {output}")
+    stdout = output[0].decode("utf-8")
+    stderr = output[1].decode("utf-8")
+    print(f"stdout:\n{stdout}\n")
+    print(f"stderr:\n{stderr}\n")
+    jobid = int(stdout.replace("Submitted batch job ", ""))
+    print(f"Job ID: {jobid}")
+    print()
+
+    sbatch_dir = f"{job_dir}/jobs"
+    os.makedirs(sbatch_dir, exist_ok=True)
+    tmppath = pathlib.Path(tmp.name)
+    fname = pathlib.Path(sbatch_dir, f"{jobid}.sbatch")
+    shutil.copy(tmppath, fname)
+    print(f"Renamed {tmp.name} to {fname}")
+
 
     # after starting the job, rename the sbatch to job id
 
