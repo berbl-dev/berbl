@@ -39,11 +39,14 @@ def run_experiment(n_iter, seed, time, reps, mem, experiment):
 
     job_dir = "/data/oc-compute02/hoffmada/prolcs"
 
-    exp_file = f"{job_dir}/src/prolcs/experiments/{experiment}.py"
-
-    if not pathlib.Path(exp_file).is_file():
-        print(f"Experiment {experiment} does not exist. Check path ({exp_file}).")
+    experiment = f"prolcs/experiments/{experiment}"
+    path = pathlib.Path(job_dir, "src", f"{experiment}.py")
+    if not path.is_file():
+        print(f"Experiment {path.name} does not exist. Check path.")
         exit(1)
+    # Use module instead of path (otherwise we get errors when using
+    # relative imports).
+    experiment = experiment.replace("/", ".")
 
     experiment = "prolcs/experiments/{experiment}".replace("/", ".")
 
@@ -55,7 +58,7 @@ def run_experiment(n_iter, seed, time, reps, mem, experiment):
         f'#SBATCH --output={job_dir}/output/output-%A-%a.txt',
         f'#SBATCH --array=0-{reps}',
         (f'nix-shell "{job_dir}/default.nix" --command '
-         f'"PYTHONPATH=\'{job_dir}/src:$PYTHONPATH\' python {experiment} '
+         f'"PYTHONPATH=\'{job_dir}/src:$PYTHONPATH\' python -m {experiment} '
          f'--seed $(({seed} + $SLURM_ARRAY_TASK_ID))"')
     ])
     print(sbatch)
