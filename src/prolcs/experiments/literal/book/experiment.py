@@ -16,8 +16,8 @@ from .toolbox import Toolbox
 np.seterr(all="warn")
 
 
-def experiment(X, y, X_test, y_test_true, X_denoised, y_denoised, n_iter, seed,
-               show, sample_size):
+def experiment(gaparams, X, y, X_test, y_test_true, X_denoised, y_denoised, n_iter,
+               seed, show, sample_size):
     mlflow.set_experiment("book.generated_function.literal")
     with mlflow.start_run() as run:
         mlflow.log_params(HParams().__dict__)
@@ -33,7 +33,7 @@ def experiment(X, y, X_test, y_test_true, X_denoised, y_denoised, n_iter, seed,
 
         random_state = check_random_state(seed)
 
-        estimator = GADrugowitsch(Toolbox(random_state=random_state),
+        estimator = GADrugowitsch(Toolbox(gaparams, random_state=random_state),
                                   n_iter=n_iter,
                                   random_state=random_state)
         estimator = estimator.fit(X, y)

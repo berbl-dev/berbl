@@ -23,7 +23,12 @@ def run_experiment(n_iter, seed, show, sample_size):
     X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
     y_denoised = f(X_denoised, noise_vars=(0, 0))
 
-    experiment(X, y, X_test, y_test_true, X_denoised, y_denoised, n_iter, seed,
+    gaparams = {
+        "n": 8,
+        "p": 0.5,
+        "tournsize": 5,
+    }
+    experiment(gaparams, X, y, X_test, y_test_true, X_denoised, y_denoised, n_iter, seed,
                show, sample_size)
 
 

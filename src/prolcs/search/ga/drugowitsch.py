@@ -30,7 +30,6 @@ class GADrugowitsch(Search):
                  cxpb=0.4,
                  mupb=0.4,
                  n_iter=250,
-                 tournsize=5,
                  random_state=None,
                  add_bias=True):
         """
@@ -50,8 +49,6 @@ class GADrugowitsch(Search):
             Mutation probability.
         n_iter : positive int
             Number of iterations to run.
-        tournsize : positive int
-            Tournament size.
         random_state : NumPy (legacy) ``RandomState``
             Due to scikit-learn compatibility, we use NumPy's legacy API.
         """
@@ -60,7 +57,6 @@ class GADrugowitsch(Search):
         self.cxpb = cxpb
         self.mupb = mupb
         self.n_iter = n_iter
-        self.tournsize = tournsize
         self.random_state = random_state
         self.add_bias = add_bias
 

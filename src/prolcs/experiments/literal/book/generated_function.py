@@ -24,8 +24,13 @@ def run_experiment(n_iter, seed, show, sample_size):
     X_denoised = np.linspace(0, 1, 100)[:, np.newaxis]
     _, y_denoised = generate(1000, noise=False, X=X_denoised)
 
-    experiment(X, y, X_test, y_test_true, X_denoised, y_denoised, n_iter, seed,
-               show, sample_size)
+    gaparams = {
+        "n": 8,
+        "p": 0.5,
+        "tournsize": 5,
+    }
+    experiment(gaparams, X, y, X_test, y_test_true, X_denoised, y_denoised,
+               n_iter, seed, show, sample_size)
 
 
 if __name__ == "__main__":
