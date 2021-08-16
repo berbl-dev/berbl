@@ -24,12 +24,12 @@ def experiment(gaparams, X, y, X_test, y_test_true, X_denoised, y_denoised, n_it
         mlflow.log_param("seed", seed)
         mlflow.log_param("train.size", sample_size)
 
-        scaler_X = StandardScaler()
-        scaler_y = StandardScaler()
-        X = scaler_X.fit_transform(X)
-        X_test = scaler_X.transform(X_test)
-        y = scaler_y.fit_transform(y)
-        y_test_true = scaler_y.transform(y_test_true)
+        # scaler_X = StandardScaler()
+        # scaler_y = StandardScaler()
+        # X = scaler_X.fit_transform(X)
+        # X_test = scaler_X.transform(X_test)
+        # y = scaler_y.fit_transform(y)
+        # y_test_true = scaler_y.transform(y_test_true)
 
         random_state = check_random_state(seed)
 
@@ -44,12 +44,12 @@ def experiment(gaparams, X, y, X_test, y_test_true, X_denoised, y_denoised, n_it
         # get unmixed classifier predictions
         y_cls = estimator.predicts(X)
 
-        X = scaler_X.inverse_transform(X)
-        X_test = scaler_X.inverse_transform(X_test)
-        y = scaler_y.inverse_transform(y)
-        y_test = scaler_y.inverse_transform(y_test)
-        var = scaler_y.scale_**2 * var
-        y_cls = scaler_y.inverse_transform(y_cls)
+        # X = scaler_X.inverse_transform(X)
+        # X_test = scaler_X.inverse_transform(X_test)
+        # y = scaler_y.inverse_transform(y)
+        # y_test = scaler_y.inverse_transform(y_test)
+        # var = scaler_y.scale_**2 * var
+        # y_cls = scaler_y.inverse_transform(y_cls)
 
         # two additional statistics to maybe better gauge solution performance
         mse = metrics.mean_squared_error(y_test_true, y_test)
