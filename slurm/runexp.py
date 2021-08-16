@@ -39,11 +39,13 @@ def run_experiment(n_iter, seed, time, reps, mem, experiment):
 
     job_dir = "/data/oc-compute02/hoffmada/prolcs"
 
-    experiment = f"{job_dir}/src/prolcs/experiments/{experiment}.py"
+    exp_file = f"{job_dir}/src/prolcs/experiments/{experiment}.py"
 
-    if not pathlib.Path(experiment).is_file():
-        print("Experiment does not exist. Check path.")
+    if not pathlib.Path(exp_file).is_file():
+        print(f"Experiment {experiment} does not exist. Check path ({exp_file}).")
         exit(1)
+
+    experiment = "prolcs/experiments/{experiment}".replace("/", ".")
 
     sbatch = "\n".join([
         f'#!/usr/bin/env bash',  #
