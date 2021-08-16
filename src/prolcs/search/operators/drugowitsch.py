@@ -15,6 +15,12 @@ creator.create("Genotype", list, fitness=creator.FitnessMax)
 
 
 class Toolbox(base.Toolbox):
+    """
+    The toolbox specified in Drugowitsch's book, providing ``select``, ``mate``
+    and ``mutate``. A generator for populations and an ``evaluate`` function are
+    not included due to them depending on the regarded problem and
+    representation.
+    """
     def __init__(self, tournsize=5):
         super().__init__()
         # “We create a new population by selecting two individuals (…) To avoid
@@ -43,9 +49,13 @@ def crossover(M_a, M_b, random_state: np.random.RandomState):
 
     :param other: another model
 
-    :returns: two new (unfitted) models resulting from crossover of the
-        inputs
+    :returns: two new (unfitted) models resulting from crossover of the inputs
     """
+    # “As two selected individuals can be of different length, we cannot apply
+    # standard uniform cross-over but have to use different means: we want the
+    # total number of classifiers to remain unchanged, but as the location of
+    # the classifiers in the genome of an individual do not provide us with
+    # any information, we allow their location to change.”
     K_a = len(M_a)
     K_b = len(M_b)
     M_a_ = M_a + M_b
@@ -60,4 +70,6 @@ def crossover(M_a, M_b, random_state: np.random.RandomState):
     assert K_b_ == len(M_b_)
     assert K_a + K_b == len(M_b_) + len(M_a_)
 
+    # TODO To use this with DEAP builtin algorithms, modify in place
+    # Use M_a.extend([1] * …) and del M_b[k:], then M_a[:] = M_a_ etc.
     return (M_a_, M_b_)

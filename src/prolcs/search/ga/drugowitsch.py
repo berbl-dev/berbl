@@ -75,7 +75,6 @@ class GADrugowitsch(Search):
         self.elitist_ = tools.HallOfFame(1)
         self.elitist_.update(self.pop_)
 
-        # TODO Line by line check this with Drugowitsch's description
         for i in range(self.n_iter):
             elitist = self.elitist_[0]
             print(
@@ -84,27 +83,38 @@ class GADrugowitsch(Search):
 
             pop_new = []
             while len(pop_new) < self.pop_size:
+                # “We create a new population by selecting two individuals from
+                # the current population. … is repeated until the new population
+                # again holds P individuals. Then, the new population replaces
+                # the current one and the next iteration begins.”
                 offspring = self.toolbox.select(self.pop_)
                 offspring = [self.toolbox.clone(ind) for ind in offspring]
 
                 offspring_ = []
                 for c1, c2 in zip(offspring[::2], offspring[1::2]):
+                    # “Apply crossover with probability pc …”
                     if random_state.random() < self.cxpb:
-                        # TODO mate clones them again, which is unnecessary
-                        # TODO I don't yet modify c1 and c2 in-place
+                        # TODO I don't yet modify c1 and c2 in-place. Must I?
                         c1_, c2_ = self.toolbox.mate(c1,
                                                      c2,
                                                      random_state=random_state)
                         c1_ = creator.Genotype(c1_)
                         c2_ = creator.Genotype(c2_)
-                        del c1.fitness.values
-                        del c2.fitness.values
+                        del c1_.fitness.values
+                        del c2_.fitness.values
                         offspring_ += [c1_, c2_]
+
+                # suspicion: this is due to the standardization (i might have had
+                # this earlier as well, but am not sure); maybe somethings wrong
+                # with the evaluation in that case? however, the p(M | D) gets
+                # computed on training data …
 
                 offspring = offspring_
                 for c in offspring:
-                    self.toolbox.mutate(c, random_state=random_state)
-                    del c.fitness.values
+                    # “… and mutation with probability pm.”
+                    if random_state.random() < self.mupb:
+                        self.toolbox.mutate(c, random_state=random_state)
+                        del c.fitness.values
 
                 invalids = [ind for ind in offspring if not ind.fitness.valid]
                 fitnesses = [
