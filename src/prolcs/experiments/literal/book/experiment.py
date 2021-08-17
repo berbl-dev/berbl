@@ -1,14 +1,15 @@
-import click
 import joblib as jl
 import mlflow
 import numpy as np  # type: ignore
+import pandas as pd  # type: ignore
 from prolcs.literal.hyperparams import HParams
 from prolcs.logging import log_
 from prolcs.search.ga.drugowitsch import GADrugowitsch
 from prolcs.tasks.book.generated_function import generate
-from sklearn.preprocessing import StandardScaler
 from sklearn import metrics  # type: ignore
+from sklearn.preprocessing import StandardScaler
 from sklearn.utils import check_random_state  # type: ignore
+import tempfile
 
 from .plot import *
 from .toolbox import Toolbox
@@ -16,13 +17,33 @@ from .toolbox import Toolbox
 np.seterr(all="warn")
 
 
-def experiment(gaparams, X, y, X_test, y_test_true, X_denoised, y_denoised, n_iter,
-               seed, show, sample_size, standardize=False):
+def log_array(a, label):
+    f = tempfile.NamedTemporaryFile(prefix=f"{label}-", suffix=f".csv")
+    pd.DataFrame(a).to_csv(f.name)
+    f.close()
+    mlflow.log_artifact(f.name)
+
+
+def experiment(gaparams,
+               X,
+               y,
+               X_test,
+               y_test_true,
+               X_denoised,
+               y_denoised,
+               n_iter,
+               seed,
+               show,
+               sample_size,
+               standardize=False):
     mlflow.set_experiment("book.generated_function.literal")
     with mlflow.start_run() as run:
         mlflow.log_params(HParams().__dict__)
         mlflow.log_param("seed", seed)
         mlflow.log_param("train.size", sample_size)
+
+        log_array(X, "X")
+        log_array(y, "y")
 
         if standardize:
             scaler_X = StandardScaler()
