@@ -20,8 +20,8 @@ np.seterr(all="warn")
 def log_array(a, label):
     f = tempfile.NamedTemporaryFile(prefix=f"{label}-", suffix=f".csv")
     pd.DataFrame(a).to_csv(f.name)
-    f.close()
     mlflow.log_artifact(f.name)
+    f.close()
 
 
 def experiment(gaparams,
@@ -80,7 +80,7 @@ def experiment(gaparams,
 
         log_array(y_test, "y_test")
         log_array(var, "var")
-        log_array(y_cls, "y_cls")
+        log_array(np.hstack(y_cls), "y_cls")
 
         # two additional statistics to maybe better gauge solution performance
         mse = metrics.mean_squared_error(y_test_true, y_test)
