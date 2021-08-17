@@ -44,6 +44,10 @@ def experiment(gaparams,
 
         log_array(X, "X")
         log_array(y, "y")
+        log_array(X_test, "X_test")
+        log_array(y_test_true, "y_test_true")
+        log_array(X_denoised, "X_denoised")
+        log_array(y_denoised, "y_denoised")
 
         if standardize:
             scaler_X = StandardScaler()
@@ -73,6 +77,10 @@ def experiment(gaparams,
             y_test = scaler_y.inverse_transform(y_test)
             var = scaler_y.scale_**2 * var
             y_cls = scaler_y.inverse_transform(y_cls)
+
+        log_array(y_test, "y_test")
+        log_array(var, "var")
+        log_array(y_cls, "y_cls")
 
         # two additional statistics to maybe better gauge solution performance
         mse = metrics.mean_squared_error(y_test_true, y_test)
