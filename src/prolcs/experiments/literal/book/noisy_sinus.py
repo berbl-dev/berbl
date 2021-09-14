@@ -11,7 +11,8 @@ from .experiment import experiment
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("--show/--no-show", type=bool, default=False)
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=300)
-def run_experiment(n_iter, seed, show, sample_size):
+@click.option("--standardize/--no-standardize", type=bool, default=False)
+def run_experiment(n_iter, seed, show, sample_size, standardize):
     X, y = generate(sample_size)
     X_test, y_test_true = generate(1000, random_state=12345)
 
@@ -26,7 +27,7 @@ def run_experiment(n_iter, seed, show, sample_size):
         "tournsize": 5,
     }
     experiment(gaparams, X, y, X_test, y_test_true, X_denoised, y_denoised, n_iter, seed,
-               show, sample_size)
+               show, sample_size, standardize=standardize)
 
 
 if __name__ == "__main__":
