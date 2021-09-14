@@ -104,11 +104,6 @@ class GADrugowitsch(Search):
                         del c2_.fitness.values
                         offspring_ += [c1_, c2_]
 
-                # suspicion: this is due to the standardization (i might have had
-                # this earlier as well, but am not sure); maybe somethings wrong
-                # with the evaluation in that case? however, the p(M | D) gets
-                # computed on training data …
-
                 offspring = offspring_
                 for c in offspring:
                     # “… and mutation with probability pm.”
