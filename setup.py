@@ -9,6 +9,9 @@ setup(
     author="David Pätzel",
     author_email="david.paetzel@posteo.de",
     url="https://github.com/dpaetzel/prolcs",
-    packages=["prolcs"],
+    packages=[
+        "prolcs", "prolcs.literal", "prolcs.search", "prolcs.search.ga",
+        "prolcs.search.operators"
+    ],
     package_dir={"": "src"},
 )
