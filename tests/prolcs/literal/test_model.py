@@ -2,7 +2,7 @@ import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from hypothesis import given, seed, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
-from prolcs.allmatch import AllMatch
+from prolcs.match.allmatch import AllMatch
 from sklearn.metrics import mean_absolute_error
 from prolcs.literal.model import Model
 from prolcs.literal.hyperparams import HParams
@@ -100,6 +100,9 @@ def test_fit_linear_functions(data):
     X, y, slope, intercept = data
 
     match = AllMatch()
+    # NOTE In `test_fit_non_linear` we use two `AllMatch`s instead of one
+    # because otherwise the Laplace approximation may lead to overflows in
+    # `train_mix_priors`. Maybe this is required here as well?
 
     # The default MAX_ITER_CLS seems to be too small for good approximations.
     HParams().MAX_ITER_CLS = 100
@@ -137,15 +140,18 @@ def random_data(draw, N=100):
     # (i.e. evenly spaced).
     X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
 
+    # Although values for y lie in [-1, 1] we do not standardize them for the
+    # sake of this test. (We could, however, by dividing by (1 - (-1))^2 / 12, I
+    # think.)
     y = draw(
         arrays(np.float64, (N, D_Y),
-               elements=st.floats(min_value=0, max_value=100)))
+               elements=st.floats(min_value=-1, max_value=1)))
 
     return (X, y)
 
 
-# We use more samples here to make sure that the algorithms' score are
-# really close.
+# We may need to use more samples here to make sure that the algorithms' scores
+# are really close.
 @given(random_data(N=1000))
 def test_fit_non_linear(data):
     """
@@ -155,10 +161,13 @@ def test_fit_non_linear(data):
     X, y = data
 
     match = AllMatch()
+    # We use two `AllMatch`s because otherwise the Laplace approximation may
+    # lead to overflows in `train_mix_priors`.
+    match2 = AllMatch()
 
     # The default MAX_ITER_CLS seems to be too small for good approximations.
     HParams().MAX_ITER_CLS = 100
-    m = Model([match]).fit(X, y)
+    m = Model([match, match2]).fit(X, y)
     HParams().MAX_ITER_CLS = 20  # Reset to the default.
 
     y_pred = m.predicts(X)[0]
@@ -177,5 +186,5 @@ def test_fit_non_linear(data):
 
     assert (score < score_oracle
             or np.isclose(score / score_oracle, 1, atol=1e-1)), (
-                f"Classifier score ({score}) not close to"
+                f"Classifier score ({score}) not close to "
                 f"linear regression oracle score ({score_oracle})")

@@ -2,7 +2,7 @@ import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
-from prolcs.allmatch import AllMatch
+from prolcs.match.allmatch import AllMatch
 from prolcs.linear.classifier import Classifier
 from prolcs.linear.mixing_laplace import MixingLaplace
 from prolcs.nomatch import NoMatch

@@ -441,6 +441,12 @@ def _stretch(eigvals: np.ndarray, voldiff: float, scale: float,
     # specified amount.
     n = len(eigvals)
     eigval_0 = np.prod(np.sqrt(eigvals))
+    raise NotImplementedError("This may not work yet, see comments")
+    # test_volume_after__stretch fails due to eigvals_ containing negative
+    # values. My current guess is that this is due to voldiff not being used as
+    # an absolute volume but as a percentage in _stretch (but being set up as an
+    # absolute volume in the corresponding test). Check Zettels for whether its
+    # semantics are as I think they are.
     eigval_0 += (
         voldiff * sp.gamma(n / 2 + 1) /
         (np.pi**(n / 2) * np.sqrt(sst.chi2.ppf(cover_confidence, n))**n))

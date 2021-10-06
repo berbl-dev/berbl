@@ -11,7 +11,7 @@ setup(
     url="https://github.com/dpaetzel/prolcs",
     packages=[
         "prolcs", "prolcs.literal", "prolcs.search", "prolcs.search.ga",
-        "prolcs.search.operators"
+        "prolcs.search.operators", "prolcs.match"
     ],
     package_dir={"": "src"},
 )

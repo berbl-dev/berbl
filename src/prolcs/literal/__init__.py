@@ -197,7 +197,9 @@ def train_classifier(m_k, X, Y):
         # “Each parameter update either increases L_k_q or leaves it unchanged
         # (…). If this is not the case, then the implementation is faulty and/or
         # suffers from numerical instabilities.” [PDF p. 237]
-        assert delta_L_k_q >= 0
+        # TODO Consider extracting this to a test
+        assert delta_L_k_q >= 0, (
+            f"iteration: {i}; Δ L_k(q) = {delta_L_k_q}; L_k(q) = {L_k_q}")
     return W_k, Lambda_k_1, a_tau_k, b_tau_k, a_alpha_k, b_alpha_k
 
 

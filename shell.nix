@@ -13,9 +13,11 @@ in
   with pkgs;
   python38.withPackages (ps: with ps; [
     deap
+    hypothesis # actually just a test dependency
     numpy
     pandas
     prolcs
+    pytest # actually just a test dependency
     scipy
     scikitlearn
   ])

@@ -205,7 +205,9 @@ def test_volume_after_random_init(dX, has_bias, cover_confidence, coverage,
                               allow_infinity=False,
                               allow_nan=False)),
     st.floats(min_value=0.01, max_value=0.99),
-    st.floats(min_value=-0.99, max_value=0.99),
+    # Don't use `pvol` close to 0 because 0 doesn't make sense and close to 0
+    # may lead to numerical instabilities.
+    st.floats(min_value=-0.99, max_value=0.99).filter(lambda x: x < -1e-6 or 1e-6 < x),
     st.floats(min_value=0.01, max_value=0.99), seeds())
 @settings(deadline=None)
 def test_volume_after__stretch(eigvals, cover_confidence, pvol, scale, seed):
@@ -216,6 +218,9 @@ def test_volume_after__stretch(eigvals, cover_confidence, pvol, scale, seed):
                                scale=scale,
                                cover_confidence=cover_confidence,
                                random_state=check_random_state(seed))
+    raise NotImplementedError("See comments")
+    # TODO Some eigvals are negative which leads to the following failing (neg
+    # values in sqrt).
     vol_ = radial._covered_vol(eigvals_, cover_confidence)
     voldiff_ = vol_ - vol
     assert np.isclose(voldiff, voldiff_, atol=1e-7, rtol=1e-7)

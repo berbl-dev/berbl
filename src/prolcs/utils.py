@@ -8,6 +8,7 @@ import scipy.special as sp  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 import scipy.optimize as so  # type: ignore
 
+# np.seterr(all="raise", under="ignore")
 
 def randseed(random_state: np.random.RandomState):
     """

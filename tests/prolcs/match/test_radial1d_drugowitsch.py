@@ -10,13 +10,12 @@ from prolcs.utils import add_bias
 
 
 @st.composite
-def match1d(draw, has_bias_column=True):
+def match1d(draw, has_bias=True):
     a = draw(st.floats(min_value=0, max_value=100))
     b = draw(st.floats(min_value=0, max_value=50))
     return RadialMatch1D(a=a,
                          b=b,
-                         ranges=np.array([[-1, 1]]),
-                         has_bias_column=has_bias_column)
+                         has_bias=has_bias)
 
 
 @st.composite
