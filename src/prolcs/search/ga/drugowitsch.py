@@ -3,6 +3,7 @@ from copy import deepcopy
 
 import numpy as np  # type: ignore
 from deap import creator, tools
+from mlflow import log_metric
 from prolcs.utils import randseed
 from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
@@ -76,6 +77,10 @@ class GADrugowitsch(Search):
 
         for i in range(self.n_iter):
             elitist = self.elitist_[0]
+
+            # TODO Consider a more modular setup for logging
+            log_metric("elitist.p_M_D", elitist.fitness.values[0], i)
+
             print(
                 f"Generation {i}. Elitist of size {len(elitist)} with p(M | D) "
                 f"= {elitist.fitness.values[0]:.2}")
@@ -125,6 +130,7 @@ class GADrugowitsch(Search):
         # TODO Doc those
         self.size_ = [len(i) for i in self.elitist_]
         self.p_M_D_ = [i.phenotype.p_M_D_ for i in self.elitist_]
+
         return self
 
     def predict_mean_var(self, X):

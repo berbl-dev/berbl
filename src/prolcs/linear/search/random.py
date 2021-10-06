@@ -1,10 +1,9 @@
+import mlflow
 import numpy as np  # type: ignore
 from prolcs.linear.mixture import Mixture
-from prolcs.match.radial1d_drugowitsch import RadialMatch1D
-from prolcs.match.radial import RadialMatch
-from prolcs.logging import log_
-from ...utils import get_ranges, randseed
 from sklearn.utils import check_random_state  # type: ignore
+
+from ...utils import get_ranges, randseed
 
 
 def uniform_interval(low, high):
@@ -71,7 +70,7 @@ class RandomSearch:
             if self.mixture_ is None or mixture.p_M_D_ > self.mixture_.p_M_D_:
                 self.mixture_ = mixture
 
-            log_("p_M_D", self.mixture_.p_M_D_, iter)
+            mlflow.log_metric("p_M_D", self.mixture_.p_M_D_, iter)
 
             print(f"Trained random mixture {iter}, "
                   f"current best has ln p(M | D) = {self.mixture_.p_M_D_:.2} "
