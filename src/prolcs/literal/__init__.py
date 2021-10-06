@@ -273,10 +273,9 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                               Lambda_V_1=Lambda_V_1,
                               a_beta=a_beta,
                               b_beta=b_beta)
-        # LCSBookCode states: “as we are using an approximation, the variational
-        # bound might decrease, so we're not checking and need to take the
-        # abs()”. I guess with approximation he means the use of the Laplace
-        # approximation (which may violate the lower bound nature of L_M_q).
+        # LCSBookCode states: “as we are using a [Laplace] approximation, the
+        # variational bound might decrease, so we're not checking and need to
+        # take the abs()”.
         with np.errstate(invalid="raise"):
             delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
         # TODO At least once “FloatingPointError: invalid value encountered in
