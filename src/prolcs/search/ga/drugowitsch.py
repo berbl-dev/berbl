@@ -1,10 +1,9 @@
 import random
-
 from copy import deepcopy
+
 import numpy as np  # type: ignore
-from deap import base, creator, tools
-from prolcs.linear.mixture import Mixture
-from prolcs.utils import add_bias, randseed, space_vol
+from deap import creator, tools
+from prolcs.utils import randseed
 from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 

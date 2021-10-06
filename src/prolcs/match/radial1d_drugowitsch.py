@@ -1,8 +1,4 @@
-from typing import *
-
-from deap import base, creator, tools
 import numpy as np  # type: ignore
-import scipy.special  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
 
