@@ -140,11 +140,8 @@ class RadialMatch():
             means that we ignore the first column (as it is assumed to be the
             bias column and that is assumed to always be matched). Note that the
             default is to internally add a bias column which means that this
-            should probably be left true.
+            should probably be left `True`.
         """
-        if not has_bias:
-            print("Warning: has_bias is False when it should probably be True")
-
         _check_input_dim(dX + has_bias, has_bias)
 
         random_state = check_random_state(random_state)
