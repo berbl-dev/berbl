@@ -39,7 +39,6 @@ import scipy.stats as sstats  # type: ignore
 
 from ..common import matching_matrix
 from .hyperparams import HParams
-from .state import State
 
 # Underflows may occur in many places, e.g. if X contains values very close to
 # 0. However, they mostly occur in the very first training iterations so they
@@ -51,6 +50,7 @@ def model_probability(matchs: List,
                       X: np.ndarray,
                       Y: np.ndarray,
                       Phi: np.ndarray,
+                      random_state: np.random.RandomState,
                       exp_min: float = np.log(np.finfo(None).tiny),
                       ln_max: float = np.log(np.finfo(None).max)):
     """
@@ -94,7 +94,8 @@ def model_probability(matchs: List,
                                                  a_tau=a_tau,
                                                  b_tau=b_tau,
                                                  exp_min=exp_min,
-                                                 ln_max=ln_max)
+                                                 ln_max=ln_max,
+                                                 random_state=random_state)
     L_q, L_k_q, L_M_q = var_bound(M=M,
                                   X=X,
                                   Y=Y,
@@ -208,7 +209,7 @@ def train_classifier(m_k, X, Y):
 def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                  W: List[np.ndarray], Lambda_1: List[np.ndarray],
                  a_tau: np.ndarray, b_tau: np.ndarray, exp_min: float,
-                 ln_max: float):
+                 ln_max: float, random_state: np.random.RandomState):
     """
     [PDF p. 238]
 
@@ -229,9 +230,9 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     N, D_Y = Y.shape
     N, D_V = Phi.shape
 
-    V = State().random_state.normal(loc=0,
-                                    scale=HParams().A_BETA / HParams().B_BETA,
-                                    size=(D_V, K))
+    V = random_state.normal(loc=0,
+                            scale=HParams().A_BETA / HParams().B_BETA,
+                            size=(D_V, K))
     a_beta = np.repeat(HParams().A_BETA, K)
     b_beta = np.repeat(HParams().B_BETA, K)
     L_M_q = -np.inf

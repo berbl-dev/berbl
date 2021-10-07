@@ -57,7 +57,8 @@ class Model():
         self.metrics_, self.params_ = model_probability(matchs=self.matchs,
                                                         X=X,
                                                         Y=y,
-                                                        Phi=Phi)
+                                                        Phi=Phi,
+                                                        random_state=random_state)
 
         self.L_q_ = self.metrics_["L_q"]
         self.ln_p_M_ = self.metrics_["ln_p_M"]

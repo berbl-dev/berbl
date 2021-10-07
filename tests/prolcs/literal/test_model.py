@@ -2,12 +2,13 @@ import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from hypothesis import given, seed, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
-from prolcs.match.allmatch import AllMatch
-from sklearn.metrics import mean_absolute_error
-from prolcs.literal.model import Model
 from prolcs.literal.hyperparams import HParams
+from prolcs.literal.model import Model
+from prolcs.match.allmatch import AllMatch
 from prolcs.match.radial1d_drugowitsch import RadialMatch1D
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
+from sklearn.utils import check_random_state  # type: ignore
 
 
 @st.composite
