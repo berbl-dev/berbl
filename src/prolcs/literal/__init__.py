@@ -277,7 +277,12 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
         # variational bound might decrease, so we're not checking and need to
         # take the abs()”.
         with np.errstate(invalid="raise"):
-            delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
+            try:
+                delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
+            except FloatingPointError as e:
+                print(f"L_M_q = {L_M_q}, L_M_q_prev = {L_M_q_prev}")
+                raise e
+
         # TODO At least once “FloatingPointError: invalid value encountered in
         # double_scalars”.
     return V, Lambda_V_1, a_beta, b_beta
