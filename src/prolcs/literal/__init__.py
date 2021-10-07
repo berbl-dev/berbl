@@ -684,7 +684,9 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     # This fixes(?) some numerical problems.
     if L_M2q > 0 and np.isclose(L_M2q, 0):
         L_M2q = 0
-    assert L_M2q <= 0, f"Kullback-Leibler divergence less than zero: {L_M2q}"
+    assert L_M2q <= 0, f"Kullback-Leibler divergence less than zero: {-L_M2q}"
     # TODO Performance: slogdet can be cached, is computed more than once
     L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
+    if np.any(~np.isfinite([L_M1q, L_M2q, L_M3q])):
+        print(f"L_M1q = {L_M1q}, L_M2q = {L_M2q}, L_M3q = {L_M3q}")
     return L_M1q + L_M2q + L_M3q
