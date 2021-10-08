@@ -543,8 +543,13 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
         # TODO Performance: a_beta is constant, extract from loop (and probably
         # from loop in using function as well)
         a_beta[k] = HParams().A_BETA + D_V / 2
-        b_beta[k] = HParams().B_BETA + 0.5 * (np.sum(Lambda_V_1_diag[l:u:1])
-                                              + v_k.T @ v_k)
+        try:
+            b_beta[k] = HParams().B_BETA + 0.5 * (
+                np.sum(Lambda_V_1_diag[l:u:1]) + v_k.T @ v_k)
+        except FloatingPointError as e:
+            print(f"FloatingPointError in train_mix_priors: "
+                  f"v_k = {v_k}, K = {K}, V = {V}, Lambda_V_1 = {Lambda_V_1}")
+            mlflow.set_tag("FloatingPointError b_beta[k]", "occurred")
 
     return a_beta, b_beta
 
