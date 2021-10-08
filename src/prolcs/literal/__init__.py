@@ -70,7 +70,7 @@ def model_probability(matchs: List,
     # 0. However, they mostly occur in the very first training iterations so they
     # should be OK to ignore for now. We want to stop (for now) if any other
     # floating point error occurs, though.
-    with np.errstate(all="raise", under="warn"):
+    with np.errstate(all="raise", under="ignore"):
 
         N, _ = X.shape
         K = len(matchs)
