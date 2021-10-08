@@ -68,7 +68,8 @@ def model_probability(matchs: List,
 
     # Underflows may occur in many places, e.g. if X contains values very close to
     # 0. However, they mostly occur in the very first training iterations so they
-    # should be OK to ignore for now.
+    # should be OK to ignore for now. We want to stop (for now) if any other
+    # floating point error occurs, though.
     with np.errstate(all="raise", under="warn"):
 
         N, _ = X.shape
@@ -277,15 +278,14 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                               b_beta=b_beta)
         # L_M_q and L_M_q_prev are sometimes -inf which results in a
         # FloatingPointError (as a nan is generated from -inf - (-inf)).
-        with np.errstate(invalid="raise"):
-            try:
-                # LCSBookCode states: “as we are using a [Laplace] approximation, the
-                # variational bound might decrease, so we're not checking and need to
-                # take the abs()”.
-                delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
-            except FloatingPointError as e:
-                print(f"L_M_q = {L_M_q}, L_M_q_prev = {L_M_q_prev}")
-                mlflow.log_metric("FPE_L_M_q", 1)
+        try:
+            # LCSBookCode states: “as we are using a [Laplace] approximation,
+            # the variational bound might decrease, so we're not checking and
+            # need to take the abs()”.
+            delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
+        except FloatingPointError as e:
+            print(f"L_M_q = {L_M_q}, L_M_q_prev = {L_M_q_prev}")
+            mlflow.set_tag("FloatingPointError delta_L_M_q", "occurred")
 
     return V, Lambda_V_1, a_beta, b_beta
 
@@ -455,7 +455,8 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         # This fixes(?) some numerical problems.
         if KLRG > 0 and np.isclose(KLRG, 0):
             KLRG = 0
-        assert KLRG <= 0, f"Kullback-Leibler divergence less than zero: {KLRG}\n{G}\n{R}"
+        assert KLRG <= 0, (f"Kullback-Leibler divergence less than zero: "
+                           f"KLRG = {-KLRG},\nG = {G},\nR = {R}")
 
         delta_KLRG = np.abs(KLRG_prev - KLRG)
 
