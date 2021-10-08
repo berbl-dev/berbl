@@ -189,3 +189,38 @@ def test_fit_non_linear(data):
             or np.isclose(score / score_oracle, 1, atol=1e-1)), (
                 f"Classifier score ({score}) not close to "
                 f"linear regression oracle score ({score_oracle})")
+
+
+@st.composite
+def seeds(draw):
+    # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
+    return draw(st.integers(min_value=0, max_value=2**32 - 1))
+
+
+@given(st.lists(match1ds(), min_size=2, max_size=10), Xs(), ys(), seeds())
+@settings(deadline=None)
+def test_model_fit_deterministic(matchs, X, y, seed):
+    random_state = check_random_state(seed)
+    m = Model(matchs, random_state=random_state)
+    m.fit(X, y)
+
+    random_state2 = check_random_state(seed)
+    m2 = Model(matchs, random_state=random_state2)
+    m2.fit(X, y)
+
+    for key in m.metrics_:
+        assert np.array_equal(m.metrics_[key], m2.metrics_[key])
+
+    for key in m.params_:
+        assert np.array_equal(m.params_[key], m2.params_[key])
+
+    # TODO Once in a while (very seldomly, may be fixed already) this throws
+    # either of these two
+    #
+    #   File "prolcs/src/prolcs/literal/__init__.py", line 668, in var_mix_bound
+    #     L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
+    # FloatingPointError: invalid value encountered in log
+    #
+    #   File "prolcs/src/prolcs/literal/__init__.py", line 449, in train_mix_weights
+    #     R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
+    # FloatingPointError: overflow encountered in true_divide
