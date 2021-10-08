@@ -41,12 +41,6 @@ import mlflow  # type: ignore
 from ..common import matching_matrix
 from .hyperparams import HParams
 
-# Underflows may occur in many places, e.g. if X contains values very close to
-# 0. However, they mostly occur in the very first training iterations so they
-# should be OK to ignore for now.
-np.seterr(all="raise", under="warn")
-
-
 def model_probability(matchs: List,
                       X: np.ndarray,
                       Y: np.ndarray,
@@ -71,70 +65,76 @@ def model_probability(matchs: List,
 
     :returns: two dicts: model metrics and model parameters
     """
-    N, _ = X.shape
-    K = len(matchs)
 
-    M = matching_matrix(matchs, X)
+    # Underflows may occur in many places, e.g. if X contains values very close to
+    # 0. However, they mostly occur in the very first training iterations so they
+    # should be OK to ignore for now.
+    with np.errstate(all="raise", under="warn"):
 
-    W = [None] * K
-    Lambda_1 = [None] * K
-    a_tau = [None] * K
-    b_tau = [None] * K
-    a_alpha = [None] * K
-    b_alpha = [None] * K
-    for k in range(K):
-        W[k], Lambda_1[k], a_tau[k], b_tau[k], a_alpha[k], b_alpha[
-            k] = train_classifier(M[:, [k]], X, Y)
+        N, _ = X.shape
+        K = len(matchs)
 
-    V, Lambda_V_1, a_beta, b_beta = train_mixing(M=M,
-                                                 X=X,
-                                                 Y=Y,
-                                                 Phi=Phi,
-                                                 W=W,
-                                                 Lambda_1=Lambda_1,
-                                                 a_tau=a_tau,
-                                                 b_tau=b_tau,
-                                                 exp_min=exp_min,
-                                                 ln_max=ln_max,
-                                                 random_state=random_state)
-    L_q, L_k_q, L_M_q = var_bound(M=M,
-                                  X=X,
-                                  Y=Y,
-                                  Phi=Phi,
-                                  W=W,
-                                  Lambda_1=Lambda_1,
-                                  a_tau=a_tau,
-                                  b_tau=b_tau,
-                                  a_alpha=a_alpha,
-                                  b_alpha=b_alpha,
-                                  V=V,
-                                  Lambda_V_1=Lambda_V_1,
-                                  a_beta=a_beta,
-                                  b_beta=b_beta)
+        M = matching_matrix(matchs, X)
 
-    ln_p_M = -np.log(float(
-        np.math.factorial(K)))  # (7.3), i.e. p_M \propto 1/K
-    p_M_D = L_q + ln_p_M
+        W = [None] * K
+        Lambda_1 = [None] * K
+        a_tau = [None] * K
+        b_tau = [None] * K
+        a_alpha = [None] * K
+        b_alpha = [None] * K
+        for k in range(K):
+            W[k], Lambda_1[k], a_tau[k], b_tau[k], a_alpha[k], b_alpha[
+                k] = train_classifier(M[:, [k]], X, Y)
 
-    return {
-        "p_M_D": p_M_D,
-        "L_q": L_q,
-        "ln_p_M": ln_p_M,
-        "L_k_q": L_k_q,
-        "L_M_q": L_M_q
-    }, {
-        "matchs": matchs,
-        "W": W,
-        "Lambda_1": Lambda_1,
-        "a_tau": a_tau,
-        "b_tau": b_tau,
-        "a_alpha": a_alpha,
-        "b_alpha": b_alpha,
-        "V": V,
-        "Lambda_V_1": Lambda_V_1,
-        "a_beta": a_beta,
-        "b_beta": b_beta,
-    }
+        V, Lambda_V_1, a_beta, b_beta = train_mixing(M=M,
+                                                    X=X,
+                                                    Y=Y,
+                                                    Phi=Phi,
+                                                    W=W,
+                                                    Lambda_1=Lambda_1,
+                                                    a_tau=a_tau,
+                                                    b_tau=b_tau,
+                                                    exp_min=exp_min,
+                                                    ln_max=ln_max,
+                                                    random_state=random_state)
+        L_q, L_k_q, L_M_q = var_bound(M=M,
+                                    X=X,
+                                    Y=Y,
+                                    Phi=Phi,
+                                    W=W,
+                                    Lambda_1=Lambda_1,
+                                    a_tau=a_tau,
+                                    b_tau=b_tau,
+                                    a_alpha=a_alpha,
+                                    b_alpha=b_alpha,
+                                    V=V,
+                                    Lambda_V_1=Lambda_V_1,
+                                    a_beta=a_beta,
+                                    b_beta=b_beta)
+
+        ln_p_M = -np.log(float(
+            np.math.factorial(K)))  # (7.3), i.e. p_M \propto 1/K
+        p_M_D = L_q + ln_p_M
+
+        return {
+            "p_M_D": p_M_D,
+            "L_q": L_q,
+            "ln_p_M": ln_p_M,
+            "L_k_q": L_k_q,
+            "L_M_q": L_M_q
+        }, {
+            "matchs": matchs,
+            "W": W,
+            "Lambda_1": Lambda_1,
+            "a_tau": a_tau,
+            "b_tau": b_tau,
+            "a_alpha": a_alpha,
+            "b_alpha": b_alpha,
+            "V": V,
+            "Lambda_V_1": Lambda_V_1,
+            "a_beta": a_beta,
+            "b_beta": b_beta,
+        }
 
 
 def train_classifier(m_k, X, Y):
