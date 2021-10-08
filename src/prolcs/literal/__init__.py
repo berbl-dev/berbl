@@ -36,6 +36,7 @@ from typing import *
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
+import mlflow  # type: ignore
 
 from ..common import matching_matrix
 from .hyperparams import HParams
@@ -274,18 +275,18 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                               Lambda_V_1=Lambda_V_1,
                               a_beta=a_beta,
                               b_beta=b_beta)
-        # LCSBookCode states: “as we are using a [Laplace] approximation, the
-        # variational bound might decrease, so we're not checking and need to
-        # take the abs()”.
+        # L_M_q and L_M_q_prev are sometimes -inf which results in a
+        # FloatingPointError (as a nan is generated from -inf - (-inf)).
         with np.errstate(invalid="raise"):
             try:
+                # LCSBookCode states: “as we are using a [Laplace] approximation, the
+                # variational bound might decrease, so we're not checking and need to
+                # take the abs()”.
                 delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
             except FloatingPointError as e:
                 print(f"L_M_q = {L_M_q}, L_M_q_prev = {L_M_q_prev}")
-                raise e
+                mlflow.log_metric("FPE_L_M_q", 1)
 
-        # TODO At least once “FloatingPointError: invalid value encountered in
-        # double_scalars”.
     return V, Lambda_V_1, a_beta, b_beta
 
 
@@ -688,5 +689,8 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     # TODO Performance: slogdet can be cached, is computed more than once
     L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
     if np.any(~np.isfinite([L_M1q, L_M2q, L_M3q])):
-        print(f"L_M1q = {L_M1q}, L_M2q = {L_M2q}, L_M3q = {L_M3q}")
+        print(f"Non-finite var_mix_bound: "
+              f"L_M1q = {L_M1q}, "
+              f"L_M2q = {L_M2q}, "
+              f"L_M3q = {L_M3q}")
     return L_M1q + L_M2q + L_M3q
