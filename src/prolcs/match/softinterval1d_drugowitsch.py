@@ -105,22 +105,28 @@ class SoftInterval1D():
         array of shape ``(N)``
             Matching vector of this matching function for the given input.
         """
-        # We have to clip this so we don't return 0 here (0 should never be
-        # returned because every match function matches everywhere at least a
-        # little bit).
-        conds = [
-            X < self.l,
-            X > self.u,
-        ]
-        cases = [
-            np.exp(-1 / (2 * self.sigma2()) * (X - self.l)**2),
-            np.exp(-1 / (2 * self.sigma2()) * (X - self.u)**2),
-        ]
-        default = 1
-        m = np.select(conds, cases, default=default)
-        m_min = np.finfo(None).tiny
-        m_max = 1
-        return np.clip(m, m_min, m_max)
+        sigma2 = self.sigma2()
+
+        # The interval may be trivial.
+        if sigma2 == 0:
+            return np.where(X == self.u, 1, np.finfo(None).tiny)
+        else:
+            # We have to clip this so we don't return 0 here (0 should never be
+            # returned because every match function matches everywhere at least a
+            # little bit).
+            conds = [
+                X < self.l,
+                X > self.u,
+            ]
+            cases = [
+                np.exp(-1 / (2 * sigma2) * (X - self.l)**2),
+                np.exp(-1 / (2 * sigma2) * (X - self.u)**2),
+            ]
+            default = 1
+            m = np.select(conds, cases, default=default)
+            m_min = np.finfo(None).tiny
+            m_max = 1
+            return np.clip(m, m_min, m_max)
 
     def plot(self, l, u, ax, **kwargs):
         X = np.arange(l, u, 0.01)[:, np.newaxis]
