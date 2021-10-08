@@ -10,6 +10,7 @@ import scipy.optimize as so  # type: ignore
 
 # np.seterr(all="raise", under="ignore")
 
+
 def randseed(random_state: np.random.RandomState):
     """
     Sometimes we need to generate a new random seed from a ``RandomState`` due
@@ -18,6 +19,7 @@ def randseed(random_state: np.random.RandomState):
     """
     # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
     return random_state.randint(2**32 - 1)
+
 
 def randseed_legacy():
     """
@@ -28,7 +30,6 @@ def randseed_legacy():
     """
     # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
     return random.randint(0, 2**32 - 1)
-
 
 
 def logstartstop(f):
@@ -165,7 +166,7 @@ def ball_vol(r: float, n: int):
     n : int
         Dimensionality.
     """
-    return np.pi**(n / 2) / sp.gamma(n/2 + 1) * r**n
+    return np.pi**(n / 2) / sp.gamma(n / 2 + 1) * r**n
 
 
 def ellipsoid_vol(rs: np.ndarray, n: int):
@@ -179,11 +180,12 @@ def ellipsoid_vol(rs: np.ndarray, n: int):
     n : int
         Dimensionality.
     """
-    return np.pi**(n / 2) / sp.gamma(n/2 + 1) * np.prod(rs)
+    return np.pi**(n / 2) / sp.gamma(n / 2 + 1) * np.prod(rs)
 
 
 def ranges_vol(ranges):
     return np.prod(np.diff(ranges))
+
 
 def space_vol(dim):
     """

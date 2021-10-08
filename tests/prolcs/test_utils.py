@@ -37,10 +37,3 @@ def test_radius_for_ci_inverse_pr_in_sd(nr):
                                 f"r' / r = {r_} / {r} = {r_ / r}")
 
 
-# TODO DRY test_radial
-@st.composite
-def seeds(draw):
-    # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
-    return draw(st.integers(min_value=0, max_value=2**32 - 1))
-
-

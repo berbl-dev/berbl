@@ -27,7 +27,6 @@ class HParams():
         # This is not documented in the book but in the code at
         # https://github.com/jdrugo/LCSBookCode
         "MAX_ITER_MIXING": 40,
-        "LOGGING": "mlflow",
     }
 
     def __init__(self):
