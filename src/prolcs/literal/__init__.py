@@ -41,6 +41,7 @@ import mlflow  # type: ignore
 from ..common import matching_matrix
 from .hyperparams import HParams
 
+
 def model_probability(matchs: List,
                       X: np.ndarray,
                       Y: np.ndarray,
@@ -88,30 +89,30 @@ def model_probability(matchs: List,
                 k] = train_classifier(M[:, [k]], X, Y)
 
         V, Lambda_V_1, a_beta, b_beta = train_mixing(M=M,
-                                                    X=X,
-                                                    Y=Y,
-                                                    Phi=Phi,
-                                                    W=W,
-                                                    Lambda_1=Lambda_1,
-                                                    a_tau=a_tau,
-                                                    b_tau=b_tau,
-                                                    exp_min=exp_min,
-                                                    ln_max=ln_max,
-                                                    random_state=random_state)
+                                                     X=X,
+                                                     Y=Y,
+                                                     Phi=Phi,
+                                                     W=W,
+                                                     Lambda_1=Lambda_1,
+                                                     a_tau=a_tau,
+                                                     b_tau=b_tau,
+                                                     exp_min=exp_min,
+                                                     ln_max=ln_max,
+                                                     random_state=random_state)
         L_q, L_k_q, L_M_q = var_bound(M=M,
-                                    X=X,
-                                    Y=Y,
-                                    Phi=Phi,
-                                    W=W,
-                                    Lambda_1=Lambda_1,
-                                    a_tau=a_tau,
-                                    b_tau=b_tau,
-                                    a_alpha=a_alpha,
-                                    b_alpha=b_alpha,
-                                    V=V,
-                                    Lambda_V_1=Lambda_V_1,
-                                    a_beta=a_beta,
-                                    b_beta=b_beta)
+                                      X=X,
+                                      Y=Y,
+                                      Phi=Phi,
+                                      W=W,
+                                      Lambda_1=Lambda_1,
+                                      a_tau=a_tau,
+                                      b_tau=b_tau,
+                                      a_alpha=a_alpha,
+                                      b_alpha=b_alpha,
+                                      V=V,
+                                      Lambda_V_1=Lambda_V_1,
+                                      a_beta=a_beta,
+                                      b_beta=b_beta)
 
         ln_p_M = -np.log(float(
             np.math.factorial(K)))  # (7.3), i.e. p_M \propto 1/K
@@ -276,15 +277,19 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                               Lambda_V_1=Lambda_V_1,
                               a_beta=a_beta,
                               b_beta=b_beta)
-        # L_M_q and L_M_q_prev are sometimes -inf which results in a
-        # FloatingPointError (as a nan is generated from -inf - (-inf)).
         try:
             # LCSBookCode states: “as we are using a [Laplace] approximation,
             # the variational bound might decrease, so we're not checking and
             # need to take the abs()”.
             delta_L_M_q = np.abs(L_M_q - L_M_q_prev)
         except FloatingPointError as e:
-            print(f"L_M_q = {L_M_q}, L_M_q_prev = {L_M_q_prev}")
+            # ``L_M_q`` and ``L_M_q_prev`` are sometimes ``-inf`` which results
+            # in a FloatingPointError (as a nan is generated from ``-inf -
+            # (-inf)``).
+            #
+            # However, ``delta_L_M_q`` being ``nan`` makes the loop abort
+            # anyway, so we should be fine. We'll log to mlflow that this
+            # happened, anyway.
             mlflow.set_tag("FloatingPointError delta_L_M_q", "occurred")
 
     return V, Lambda_V_1, a_beta, b_beta
@@ -688,6 +693,9 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
         L_M2q = 0
     assert L_M2q <= 0, f"Kullback-Leibler divergence less than zero: {-L_M2q}"
     # TODO Performance: slogdet can be cached, is computed more than once
+    # L_M3q may be -inf after the following line but that is probably OK since
+    # the ``train_mixing`` loop then aborts (also see comment in
+    # ``train_mixing``).
     L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
     if np.any(~np.isfinite([L_M1q, L_M2q, L_M3q])):
         print(f"Non-finite var_mix_bound: "
