@@ -549,7 +549,7 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
         except FloatingPointError as e:
             print(f"FloatingPointError in train_mix_priors: "
                   f"v_k = {v_k}, K = {K}, V = {V}, Lambda_V_1 = {Lambda_V_1}")
-            mlflow.set_tag("FloatingPointError b_beta[k]", "occurred")
+            mlflow.set_tag("FloatingPointError_b_beta_k", "occurred")
 
     return a_beta, b_beta
 
