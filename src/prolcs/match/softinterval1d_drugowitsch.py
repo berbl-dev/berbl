@@ -33,11 +33,8 @@ class SoftInterval1D():
         # Data is assumed to lie within [-1, 1]
         self._l, self._u = -1, 1
 
-        if u < l:
-            raise ValueError("Bounds not ordered or equal")
-
-        self.l = l
-        self.u = u
+        # Unordered bound representation, we swap if necessary. [PDF p. 261]
+        self.l, self.u = tuple(sorted([l, u]))
 
     def __repr__(self):
         return (f"SoftInterval1D(l={self.l},u={self.u},"
@@ -52,11 +49,13 @@ class SoftInterval1D():
         [PDF p. 260]
         """
         random_state = check_random_state(random_state)
-        l, u = tuple(sorted(random_state.uniform(-1, 1, size=2)))
-        return SoftInterval1D(l=l, u=u)
+        bounds = random_state.uniform(-1, 1, size=2)
+        return SoftInterval1D(*bounds)
 
     def mutate(self, random_state: np.random.RandomState):
         """
+        Note: Unordered bound representation, we swap if necessary.
+
         [PDF p. 261]
         """
         self.l, self.u = tuple(
