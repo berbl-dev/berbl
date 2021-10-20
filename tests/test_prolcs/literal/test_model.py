@@ -11,30 +11,10 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.utils import check_random_state  # type: ignore
 
 
-@st.composite
-def match1ds(draw):
-    a = draw(st.floats(min_value=0, max_value=100))
-    b = draw(st.floats(min_value=0, max_value=50))
-    return RadialMatch1D(a=a, b=b)
+from test_prolcs import rmatch1ds, Xs, ys, seeds
 
 
-@st.composite
-def Xs(draw, N=10, D_X=1):
-    X = draw(
-        arrays(np.float64, (N, D_X),
-               elements=st.floats(min_value=-1, max_value=1),
-               unique=True))
-    return X
-
-
-@st.composite
-def ys(draw, N=10, D_y=1):
-    return draw(
-        arrays(np.float64, (N, D_y),
-               elements=st.floats(min_value=-1, max_value=1)))
-
-
-@given(st.lists(match1ds(), min_size=2, max_size=10), Xs(), ys())
+@given(st.lists(rmatch1ds(), min_size=2, max_size=10), Xs(), ys())
 @settings(deadline=None, max_examples=20)
 # hypothesis.errors.FailedHealthCheck: Examples routinely exceeded the max
 # allowable size. (20 examples overran while generating 9 valid ones).
@@ -50,7 +30,7 @@ def test_fit(matchs, X, y):
     m.fit(X, y)
 
 
-@given(st.lists(match1ds(), min_size=2, max_size=10), Xs(), ys(), Xs())
+@given(st.lists(rmatch1ds(), min_size=2, max_size=10), Xs(), ys(), Xs())
 @settings(deadline=None, max_examples=20)
 # Disable shrink
 # phases=(Phase.explicit, Phase.reuse, Phase.generate, Phase.target))
@@ -153,8 +133,9 @@ def random_data(draw, N=100):
 
 # We may need to use more samples here to make sure that the algorithms' scores
 # are really close.
-@given(random_data(N=1000))
-def test_fit_non_linear(data):
+@given(random_data(N=1000), seeds())
+@settings(deadline=None)
+def test_fit_non_linear(data, seed):
     """
     A single classifier should behave better or very similar to a
     ``sklearn.linear_model.LinearRegression`` on random data.
@@ -168,8 +149,13 @@ def test_fit_non_linear(data):
 
     # The default MAX_ITER_CLS seems to be too small for good approximations.
     HParams().MAX_ITER_CLS = 100
-    m = Model([match, match2]).fit(X, y)
-    HParams().MAX_ITER_CLS = 20  # Reset to the default.
+
+    # We seed this so we don't get flaky tests.
+    random_state = check_random_state(seed)
+    m = Model([match, match2], random_state=random_state).fit(X, y)
+
+    # Reset to the default.
+    HParams().MAX_ITER_CLS = 20
 
     y_pred = m.predicts(X)[0]
 
@@ -191,13 +177,7 @@ def test_fit_non_linear(data):
                 f"linear regression oracle score ({score_oracle})")
 
 
-@st.composite
-def seeds(draw):
-    # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
-    return draw(st.integers(min_value=0, max_value=2**32 - 1))
-
-
-@given(st.lists(match1ds(), min_size=2, max_size=10), Xs(), ys(), seeds())
+@given(st.lists(rmatch1ds(), min_size=2, max_size=10), Xs(), ys(), seeds())
 @settings(deadline=None)
 def test_model_fit_deterministic(matchs, X, y, seed):
     random_state = check_random_state(seed)

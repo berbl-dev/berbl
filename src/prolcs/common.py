@@ -4,6 +4,9 @@ import numpy as np  # type: ignore
 from deap import tools
 
 
+# TODO Move all of this to utils
+
+
 def check_phi(phi, X: np.ndarray):
     """
     Given a mixing feature mapping ``phi``, compute the mixing feature matrix
