@@ -1,4 +1,4 @@
 #!/usr/bin/env fish
 
 
-PYTHONPATH=src:$PYTHONPATH pytest --capture=tee-sys tests $argv
+pytest --capture=tee-sys tests $argv
