@@ -150,6 +150,7 @@ def test_fit_non_linear(data, seed):
     match = AllMatch()
     # We use two `AllMatch`s because otherwise the Laplace approximation may
     # lead to overflows in `train_mix_priors`.
+    # TODO Is this fixable in `train_mix_priors`
     match2 = AllMatch()
 
     # The default MAX_ITER_CLS seems to be too small for good approximations.
@@ -176,10 +177,21 @@ def test_fit_non_linear(data, seed):
     score = np.clip(score, a_min=1e-3, a_max=np.inf)
     score_oracle = np.clip(score_oracle, a_min=1e-3, a_max=np.inf)
 
-    assert (score < score_oracle
-            or np.isclose(score / score_oracle, 1, atol=1e-1)), (
-                f"Classifier score ({score}) not close to "
-                f"linear regression oracle score ({score_oracle})")
+    # We allow deviations by up to ``(atol + rtol * score_oracle)`` from
+    # ``score_oracle``.
+    atol = 1e-4
+    rtol = 1e-1
+    assert (
+        score < score_oracle
+        or np.isclose(score, score_oracle, atol=atol, rtol=rtol)
+    ), (f"Classifier score ({score}) not close to "
+        f"linear regression oracle score ({score_oracle}): "
+        f"absolute(a - b) <= (atol + rtol * absolute(b)) is "
+        f"{np.abs(score - score_oracle)} <= "
+        f"({atol} + {rtol * np.abs(score_oracle)}) which is"
+        f"{np.abs(score - score_oracle)} <= "
+        f"({atol + rtol * np.abs(score_oracle)})"
+        )
 
 
 @given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
