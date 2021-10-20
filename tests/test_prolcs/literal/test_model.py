@@ -10,11 +10,15 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
 from sklearn.utils import check_random_state  # type: ignore
 
-
 from test_prolcs import rmatch1ds, Xs, ys, seeds
 
+# NOTE Matching functions always assume a bias column (``has_bias=True``)
+# whereas the ``Xs`` do not contain one (``bias_column=False``) because
+# ``Model.fit`` adds it automatically.
 
-@given(st.lists(rmatch1ds(), min_size=2, max_size=10), Xs(), ys())
+
+@given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
+       Xs(bias_column=False), ys())
 @settings(deadline=None, max_examples=20)
 # hypothesis.errors.FailedHealthCheck: Examples routinely exceeded the max
 # allowable size. (20 examples overran while generating 9 valid ones).
@@ -30,7 +34,8 @@ def test_fit(matchs, X, y):
     m.fit(X, y)
 
 
-@given(st.lists(rmatch1ds(), min_size=2, max_size=10), Xs(), ys(), Xs())
+@given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
+       Xs(bias_column=False), ys(), Xs(bias_column=False))
 @settings(deadline=None, max_examples=20)
 # Disable shrink
 # phases=(Phase.explicit, Phase.reuse, Phase.generate, Phase.target))
@@ -177,7 +182,8 @@ def test_fit_non_linear(data, seed):
                 f"linear regression oracle score ({score_oracle})")
 
 
-@given(st.lists(rmatch1ds(), min_size=2, max_size=10), Xs(), ys(), seeds())
+@given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
+       Xs(bias_column=False), ys(), seeds())
 @settings(deadline=None)
 def test_model_fit_deterministic(matchs, X, y, seed):
     random_state = check_random_state(seed)
