@@ -38,7 +38,7 @@ import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
 import mlflow  # type: ignore
 
-from ..common import matching_matrix
+from ..utils import matching_matrix
 from .hyperparams import HParams
 
 
