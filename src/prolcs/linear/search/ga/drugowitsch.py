@@ -2,7 +2,7 @@ import random
 
 import numpy as np  # type: ignore
 from deap import base, creator, tools
-from prolcs.linear.mixture import Mixture
+from prolcs.mixture import Mixture
 from prolcs.utils import randseed
 from sklearn.utils import check_random_state  # type: ignore
 

@@ -1,44 +1,14 @@
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from hypothesis import given, settings  # type: ignore
-from hypothesis.extra.numpy import arrays  # type: ignore
+from prolcs.classifier import Classifier
 from prolcs.match.allmatch import AllMatch
-from prolcs.linear.classifier import Classifier
-from prolcs.linear.mixing_laplace import MixingLaplace
 from prolcs.match.nomatch import NoMatch
-from prolcs.match.radial1d_drugowitsch import RadialMatch1D
-from prolcs.utils import add_bias
+from prolcs.mixing_laplace import MixingLaplace
+from test_prolcs import Xs, rmatch1ds, ys
 
 
-@st.composite
-def match1ds(draw, has_bias_column=True):
-    a = draw(st.floats(min_value=0, max_value=100))
-    b = draw(st.floats(min_value=0, max_value=50))
-    return RadialMatch1D(a=a,
-                         b=b,
-                         ranges=np.array([[-1, 1]]),
-                         has_bias_column=has_bias_column)
-
-
-@st.composite
-def Xs(draw, N=10, D_X=1, bias_column=True):
-    X = draw(
-        arrays(np.float64, (N, D_X),
-               elements=st.floats(min_value=-1, max_value=1),
-               unique=True))
-    if bias_column:
-        X = add_bias(X)
-    return X
-
-
-@st.composite
-def ys(draw, N=10, D_y=1):
-    return draw(
-        arrays(np.float64, (N, D_y),
-               elements=st.floats(min_value=-1000, max_value=1000)))
-
-
-@given(match1ds(), Xs(), ys())
+@given(rmatch1ds(), Xs(), ys())
 @settings(max_examples=50)
 def test_same_match_equal_weights(match, X, y):
     """

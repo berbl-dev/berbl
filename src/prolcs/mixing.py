@@ -3,7 +3,7 @@ import scipy.special as ss  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 
-from ..utils import matching_matrix
+from .utils import matching_matrix
 
 
 
