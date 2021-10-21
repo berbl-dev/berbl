@@ -1,4 +1,4 @@
-(let
+let
   bootstrap = import <nixpkgs> { };
   pkgs = import (bootstrap.fetchFromGitHub {
     owner = "NixOS";
@@ -57,17 +57,25 @@
   prolcs = pkgs.callPackage ./default.nix {
     buildPythonPackage = pkgs.python38Packages.buildPythonPackage;
   };
-in
-  with pkgs;
-  python3.withPackages (ps: with ps; [
-    deap
-    hypothesis # actually just a test dependency
-    mlflowPatched
-    numpy
-    pandas
-    prolcs
-    pytest # actually just a test dependency
-    scipy
-    scikitlearn
-  ])
-).env
+in pkgs.mkShell rec {
+  name = "piure";
+  packages = with pkgs; [
+    (python3.withPackages (ps: with ps; [
+      deap
+      mlflowPatched
+      numpy
+      pandas
+      prolcs
+      scipy
+      scikitlearn
+
+      # test dependencies
+      hypothesis
+      pytest
+      tox
+    ]))
+  ];
+  shellHook = ''
+    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH
+  '';
+}
