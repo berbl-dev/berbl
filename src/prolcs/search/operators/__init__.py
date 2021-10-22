@@ -23,8 +23,7 @@ class Toolbox(base.Toolbox):
                  add_bias=True,
                  phi=None,
                  fit_mixing="bouchard",
-                 random_state=None,
-                 **kwargs):
+                 random_state=None):
         """
         Parameters
         ----------
@@ -44,10 +43,6 @@ class Toolbox(base.Toolbox):
             ``"laplace"`` (the original method, very slow and possibly
             suboptimal in terms of the variational bound).
         random_state : int, RandomState instance
-        kwargs
-            Are passed down unmodified to the model constructor
-            (``prolcs.literal.Model`` or ``prolcs.mixture.Mixture`` depending on
-            ``literal``).
         """
         super().__init__()
 
@@ -60,8 +55,7 @@ class Toolbox(base.Toolbox):
                 genotype.phenotype = Model(matchs=genotype,
                                            random_state=self.random_state,
                                            add_bias=add_bias,
-                                           phi=phi,
-                                           *kwargs).fit(X, y)
+                                           phi=phi).fit(X, y)
                 return (genotype.phenotype.p_M_D_, )
         else:
 
@@ -73,7 +67,7 @@ class Toolbox(base.Toolbox):
                                              random_state=self.random_state,
                                              add_bias=add_bias,
                                              phi=phi,
-                                             *kwargs).fit(X, y)
+                                             fit_mixing=fit_mixing).fit(X, y)
                 return (genotype.phenotype.p_M_D_, )
 
         self.register("evaluate", _evaluate)
