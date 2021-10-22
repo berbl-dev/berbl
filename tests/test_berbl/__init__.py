@@ -1,9 +1,9 @@
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
-from prolcs.match.radial1d_drugowitsch import RadialMatch1D
-from prolcs.match.softinterval1d_drugowitsch import SoftInterval1D
-from prolcs.utils import add_bias
+from berbl.match.radial1d_drugowitsch import RadialMatch1D
+from berbl.match.softinterval1d_drugowitsch import SoftInterval1D
+from berbl.utils import add_bias
 
 
 @st.composite

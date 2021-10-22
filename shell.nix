@@ -54,18 +54,18 @@ let
       };
     };
   };
-  prolcs = pkgs.callPackage ./default.nix {
+  berbl = pkgs.callPackage ./default.nix {
     buildPythonPackage = pkgs.python38Packages.buildPythonPackage;
   };
 in pkgs.mkShell rec {
   name = "piure";
   packages = with pkgs; [
     (python3.withPackages (ps: with ps; [
+      berbl
       deap
       mlflowPatched
       numpy
       pandas
-      prolcs
       scipy
       scikitlearn
 

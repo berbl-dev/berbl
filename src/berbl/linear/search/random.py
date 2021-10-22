@@ -1,6 +1,6 @@
 import mlflow
 import numpy as np  # type: ignore
-from prolcs.mixture import Mixture
+from berbl.mixture import Mixture
 from sklearn.utils import check_random_state  # type: ignore
 
 from ...utils import get_ranges, randseed

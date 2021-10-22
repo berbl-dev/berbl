@@ -3,10 +3,10 @@ import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
-from prolcs.match.allmatch import AllMatch
-from prolcs.classifier import Classifier
-from prolcs.match.radial1d_drugowitsch import RadialMatch1D
-from prolcs.utils import add_bias
+from berbl.match.allmatch import AllMatch
+from berbl.classifier import Classifier
+from berbl.match.radial1d_drugowitsch import RadialMatch1D
+from berbl.utils import add_bias
 from sklearn.metrics import mean_absolute_error
 from sklearn.linear_model import LinearRegression
 

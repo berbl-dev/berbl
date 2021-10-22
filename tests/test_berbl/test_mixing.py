@@ -1,11 +1,11 @@
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from hypothesis import given, settings  # type: ignore
-from prolcs.classifier import Classifier
-from prolcs.match.allmatch import AllMatch
-from prolcs.match.nomatch import NoMatch
-from prolcs.mixing import Mixing
-from test_prolcs import Xs, rmatch1ds, ys
+from berbl.classifier import Classifier
+from berbl.match.allmatch import AllMatch
+from berbl.match.nomatch import NoMatch
+from berbl.mixing import Mixing
+from test_berbl import Xs, rmatch1ds, ys
 
 # TODO Test using n-d inputs (e.g. radial instead of radial1d)
 # TODO train and check for similarity with mixing_laplace

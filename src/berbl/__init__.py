@@ -7,7 +7,7 @@ from .search.operators.drugowitsch import DefaultToolbox
 search_methods = {"drugowitsch": GADrugowitsch}
 
 
-class ProLCS(BaseEstimator, RegressorMixin):
+class BERBL(BaseEstimator, RegressorMixin):
     """
     TODO
     """

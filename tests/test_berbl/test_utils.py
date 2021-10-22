@@ -1,7 +1,7 @@
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from hypothesis import given  # type: ignore
-from prolcs.utils import pr_in_sd, radius_for_ci
+from berbl.utils import pr_in_sd, radius_for_ci
 
 
 @given(st.integers(min_value=1, max_value=100),

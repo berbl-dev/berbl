@@ -3,15 +3,15 @@
 from distutils.core import setup
 
 setup(
-    name="prolcs",
+    name="berbl",
     version="0.1",
-    description="Probabilistic LCS",
+    description="Bayesian Evolutionary Rule-based Learner",
     author="David Pätzel",
     author_email="david.paetzel@posteo.de",
-    url="https://github.com/dpaetzel/prolcs",
+    url="https://github.com/dpaetzel/berbl",
     packages=[
-        "prolcs", "prolcs.literal", "prolcs.search", "prolcs.search.ga",
-        "prolcs.search.operators", "prolcs.match"
+        "berbl", "berbl.literal", "berbl.search", "berbl.search.ga",
+        "berbl.search.operators", "berbl.match"
     ],
     package_dir={"": "src"},
     install_requires=[

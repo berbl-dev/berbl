@@ -2,15 +2,15 @@ import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from hypothesis import given, seed, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
-from prolcs.literal.hyperparams import HParams
-from prolcs.literal.model import Model
-from prolcs.match.allmatch import AllMatch
-from prolcs.match.radial1d_drugowitsch import RadialMatch1D
+from berbl.literal.hyperparams import HParams
+from berbl.literal.model import Model
+from berbl.match.allmatch import AllMatch
+from berbl.match.radial1d_drugowitsch import RadialMatch1D
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
 from sklearn.utils import check_random_state  # type: ignore
 
-from test_prolcs import rmatch1ds, Xs, ys, seeds
+from test_berbl import rmatch1ds, Xs, ys, seeds
 
 # NOTE Matching functions always assume a bias column (``has_bias=True``)
 # whereas the ``Xs`` do not contain one (``bias_column=False``) because
@@ -215,10 +215,10 @@ def test_model_fit_deterministic(matchs, X, y, seed):
     # TODO Once in a while (very seldomly, may be fixed already) this throws
     # either of these two
     #
-    #   File "prolcs/src/prolcs/literal/__init__.py", line 668, in var_mix_bound
+    #   File "berbl/src/berbl/literal/__init__.py", line 668, in var_mix_bound
     #     L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
     # FloatingPointError: invalid value encountered in log
     #
-    #   File "prolcs/src/prolcs/literal/__init__.py", line 449, in train_mix_weights
+    #   File "berbl/src/berbl/literal/__init__.py", line 449, in train_mix_weights
     #     R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
     # FloatingPointError: overflow encountered in true_divide

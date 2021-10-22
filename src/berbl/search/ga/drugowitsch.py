@@ -4,9 +4,10 @@ from copy import deepcopy
 import numpy as np  # type: ignore
 from deap import creator, tools
 from mlflow import log_metric
-from prolcs.utils import randseed
 from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
+
+from ...utils import randseed
 
 
 class GADrugowitsch:
@@ -34,7 +35,7 @@ class GADrugowitsch:
         Model training hyperparameters can be changed by assigning values to the
         fields of ``HParams()``; e.g. ``HParams().A_ALPHA = 1e-2``. This might
         seem ugly (and it certainly is), but, this way, we are able to keep the
-        signatures in prolcs.literal.__init__.py clean and very close to the
+        signatures in berbl.literal.__init__.py clean and very close to the
         algorithmic description.
 
         Parameters
