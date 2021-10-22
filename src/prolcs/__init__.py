@@ -32,7 +32,9 @@ class ProLCS(BaseEstimator, RegressorMixin):
         """
         # TODO Consider to perform input checking only here (and not in
         # classifier/mixing etc. as well)
-        X, y = check_X_y(X, y, multi_output=True)
+
+        # See SLEP010.
+        X, y = self._validate_data(X, y, multi_output=True)
 
         searchcls = search_methods[self.search]
         self.search_ = searchcls(self.toolbox, n_iter=self.n_iter)
@@ -42,23 +44,26 @@ class ProLCS(BaseEstimator, RegressorMixin):
         return self
 
     def predict(self, X):
+        # See SLEP010.
+        X = self._validate_data(X, reset=False)
         check_is_fitted(self)
-
         return self.search_.predict(X)
 
     def predict_mean_var(self, X):
+        # See SLEP010.
+        X = self._validate_data(X, reset=False)
         check_is_fitted(self)
-
         return self.search_.predict_mean_var(X)
 
     def predicts(self, X):
+        # See SLEP010.
+        X = self._validate_data(X, reset=False)
         check_is_fitted(self)
-
         return self.search_.predicts(X)
 
-    # TODO Implement predict_distribution
     def predict_distribution(self, X):
+        # See SLEP010.
+        X = self._validate_data(X, reset=False)
         check_is_fitted(self)
-
+        # TODO Implement predict_distribution
         raise NotImplementedError()
-
