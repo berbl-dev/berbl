@@ -69,6 +69,9 @@ in pkgs.mkShell rec {
       scipy
       scikitlearn
 
+      # develop dependencies
+      ipython
+
       # test dependencies
       hypothesis
       pytest
