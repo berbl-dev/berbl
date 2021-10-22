@@ -50,15 +50,18 @@ let
               ]);
             meta.broken = false;
           });
+          berbl = with pkgs; with python-super; import ./default.nix {
+            inherit lib deap numpy scipy scikitlearn hypothesis pytest;
+            pandas = python-self.pandas;
+            mlflow = python-self.mlflowPatched;
+            buildPythonPackage = buildPythonPackage;
+          };
         };
       };
     };
   };
-  berbl = pkgs.callPackage ./default.nix {
-    buildPythonPackage = pkgs.python38Packages.buildPythonPackage;
-  };
 in pkgs.mkShell rec {
-  name = "piure";
+  name = "pure";
   packages = with pkgs; [
     (python3.withPackages (ps: with ps; [
       berbl

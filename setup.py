@@ -18,11 +18,10 @@ setup(
         "deap ==1.3.1",
         "mlflow ==1.20.1",
         "numpy ==1.21.2",
-        "pandas ==1.3.2",
         "scipy ==1.7.1",
         "scikit-learn ==0.24.1",
-
-        # just required for testing
+    ],
+    tests_requires=[
         "hypothesis",
         "pytest"
     ])

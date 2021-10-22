@@ -1,4 +1,5 @@
-{ lib, buildPythonPackage } :
+{ lib, buildPythonPackage, deap, mlflow, numpy, pandas, scipy, scikitlearn
+, hypothesis, pytest }:
 
 buildPythonPackage rec {
   pname = "berbl";
@@ -6,11 +7,16 @@ buildPythonPackage rec {
 
   src = ./.;
 
+  propagatedBuildInputs = [ deap mlflow numpy pandas scipy scikitlearn ];
+
+  testInputs = [ hypothesis pytest ];
+
   doCheck = false;
 
   meta = with lib; {
     homepage = "https://github.com/dpaetzel/berbl";
-    description = "Implementation of a Bayesian Evolutionary Rule-based Learner";
+    description =
+      "Implementation of a Bayesian Evolutionary Rule-based Learner";
     license = licenses.gpl3;
     maintainers = with maintainers; [ dpaetzel ];
   };
