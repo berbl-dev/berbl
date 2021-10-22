@@ -33,10 +33,10 @@ class Mixture():
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi
-            mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
-            default LCS mixing feature matrix based on ``phi(x) = 1``
+            Mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
+            default LCS mixing feature matrix based on ``phi(x) = 1``.
         fit_mixing
-            either of "bouchard" or "laplace"
+            Either of "bouchard" or "laplace"
         random_state
             See ``n_cls``.
         **kwargs

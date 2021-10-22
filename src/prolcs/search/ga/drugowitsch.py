@@ -8,10 +8,8 @@ from prolcs.utils import randseed
 from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 
-from .. import Search
 
-
-class GADrugowitsch(Search):
+class GADrugowitsch:
     """
     A DEAP-based implementation of the general GA algorithm found in
     Drugowitsch's book.
@@ -132,6 +130,9 @@ class GADrugowitsch(Search):
         self.p_M_D_ = [i.phenotype.p_M_D_ for i in self.elitist_]
 
         return self
+
+    def predict(self, X):
+        return self.elitist_[0].phenotype.predict(X)
 
     def predict_mean_var(self, X):
         check_is_fitted(self)

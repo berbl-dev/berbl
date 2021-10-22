@@ -1,28 +1,57 @@
-"""
-Search operators as defined in Drugowitsch's book.
-"""
+"""Search operators as defined in Drugowitsch's book."""
 
 import numpy as np
-from deap import base, creator, tools
-from prolcs.utils import randseed_legacy
-from sklearn.utils import check_random_state  # type: ignore
+from deap import creator, tools
 
-# I'm not sure whether it is best practice to execute this whenever importing
-# this module but since you get a warning if you do it multiple times, we leave
-# it as that for now.
-creator.create("FitnessMax", base.Fitness, weights=(1., ))
-creator.create("Genotype", list, fitness=creator.FitnessMax)
+from ...match.softinterval1d_drugowitsch import SoftInterval1D
+from ...utils import initRepeat_binom
+from . import Toolbox
 
 
-class Toolbox(base.Toolbox):
+class DefaultToolbox(Toolbox):
     """
-    The toolbox specified in Drugowitsch's book, providing ``select``, ``mate``
-    and ``mutate``. A generator for populations and an ``evaluate`` function are
-    not included due to them depending on the regarded problem and
-    representation.
+    Toolbox specified in Drugowitsch's book. Extends the base toolbox
+    (containing ``evaluate``) by providing ``select``, ``mate`` and ``mutate``.
+
+    A generator for populations is not included due to depending on the regarded
+    problem and representation.
     """
-    def __init__(self, tournsize=5):
-        super().__init__()
+    def __init__(self,
+                 matchcls=SoftInterval1D,
+                 n=100,
+                 p=0.5,
+                 literal=False,
+                 add_bias=True,
+                 phi=None,
+                 tournsize=5,
+                 fit_mixing="bouchard",
+                 random_state=None):
+        """
+        n : positive int
+            n parameter (number of independent experiments) of the binomial
+            distribution from which initial individual sizes are drawn.
+        p : float
+            p parameter (success rate) of the binomial distribution from which
+            initial individual sizes are drawn.
+        """
+        # TODO Consider putting kwargs here as well (e.g. if literal=False, then
+        # we can specify a lot of additional parameters such as fit_mixing)
+        super().__init__(literal=literal,
+                         add_bias=add_bias,
+                         phi=phi,
+                         fit_mixing=fit_mixing,
+                         random_state=random_state)
+
+        self.register("gene", matchcls.random, random_state=self.random_state)
+        self.register("genotype",
+                      initRepeat_binom,
+                      creator.Genotype,
+                      self.gene,
+                      n=8,
+                      p=0.5,
+                      random_state=self.random_state)
+        self.register("population", tools.initRepeat, list, self.genotype)
+
         # “We create a new population by selecting two individuals (…) To avoid
         # the influence of fitness scaling, we select individuals from the
         # current population by deterministic tournament selection with
