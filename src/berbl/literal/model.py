@@ -16,16 +16,14 @@ class Model():
                  phi=None,
                  random_state=None):
         """
-        A model based on mixing linear classifiers using the given model
+        A model based on mixing localized linear submodels using the given model
         structure.
 
         Parameters
         ----------
         matchs
             A list of matching functions (i.e. objects implementing a ``match``
-            attribute) defining the structure of this mixture. If given,
-            ``n_cls`` and ``match_class`` are not used to generate classifiers
-            randomly.
+            attribute) defining the structure of this mixture.
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi
@@ -160,8 +158,8 @@ class Model():
         if self.add_bias:
             X = add_bias(X)
 
-        # Collect the independent predictions and variances of each classifier.
-        # We use the definitions of those that do neither perform input checking
+        # Collect the independent predictions and variances of each submodel. We
+        # use the definitions of those that do neither perform input checking
         # nor bias adding to save some time.
         ys = self._predicts(X)
         y_vars = self._predict_vars(X)
@@ -171,9 +169,8 @@ class Model():
         M = matching_matrix(self.matchs, X)
         G_ = mixing(M, Phi, self.V_)
 
-        # For each classifier's prediction, we weigh every dimension of the
-        # output vector by the same amount, thus we simply repeat the G values
-        # over Dy.
+        # For each rule's prediction, we weigh every dimension of the output
+        # vector by the same amount, thus we simply repeat the G values over Dy.
         G = G_.reshape(ys.shape).repeat(Dy, axis=2)  # K × N × Dy
 
         y = np.sum(G * ys, axis=0)
@@ -187,7 +184,7 @@ class Model():
         #     g = G_.T[n]
         #     for j in range(Dy):
         #         for k in range(self.K_):
-        #             cl = self.classifiers[k]
+        #             cl = self.rules[k]
         #             var[n][j] += g[k] * (2 * cl.b_tau / (cl.a_tau - 1) *
         #                                  (1 + x_ @ cl.Lambda_1 @ x_) +
         #                                  (cl.W[j] @ x_)**2)
@@ -200,13 +197,13 @@ class Model():
 
     def predicts(self, X):
         """
-        Returns this model's classifiers' predictions, one by one, without
-        mixing them.
+        Returns this model's submodels' predictions, one by one, without mixing
+        them.
 
         Returns
         -------
         array of shape (K, N, Dy)
-            Mean output vectors of each classifier.
+            Mean output vectors of each submodel.
         """
         check_is_fitted(self)
 
@@ -224,19 +221,19 @@ class Model():
         y = np.zeros((self.K_, N, self.Dy_))
         # TODO Maybe more efficient: np.sum(W[k] * X, axis=1)
         for k in range(self.K_):
-            # A classifier's prediction.
+            # A submodel's prediction.
             y[k] = X @ self.W_[k].T
         return y
 
     def predict_vars(self, X):
         """
-        Returns this model's classifiers' prediction variance, one by one,
-        without mixing them.
+        Returns this model's submodels' prediction variances, one by one, without
+        mixing them.
 
         Returns
         -------
         array of shape (K, N)
-            Prediction variances of each classifier.
+            Prediction variances of each submodel.
         """
         check_is_fitted(self)
 
@@ -253,7 +250,7 @@ class Model():
 
         y_var = np.zeros((self.K_, N, self.Dy_))
         for k in range(self.K_):
-            # A classifier's prediction variance.
+            # A submodel's prediction variance.
             var = 2 * self.b_tau_[k] / (self.a_tau_[k] - 1) * (
                 1 + np.sum(X * X @ self.Lambda_1_[k], axis=1))
             y_var[k] = var.reshape((len(X), self.Dy_)).repeat(self.Dy_, axis=1)

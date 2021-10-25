@@ -8,7 +8,7 @@ class SoftInterval1D():
         ``self.match`` is a soft interval–based matching function as defined in
         Drugowitsch's book [PDF p. 260].
 
-        “When specifying the interval for classifier k by its lower bound l_k
+        “When specifying the interval for [rule] k by its lower bound l_k
         and upper bound u_k, we want exactly one standard deviation of the
         Gaussian to lie inside this interval, and additionally require 95% of
         the area underneath the matching function to be inside this interval.”

@@ -82,8 +82,8 @@ def crossover(M_a, M_b, random_state: np.random.RandomState):
     """
     # “As two selected individuals can be of different length, we cannot apply
     # standard uniform cross-over but have to use different means: we want the
-    # total number of classifiers to remain unchanged, but as the location of
-    # the classifiers in the genome of an individual do not provide us with
+    # total number of [rules] to remain unchanged, but as the location of
+    # the [rules] in the genome of an individual do not provide us with
     # any information, we allow their location to change.”
     K_a = len(M_a)
     K_b = len(M_b)

@@ -80,8 +80,8 @@ def linears(draw, N=10, slope_range=(0, 1), intercept_range=(0, 1)):
 def test_fit_linear_functions(data):
     """
     Learning one-dimensional (affine) linear functions should be doable for a
-    single classifier that is responsible for/matches all inputs (i.e. it should
-    be able to find the slope and intercept).
+    single rule that is responsible for/matches all inputs (i.e. it should be
+    able to find the slope and intercept).
     """
     X, y, slope, intercept = data
 
@@ -108,7 +108,7 @@ def test_fit_linear_functions(data):
     tol = 1e-2
     assert score < tol, (
         f"Mean absolute error is {score} (> {tol})."
-        f"Even though L(q) = {m.L_k_q_}, classifier's weight matrix is still: "
+        f"Even though L(q) = {m.L_k_q_}, submodel's weight matrix is still: "
         f"{m.W_[0]} when it should be [{intercept}, {slope}].\n"
         f"Also, predictions are:\n {np.hstack([y, y_pred])}")
 
@@ -142,7 +142,7 @@ def random_data(draw, N=100):
 @settings(deadline=None)
 def test_fit_non_linear(data, seed):
     """
-    A single classifier should behave better or very similar to a
+    A single rule should behave better or very similar to a
     ``sklearn.linear_model.LinearRegression`` on random data.
     """
     X, y = data
@@ -184,7 +184,7 @@ def test_fit_non_linear(data, seed):
     assert (
         score < score_oracle
         or np.isclose(score, score_oracle, atol=atol, rtol=rtol)
-    ), (f"Classifier score ({score}) not close to "
+    ), (f"Rule score ({score}) not close to "
         f"linear regression oracle score ({score_oracle}): "
         f"absolute(a - b) <= (atol + rtol * absolute(b)) is "
         f"{np.abs(score - score_oracle)} <= "

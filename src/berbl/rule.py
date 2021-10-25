@@ -3,7 +3,7 @@ import scipy.special as ss  # type: ignore
 from sklearn.utils.validation import check_is_fitted # type: ignore
 
 
-class Classifier():
+class Rule():
     """
     A local linear regression model (in LCS speak, a “linear regression
     classifier”) based on the provided match function.
@@ -21,13 +21,12 @@ class Classifier():
         Parameters
         ----------
         match : object
-            ``match.match`` is this classifier's match function. According to
-            Drugowitsch's framework (or mixture of experts), each classifier
-            should get assigned a responsibility for each data point. However,
-            in order to be able to train the classifiers independently, that
-            responsibility (which depends on the matching function but also on
-            the other classifiers' responsibilities) is replaced with the
-            matching function.
+            ``match.match`` is this rule's match function. According to
+            Drugowitsch's framework (or mixture of experts), each rule should
+            get assigned a responsibility for each data point. However, in order
+            to be able to train the submodels independently, that responsibility
+            (which depends on the matching function but also on the other rules'
+            responsibilities) is replaced with the matching function.
         A_ALPHA : float
             Scale parameter of weight vector variance prior.
         B_ALPHA : float
@@ -44,10 +43,10 @@ class Classifier():
         **kwargs : kwargs
             This is here so that we don't need to repeat all the hyperparameters
             in ``Mixture`` etc. ``Mixture`` simply passes through all
-            ``**kwargs`` to both ``Mixing`` and ``Classifier``. This means that
-            during implementation, we need to be aware that if there are
-            parameters in those two classes with the same name, they always
-            receive the same value.
+            ``**kwargs`` to both ``Mixing`` and ``Rule``. This means that during
+            implementation, we need to be aware that if there are parameters in
+            those two classes with the same name, they always receive the same
+            value.
         """
         self.match = match
         self.A_ALPHA = A_ALPHA
@@ -59,7 +58,8 @@ class Classifier():
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         """
-        Fits this classifier to the part of the provided data that it matches.
+        Fits this rule's (sub)model to the part of the provided data that the
+        rule matches.
         """
 
         self.m_ = self.match.match(X)
@@ -101,9 +101,9 @@ class Classifier():
             self.L_q_ = self.var_bound(
                 X=X,
                 y=y,
-                # Substitute r by m in order to train classifiers independently
+                # Substitute r by m in order to train submodels independently
                 # (see [PDF p. 219]). Note, however, that after having trained
-                # the mixing model we finally evaluate the classifier using
+                # the mixing model we finally evaluate the submodels using
                 # ``r=R[:,[k]]`` though.
                 r=self.m_)
             delta_L_q = self.L_q_ - L_q_prev

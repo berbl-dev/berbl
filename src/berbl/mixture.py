@@ -6,7 +6,7 @@ from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 
 from .utils import add_bias, check_phi
-from .classifier import Classifier
+from .rule import Rule
 from .mixing import Mixing
 from .mixing_laplace import MixingLaplace
 
@@ -20,16 +20,14 @@ class Mixture():
                  random_state=None,
                  **kwargs):
         """
-        A model based on mixing linear classifiers using the given model
+        A model based on mixing linear regression rules using the given model
         structure.
 
         Parameters
         ----------
         matchs
             A list of matching functions (i.e. objects implementing a ``match``
-            attribute) defining the structure of this mixture. If given,
-            ``n_cls`` and ``match_class`` are not used to generate classifiers
-            randomly.
+            attribute) defining the structure of this mixture.
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi
@@ -40,8 +38,7 @@ class Mixture():
         random_state
             See ``n_cls``.
         **kwargs
-            This is passed through unchanged to both ``Mixing`` and
-            ``Classifier``.
+            This is passed through unchanged to both ``Mixing`` and ``Rule``.
         """
 
         self.matchs = matchs
@@ -74,24 +71,24 @@ class Mixture():
         y = y.reshape((len(X), -1))
         _, self.Dy_ = y.shape
 
-        # Train classifiers.
+        # Train submodels.
         #
         # “When fit is called, any previous call to fit should be ignored.”
-        self.classifiers_ = list(
-            map(lambda m: Classifier(m, **self.__kwargs), self.matchs))
+        self.rules_ = list(
+            map(lambda m: Rule(m, **self.__kwargs), self.matchs))
         for k in range(self.K_):
-            self.classifiers_[k].fit(X, y)
+            self.rules_[k].fit(X, y)
 
         # Train mixing model.
         #
         # “When fit is called, any previous call to fit should be ignored.”
         if self.fit_mixing == "bouchard":
-            self.mixing_ = Mixing(classifiers=self.classifiers_,
+            self.mixing_ = Mixing(rules=self.rules_,
                                   phi=self.phi,
                                   random_state=random_state,
                                   **self.__kwargs)
         elif self.fit_mixing == "laplace":
-            self.mixing_ = MixingLaplace(classifiers=self.classifiers_,
+            self.mixing_ = MixingLaplace(rules=self.rules_,
                                          phi=self.phi,
                                          random_state=random_state,
                                          **self.__kwargs)
@@ -100,12 +97,12 @@ class Mixture():
                 "Only 'bouchard' and 'laplace' supported for fit_mixing")
         self.mixing_.fit(X, y)
 
-        # We need to recalculate the classifiers' here because we now have
-        # access to the final value of R (which we substituted by M during
-        # classifier training for ensuring indenpendence).
-        self.L_C_q_ = np.repeat(-np.inf, len(self.classifiers_))
+        # We need to recalculate the rules' variational bounds here because we
+        # now have access to the final value of R (which we substituted by M
+        # during submodel training for ensuring indenpendence).
+        self.L_C_q_ = np.repeat(-np.inf, len(self.rules_))
         for k in range(self.K_):
-            self.L_C_q_[k] = self.classifiers_[k].var_bound(
+            self.L_C_q_[k] = self.rules_[k].var_bound(
                 X, y, r=self.mixing_.R_[:, [k]])
         self.L_M_q_ = self.mixing_.L_M_q_
         self.L_q_ = np.sum(self.L_C_q_) + self.L_M_q_
@@ -141,7 +138,7 @@ class Mixture():
         check_is_fitted(self)
 
         N, _ = X.shape
-        Dy, D_X = self.classifiers_[0].W_.shape
+        Dy, D_X = self.rules_[0].W_.shape
 
         Phi = check_phi(self.phi, X)
 
@@ -150,17 +147,16 @@ class Mixture():
         if self.add_bias:
             X = add_bias(X)
 
-        # Collect the independent predictions and variances of each classifier.
-        # We use the definitions of those that do neither perform input checking
-        # nor bias adding to save some time.
+        # Collect the independent predictions and variances of each submodel. We
+        # use the implementations of those that do neither perform input
+        # checking nor bias adding to save some time.
         ys = self._predicts(X)
         y_vars = self._predict_vars(X)
 
         G_ = self.mixing_.mixing(X).T  # K × N
 
-        # For each classifier's prediction, we weigh every dimension of the
-        # output vector by the same amount, thus we simply repeat the G values
-        # over Dy.
+        # For each submodel's prediction, we weigh every dimension of the output
+        # vector by the same amount, thus we simply repeat the G values over Dy.
         G = G_.reshape(ys.shape).repeat(Dy, axis=2)  # K × N × Dy
 
         y = np.sum(G * ys, axis=0)
@@ -176,7 +172,7 @@ class Mixture():
         #     g = G_.T[n]
         #     for j in range(Dy):
         #         for k in range(self.K_):
-        #             cl = self.classifiers[k]
+        #             cl = self.rules_[k]
         #             var[n][j] += g[k] * (2 * cl.b_tau / (cl.a_tau - 1) *
         #                                  (1 + x_ @ cl.Lambda_1 @ x_) +
         #                                  (cl.W[j] @ x_)**2)
@@ -189,13 +185,13 @@ class Mixture():
 
     def predicts(self, X):
         """
-        Returns this model's classifiers' predictions, one by one, without
-        mixing them.
+        Returns this model's submodel's predictions, one by one, without mixing
+        them.
 
         Returns
         -------
         array of shape (K, N, Dy)
-            Mean output vectors of each classifier.
+            Mean output vectors of each rule.
         """
         check_is_fitted(self)
 
@@ -212,18 +208,18 @@ class Mixture():
 
         y = np.zeros((self.K_, N, self.Dy_))
         for k in range(self.K_):
-            y[k] = self.classifiers_[k].predict(X)
+            y[k] = self.rules_[k].predict(X)
         return y
 
     def predict_vars(self, X):
         """
-        Returns this model's classifiers' prediction variance, one by one,
-        without mixing them.
+        Returns this model's submodel's prediction variances, one by one, without
+        mixing them.
 
         Returns
         -------
         array of shape (K, N)
-            Prediction variances of each classifier.
+            Prediction variances of each submodel.
         """
         check_is_fitted(self)
 
@@ -240,6 +236,6 @@ class Mixture():
 
         y_vars = np.zeros((self.K_, N, self.Dy_))
         for k in range(self.K_):
-            y_vars[k] = self.classifiers_[k].predict_var(X)
+            y_vars[k] = self.rules_[k].predict_var(X)
 
         return y_vars

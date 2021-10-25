@@ -50,7 +50,7 @@ class GADrugowitsch(Search):
             Due to scikit-learn compatibility, we use NumPy's legacy API.
         **kwargs
             Any other keyword parameters are passed through to ``Mixture``,
-            ``Classifier`` and ``Mixing``.
+            ``Rule`` and ``Mixing``.
         """
         # TODO init should be in a parent class
         self.init = init

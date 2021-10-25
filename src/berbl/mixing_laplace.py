@@ -13,8 +13,8 @@ class MixingLaplace(Mixing):
 
     Structurally, the main difference `Mixing` is that `Lambda_V_1` is a `K *
     D_V` × `K * D_V` matrix (i.e. the mixing problem is solved for all
-    classifiers at once), whereas the parent has `K` mixing matrices (one for
-    each classifier).
+    submodels at once), whereas the parent has `K` mixing matrices (one for
+    each submodel).
     """
     def __init__(self, DELTA_S_KLRG=10**-8, **kwargs):
         """

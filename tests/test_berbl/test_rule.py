@@ -4,7 +4,7 @@ import numpy as np  # type: ignore
 from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
 from berbl.match.allmatch import AllMatch
-from berbl.classifier import Classifier
+from berbl.rule import Rule
 from berbl.match.radial1d_drugowitsch import RadialMatch1D
 from berbl.utils import add_bias
 from sklearn.metrics import mean_absolute_error
@@ -47,7 +47,7 @@ def test_fit_inc_L_q(X, y):
     max_iters = range(1, 101, 10)
     L_qs = np.array([None] * len(max_iters))
     for i in range(len(max_iters)):
-        L_qs[i] = Classifier(match, MAX_ITER=max_iters[i]).fit(X, y).L_q_
+        L_qs[i] = Rule(match, MAX_ITER=max_iters[i]).fit(X, y).L_q_
 
     assert np.all(np.diff(L_qs) >= 0)
 
@@ -85,14 +85,14 @@ def linears(draw, N=10, slope_range=(0, 1), intercept_range=(0, 1)):
 def test_fit_linear_functions(data):
     """
     Learning one-dimensional (affine) linear functions should be doable for a
-    single classifier that is responsible for/matches all inputs (i.e. it should
-    be able to find the slope and intercept).
+    single rule that is responsible for/matches all inputs (i.e. it should be
+    able to find the slope and intercept).
     """
     X, y, slope, intercept = data
 
     match = AllMatch()
 
-    cl = Classifier(match, MAX_ITER=100).fit(X, y)
+    cl = Rule(match, MAX_ITER=100).fit(X, y)
 
     y_pred = cl.predict(X)
 
@@ -107,7 +107,7 @@ def test_fit_linear_functions(data):
     tol = 1e-2
     assert score < tol, (
         f"Mean absolute error is {score} (> {tol})."
-        f"Even though L(q) = {cl.L_q_}, classifier's weight matrix is still"
+        f"Even though L(q) = {cl.L_q_}, rule's weight matrix is still"
         f"{cl.W_} when it should be [{intercept}, {slope}]")
 
 
@@ -137,14 +137,14 @@ def random_data(draw, N=100):
 @given(random_data(N=1000))
 def test_fit_non_linear(data):
     """
-    A single classifier should behave better or very similar to a
+    A single rule should behave better or very similar to a
     ``sklearn.linear_model.LinearRegression`` on random data.
     """
     X, y = data
 
     match = AllMatch()
 
-    cl = Classifier(match, MAX_ITER=100).fit(X, y)
+    cl = Rule(match, MAX_ITER=100).fit(X, y)
 
     y_pred = cl.predict(X)
     score = mean_absolute_error(y_pred, y)
@@ -161,10 +161,10 @@ def test_fit_non_linear(data):
 
     assert (score < score_oracle
             or np.isclose(score / score_oracle, 1, atol=1e-1)), (
-                f"Classifier score ({score}) not close to"
+                f"Submodel score ({score}) not close to"
                 f"linear regression oracle score ({score_oracle})")
 
 
-# TODO Test classifier variance: Vectorized form (berbl) vs. point form
+# TODO Test submodel variance: Vectorized form (berbl) vs. point form
 
-# TODO Add tests for all the other hyperparameters of Classifier.
+# TODO Add tests for all the other hyperparameters of Rule.

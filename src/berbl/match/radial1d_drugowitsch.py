@@ -116,7 +116,7 @@ class RadialMatch1D():
 
         :param X: input matrix ``(N × D_X)`` with ``D_X == 1``
         :returns: matching vector ``(N)`` of this matching function (i.e. of
-            this classifier)
+            this rule)
         """
         # We have to clip this so we don't return 0 here (0 should never be
         # returned because every match function matches everywhere at least a

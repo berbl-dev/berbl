@@ -2,9 +2,13 @@
 Module implementing the algorithm presented in ‘Design and Analysis of Learning
 Classifier Systems – A Probabilistic Approach’ by Jan Drugowitsch.
 
-This implementation intentionially does break with several Python conventions
-(e.g. PEP8 regarding variable naming) in order to stay as close as possible to
-the formulation of the algorithm in aforementioned work.
+This implementation intentionally breaks with several Python conventions (e.g.
+PEP8 regarding variable naming) in order to stay as close as possible to the
+formulation of the algorithm in aforementioned work.
+
+Also, other than in the remainder of this implementation, we do not as strictly
+avoid the overloaded term “classifier” within this module since it is sometimes
+used by the original algorithms.
 
 The only deviations from the book are:
 * ``model_probability`` returns L(q) - ln K! instead of L(q) + ln K! as the
@@ -21,7 +25,7 @@ The only deviations from the book are:
   an infinite loop between several weight values, we add a maximum number of
   iterations to the three main training loops:
 
-  * classifier training (``train_classifier``)
+  * submodel training (``train_classifier``)
   * mixing model training (``train_mixing``)
   * mixing weight training (``train_mix_weights``)
 
@@ -161,8 +165,8 @@ def train_classifier(m_k, X, Y):
     # (probably for readability).
     a_alpha_k = HParams().A_ALPHA + D_X * D_Y / 2
     # Drugowitsch reaches convergence usually after 3-4 iterations [PDF p. 237].
-    # NOTE Deviation from the original text since we add a maximum number of
-    # iterations (see module doc string).
+    # NOTE Deviation from the original text (but not from LCSBookCode) since we
+    # add a maximum number of iterations (see module doc string).
     i = 0
     while delta_L_k_q > HParams().DELTA_S_L_K_Q and i < HParams().MAX_ITER_CLS:
         i += 1
@@ -194,7 +198,7 @@ def train_classifier(m_k, X, Y):
             b_tau_k=b_tau_k,
             a_alpha_k=a_alpha_k,
             b_alpha_k=b_alpha_k,
-            # Substitute r_k by m_k in order to train classifiers independently
+            # Substitute r_k by m_k in order to train submodels independently
             # (see [PDF p. 219]).
             r_k=m_k)
         delta_L_k_q = L_k_q - L_k_q_prev
@@ -220,10 +224,10 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     :param X: input matrix (N × D_X)
     :param Y: output matrix (N × D_Y)
     :param Phi: mixing feature matrix (N × D_V)
-    :param W: classifier weight matrices (list of D_Y × D_X)
-    :param Lambda_1: classifier covariance matrices (list of D_X × D_X)
-    :param a_tau: classifier noise precision parameters
-    :param b_tau: classifier noise precision parameters
+    :param W: submodel weight matrices (list of D_Y × D_X)
+    :param Lambda_1: submodel covariance matrices (list of D_X × D_X)
+    :param a_tau: submodel noise precision parameters
+    :param b_tau: submodel noise precision parameters
 
     :returns: mixing weight matrix (D_V × K), mixing weight covariance matrix (K
         D_V × K D_V), mixing weight vector prior parameters a_beta/b_beta
@@ -299,7 +303,7 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     """
     [PDF p. 239]
 
-    Is zero wherever a classifier does not match.
+    Is zero wherever a rule does not match.
 
     :param M: matching matrix (N × K)
     :param Phi: mixing feature matrix (N × D_V)
@@ -339,10 +343,10 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
     :param X: input matrix (N × D_X)
     :param Y: output matrix (N × D_Y)
     :param G: mixing (“gating”) matrix (N × K)
-    :param W: classifier weight matrices (list of D_Y × D_X)
-    :param Lambda_1: classifier covariance matrices (list of D_X × D_X)
-    :param a_tau: classifier noise precision parameters
-    :param b_tau: classifier noise precision parameters
+    :param W: submodel weight matrices (list of D_Y × D_X)
+    :param Lambda_1: submodel covariance matrices (list of D_X × D_X)
+    :param a_tau: submodel noise precision parameters
+    :param b_tau: submodel noise precision parameters
 
     :returns: responsibility matrix (N × K)
     """
@@ -378,10 +382,10 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     :param X: input matrix (N × D_X)
     :param Y: output matrix (N × D_Y)
     :param Phi: mixing feature matrix (N × D_V)
-    :param W: classifier weight matrices (list of D_Y × D_X)
-    :param Lambda_1: classifier covariance matrices (list of D_X × D_X)
-    :param a_tau: classifier noise precision parameters
-    :param b_tau: classifier noise precision parameters
+    :param W: submodel weight matrices (list of D_Y × D_X)
+    :param Lambda_1: submodel covariance matrices (list of D_X × D_X)
+    :param a_tau: submodel noise precision parameters
+    :param b_tau: submodel noise precision parameters
     :param V: mixing weight matrix (D_V × K)
     :param a_beta: mixing weight prior parameter (row vector of length K)
     :param b_beta: mixing weight prior parameter (row vector of length K)
@@ -566,10 +570,10 @@ def var_bound(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     :param X: input matrix (N × D_X)
     :param Y: output matrix (N × D_Y)
     :param Phi: mixing feature matrix (N × D_V)
-    :param W: classifier weight matrices (list of D_Y × D_X)
-    :param Lambda_1: classifier covariance matrices (list of D_X × D_X)
-    :param a_tau: classifier noise precision parameters
-    :param b_tau: classifier noise precision parameters
+    :param W: submodel weight matrices (list of D_Y × D_X)
+    :param Lambda_1: submodel covariance matrices (list of D_X × D_X)
+    :param a_tau: submodel noise precision parameters
+    :param b_tau: submodel noise precision parameters
     :param a_alpha: weight vector prior parameters
     :param b_alpha: weight vector prior parameters
     :param V: mixing weight matrix (D_V × K)
@@ -615,16 +619,16 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
 
     :param X: input matrix (N × D_X)
     :param Y: output matrix (N × D_Y)
-    :param W_k: classifier weight matrix (D_Y × D_X)
-    :param Lambda_k_1: classifier covariance matrix (D_X × D_X)
-    :param a_tau_k: classifier noise precision parameter
-    :param b_tau_k: classifier noise precision parameter
+    :param W_k: submodel weight matrix (D_Y × D_X)
+    :param Lambda_k_1: submodel covariance matrix (D_X × D_X)
+    :param a_tau_k: submodel noise precision parameter
+    :param b_tau_k: submodel noise precision parameter
     :param a_alpha_k: weight vector prior parameter
     :param b_alpha_k: weight vector prior parameter
     :param r_k: responsibility vector (NumPy row or column vector, we reshape to
         (-1) anyways)
 
-    :returns: classifier component L_k(q) of variational bound
+    :returns: rule component L_k(q) of variational bound
     """
     D_Y, D_X = W_k.shape
     E_tau_tau_k = a_tau_k / b_tau_k

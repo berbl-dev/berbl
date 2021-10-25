@@ -9,7 +9,7 @@ from .utils import matching_matrix
 
 class Mixing:
     def __init__(self,
-                 classifiers,
+                 rules,
                  phi,
                  A_BETA=10**-2,
                  B_BETA=10**-4,
@@ -20,8 +20,8 @@ class Mixing:
                  random_state=None,
                  **kwargs):
         """
-        :param classifiers: List of classifier models (which are held fixed
-            during mixing training).
+        :param rules: List of rules (which are held fixed during mixing
+            training).
         :param phi: Mixing feature function (X → V), if `None` use the LCS
             default of `phi(x) = 1`.
         :param A_BETA: Scale parameter of mixing weight vector variance prior.
@@ -37,12 +37,11 @@ class Mixing:
             default dtype.
         :param **kwargs: This is here so that we don't need to repeat all the
             hyperparameters in ``Mixture``, ``RandomSearch`` etc. ``Mixture``
-            simply passes through ``**kwargs`` to both ``Mixing`` and
-            ``Classifier``.
+            simply passes through ``**kwargs`` to both ``Mixing`` and ``Rule``.
         """
 
-        # The set of classifiers is constant here.
-        self.CLS = classifiers
+        # The set of rules is constant here.
+        self.CLS = rules
         # … as is phi.
         self.PHI = phi
         self.A_BETA = A_BETA
@@ -154,8 +153,7 @@ class Mixing:
         Returns
         -------
         array of shape (N, K)
-            Mixing matrix containing the classifiers' mixing weights for each
-            input.
+            Mixing matrix containing the rules' mixing weights for each input.
         """
         check_is_fitted(self)
 
@@ -165,7 +163,7 @@ class Mixing:
             raise NotImplementedError("phi is not None in Mixing")
 
         # TODO When predicting (which uses this mixing method), I currently
-        # calculate M twice, once when matching for each classifier and once in
+        # calculate M twice, once when matching for each rule and once in
         # mixing (see same comment in Mixture).
         M = matching_matrix([cl.match for cl in self.CLS], X)
 
@@ -244,7 +242,7 @@ class Mixing:
         """
         [PDF p. 239]
 
-        Is zero wherever a classifier does not match.
+        Is zero wherever a rule does not match.
 
         :param M: matching matrix (N × K)
         :param Phi: mixing feature matrix (N × D_V)
@@ -280,10 +278,10 @@ class Mixing:
         :param X: input matrix (N × D_X)
         :param y: output matrix (N × D_y)
         :param G: mixing (“gating”) matrix (N × K)
-        :param W: classifier weight matrices (list of D_y × D_X)
-        :param Lambda_1: classifier covariance matrices (list of D_X × D_X)
-        :param a_tau: classifier noise precision parameters
-        :param b_tau: classifier noise precision parameters
+        :param W: submodel weight matrices (list of D_y × D_X)
+        :param Lambda_1: submodel covariance matrices (list of D_X × D_X)
+        :param a_tau: submodel noise precision parameters
+        :param b_tau: submodel noise precision parameters
 
         :returns: responsibility matrix (N × K)
         """

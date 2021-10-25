@@ -31,7 +31,7 @@ class BERBL(BaseEstimator, RegressorMixin):
         Note: Input is assumed to be standardized.
         """
         # TODO Consider to perform input checking only here (and not in
-        # classifier/mixing etc. as well)
+        # rule/mixing etc. as well)
 
         # See SLEP010.
         X, y = self._validate_data(X, y, multi_output=True)
