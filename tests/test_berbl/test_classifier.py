@@ -165,4 +165,6 @@ def test_fit_non_linear(data):
                 f"linear regression oracle score ({score_oracle})")
 
 
+# TODO Test classifier variance: Vectorized form (berbl) vs. point form
+
 # TODO Add tests for all the other hyperparameters of Classifier.

@@ -4,8 +4,10 @@ from sklearn.utils.validation import check_is_fitted # type: ignore
 
 
 class Classifier():
-    # NOTE We drop the k subscript for brevity (i.e. we write W instead of
-    # W_k etc.).
+    """
+    A local linear regression model (in LCS speak, a “linear regression
+    classifier”) based on the provided match function.
+    """
     def __init__(self,
                  match,
                  A_ALPHA=10**-2,
@@ -16,27 +18,36 @@ class Classifier():
                  MAX_ITER=20,
                  **kwargs):
         """
-        A local linear regression model (in LCS speak, a “linear regression
-        classifier”) based on the provided match function.
-
-        :param match: ``match.match`` is this classifier's match function.
-            According to Drugowitsch's framework (or mixture of experts), each
-            classifier should get assigned a responsibility for each data point.
-            However, in order to be able to train the classifiers independently,
-            that responsibility (which depends on the matching function but
-            also on the other classifiers' responsibilities) is replaced with
-            the matching function.
-        :param A_ALPHA: Scale parameter of weight vector variance prior.
-        :param B_ALPHA: Shape parameter of weight vector variance prior.
-        :param A_TAU: Scale parameter of noise variance prior.
-        :param B_TAU: Shape parameter of noise variance prior.
-        :param DELTA_S_L_K_Q: Stopping criterion for variational update loop.
-        :param MAX_ITER: Only perform up to this many iterations of variational
+        Parameters
+        ----------
+        match : object
+            ``match.match`` is this classifier's match function. According to
+            Drugowitsch's framework (or mixture of experts), each classifier
+            should get assigned a responsibility for each data point. However,
+            in order to be able to train the classifiers independently, that
+            responsibility (which depends on the matching function but also on
+            the other classifiers' responsibilities) is replaced with the
+            matching function.
+        A_ALPHA : float
+            Scale parameter of weight vector variance prior.
+        B_ALPHA : float
+            Shape parameter of weight vector variance prior.
+        A_TAU : float
+            Scale parameter of noise variance prior.
+        B_TAU : float
+            Shape parameter of noise variance prior.
+        DELTA_S_L_K_Q : float
+            Stopping criterion for variational update loop.
+        MAX_ITER : int
+            Only perform up to this many iterations of variational
             updates (abort then, even if stopping criterion is not yet met).
-        :param **kwargs: This is here so that we don't need to repeat all the
-            hyperparameters in ``Mixture``, ``RandomSearch`` etc. ``Mixture``
-            simply passes through ``**kwargs`` to both ``Mixing`` and
-            ``Classifier``.
+        **kwargs : kwargs
+            This is here so that we don't need to repeat all the hyperparameters
+            in ``Mixture`` etc. ``Mixture`` simply passes through all
+            ``**kwargs`` to both ``Mixing`` and ``Classifier``. This means that
+            during implementation, we need to be aware that if there are
+            parameters in those two classes with the same name, they always
+            receive the same value.
         """
         self.match = match
         self.A_ALPHA = A_ALPHA
@@ -48,7 +59,7 @@ class Classifier():
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         """
-        Fits this classifier to the provided data.
+        Fits this classifier to the part of the provided data that it matches.
         """
 
         self.m_ = self.match.match(X)
@@ -70,7 +81,6 @@ class Classifier():
         iter = 0
         while delta_L_q > self.DELTA_S_L_K_Q and iter < self.MAX_ITER:
             iter += 1
-            # print(f"train_classifier: {delta_L_k_q} > {DELTA_S_L_K_Q}")
             E_alpha_alpha = self.a_alpha_ / self.b_alpha_
             self.Lambda_ = np.diag([E_alpha_alpha] * self.D_X_) + X_.T @ X_
             # While, in theory, Lambda is always invertible here and we thus
@@ -92,8 +102,9 @@ class Classifier():
                 X=X,
                 y=y,
                 # Substitute r by m in order to train classifiers independently
-                # (see [PDF p. 219]). After having trained the mixing model
-                # we finally evaluate the classifier using r=R[:,[k]] though.
+                # (see [PDF p. 219]). Note, however, that after having trained
+                # the mixing model we finally evaluate the classifier using
+                # ``r=R[:,[k]]`` though.
                 r=self.m_)
             delta_L_q = self.L_q_ - L_q_prev
 
@@ -103,9 +114,13 @@ class Classifier():
         """
         This model's mean at the given positions; may serve as a prediction.
 
-        :param X: input vector (N × D_X)
+        Parameters
+        ----------
+        X : array of shape (N, D_X)
 
-        :returns: mean output vector (N × D_y)
+        Returns
+        -------
+        mean : array of shape (N, D_y)
         """
         check_is_fitted(self)
 
@@ -114,24 +129,41 @@ class Classifier():
     def predict_var(self, X):
         """
         This model's variance at the given positions; may serve as some kind of
-        confidence for the prediction.
+        confidence estimate for the prediction.
 
         The model currently assumes the same variance in all dimensions; thus
         the same value is repeated for each dimension.
 
-        :param X: input vector (N × D_X)
+        Parameters
+        ----------
+        X : array of shape (N, D_X)
 
-        :returns: variance vector (N × D_y)
+        Returns
+        -------
+        variance : array of shape (N, D_y)
         """
         check_is_fitted(self)
 
-        # TODO Check whether this is correct
+        # TODO Check whether this vectorized form and reshaping is correct
         # The sum corresponds to x @ self.Lambda_1 @ x for each x in X.
         var = 2 * self.b_tau_ / (self.a_tau_
                                  - 1) * (1 + np.sum(X * X @ self.Lambda_1_, 1))
         return var.reshape((len(X), self.D_y_)).repeat(self.D_y_, axis=1)
 
     def var_bound(self, X: np.ndarray, y: np.ndarray, r: np.ndarray):
+        """
+        The components of the variational bound specific to this rule.
+
+        See VarClBound [PDF p. 247].
+
+        Parameters
+        ----------
+        X : array of shape (N, D_X)
+        y : array of shape (N, D_y)
+        r : array of shape (N, 1)
+            Responsibilities (during training replaced with matching array of
+            this rule in order to enable independent submodel training).
+        """
         E_tau_tau = self.a_tau_ / self.b_tau_
         L_1_q = self.D_y_ / 2 * (ss.digamma(self.a_tau_) - np.log(self.b_tau_)
                                  - np.log(2 * np.pi)) * np.sum(r)
