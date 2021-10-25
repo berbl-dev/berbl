@@ -5,6 +5,7 @@ from berbl.search.operators.drugowitsch import DefaultToolbox
 from sklearn.metrics import mean_absolute_error  # type: ignore
 from sklearn.pipeline import make_pipeline  # type: ignore
 from sklearn.preprocessing import StandardScaler  # type: ignore
+from sklearn.compose import TransformedTargetRegressor  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
 X = np.arange(300).reshape((-1, 1))
@@ -23,7 +24,10 @@ def custom_mutate(genotype, random_state):
 
 toolbox.register("mutate", custom_mutate)
 
-pipe = make_pipeline(StandardScaler(), BERBL(toolbox=toolbox, n_iter=20))
+pipe = make_pipeline(
+    StandardScaler(),
+    TransformedTargetRegressor(regressor=BERBL(toolbox=toolbox, n_iter=20),
+                               transformer=StandardScaler()))
 estimator = pipe.fit(X, y)
 y_pred = estimator.predict(X)
 print("MAE on training data: ", mean_absolute_error(y, y_pred))

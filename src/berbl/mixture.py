@@ -71,6 +71,7 @@ class Mixture():
 
         self.K_ = len(self.matchs)
         _, self.D_X_ = X.shape
+        y = y.reshape((len(X), -1))
         _, self.Dy_ = y.shape
 
         # Train classifiers.
