@@ -1,5 +1,5 @@
-{ lib, buildPythonPackage, deap, mlflow, numpy, pandas, scipy, scikitlearn
-, hypothesis, pytest }:
+{ lib, buildPythonPackage, deap, mlflow, numpy, numpydoc, pandas, scipy
+, scikitlearn, hypothesis, pytest, sphinx }:
 
 buildPythonPackage rec {
   pname = "berbl";
@@ -7,7 +7,8 @@ buildPythonPackage rec {
 
   src = ./.;
 
-  propagatedBuildInputs = [ deap mlflow numpy pandas scipy scikitlearn ];
+  propagatedBuildInputs =
+    [ deap mlflow numpy numpydoc pandas scipy scikitlearn sphinx ];
 
   testInputs = [ hypothesis pytest ];
 

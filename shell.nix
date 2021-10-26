@@ -50,37 +50,42 @@ let
               ]);
             meta.broken = false;
           });
-          berbl = with pkgs; with python-super; import ./default.nix {
-            inherit lib deap numpy scipy scikitlearn hypothesis pytest;
-            pandas = python-self.pandas;
-            mlflow = python-self.mlflowPatched;
-            buildPythonPackage = buildPythonPackage;
-          };
+          berbl = with pkgs;
+            with python-super;
+            import ./default.nix {
+              inherit lib deap numpy numpydoc scipy scikitlearn sphinx
+                hypothesis pytest;
+              pandas = python-self.pandas;
+              mlflow = python-self.mlflowPatched;
+              buildPythonPackage = buildPythonPackage;
+            };
         };
       };
     };
   };
 in pkgs.mkShell rec {
   name = "pure";
-  packages = with pkgs; [
-    (python3.withPackages (ps: with ps; [
-      berbl
-      deap
-      mlflowPatched
-      numpy
-      pandas
-      scipy
-      scikitlearn
+  packages = with pkgs;
+    [
+      (python3.withPackages (ps:
+        with ps; [
+          berbl
+          deap
+          mlflowPatched
+          numpy
+          pandas
+          scipy
+          scikitlearn
 
-      # develop dependencies
-      ipython
+          # develop dependencies
+          ipython
 
-      # test dependencies
-      hypothesis
-      pytest
-      tox
-    ]))
-  ];
+          # test dependencies
+          hypothesis
+          pytest
+          tox
+        ]))
+    ];
   shellHook = ''
     export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH
   '';
