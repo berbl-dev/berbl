@@ -33,7 +33,7 @@ class MixingLaplace(Mixing):
         else:
             raise NotImplementedError("phi is not None in Mixing")
 
-        M = np.hstack([cl.m_ for cl in self.CLS])
+        M = np.hstack([rule.m_ for rule in self.RULES])
 
         _, self.D_X_ = X.shape
         _, self.D_y_ = y.shape

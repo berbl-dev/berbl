@@ -8,6 +8,9 @@ from .utils import matching_matrix
 
 
 class Mixing:
+    """
+    Model for the mixing weights of a set of linear regression rules.
+    """
     def __init__(self,
                  rules,
                  phi,
@@ -20,28 +23,41 @@ class Mixing:
                  random_state=None,
                  **kwargs):
         """
-        :param rules: List of rules (which are held fixed during mixing
-            training).
-        :param phi: Mixing feature function (X → V), if `None` use the LCS
-            default of `phi(x) = 1`.
-        :param A_BETA: Scale parameter of mixing weight vector variance prior.
-        :param B_BETA: Shape parameter of mixing weight vector variance prior.
-        :param DELTA_S_L_M_Q: Stopping criterion for variational update loop.
-        :param MAX_ITER: Only perform up to this many iterations of variational
-            updates (abort then, even if stopping criterion is not yet met).
-        :param EXP_MIN: Lowest real number ``x`` on system such that ``exp(x) >
-            0``. The default is the logarithm of the smallest positive number of
-            the default dtype (as of 2020-10-06, this dtype is float64).
-        :param LN_MAX: ``ln(x)``, where ``x`` is the highest real number on the
-            system. The default is the logarithm of the highest number of the
-            default dtype.
-        :param **kwargs: This is here so that we don't need to repeat all the
-            hyperparameters in ``Mixture``, ``RandomSearch`` etc. ``Mixture``
-            simply passes through ``**kwargs`` to both ``Mixing`` and ``Rule``.
+        Parameters
+        ----------
+        rules : list of rule object
+            List of rules (which are held fixed during mixing training).
+        phi : callable
+            Mixing feature function taking input matrices of shape (N, D_X) and
+            returning mixing feature matrices of shape (n, V). If ``None`` use
+            the LCS default of ``phi(x) = 1``.
+        A_BETA : float
+            Scale parameter of mixing weight vector variance prior.
+        B_BETA : float
+            Shape parameter of mixing weight vector variance prior.
+        DELTA_S_L_M_Q : float
+            Stopping criterion for variational update loop.
+        MAX_ITER : int
+            Only perform up to this many iterations of variational updates
+            (abort then, even if stopping criterion is not yet met).
+        EXP_MIN : float
+            Lowest real number ``x`` on system such that ``exp(x) > 0``. The
+            default is the logarithm of the smallest positive number of the
+            default dtype (as of 2020-10-06, this dtype is float64).
+        LN_MAX : float
+            ``ln(x)``, where ``x`` is the highest real number on the system. The
+            default is the logarithm of the highest number of the default dtype
+            (as of 2020-10-06, this dtype is float64).
+        **kwargs : kwargs
+            This is here so that we don't need to repeat all the hyperparameters
+            in ``Mixture`` etc. ``Mixture`` simply passes through all
+            ``**kwargs`` to both ``Mixing`` and ``Rule``. This means that during
+            implementation, we need to be aware that if there are parameters in
+            those two classes with the same name, they always receive the same
+            value.
         """
-
         # The set of rules is constant here.
-        self.CLS = rules
+        self.RULES = rules
         # … as is phi.
         self.PHI = phi
         self.A_BETA = A_BETA
@@ -51,10 +67,13 @@ class Mixing:
         self.EXP_MIN = EXP_MIN
         self.LN_MAX = LN_MAX
         self.random_state = random_state
-        self.K = len(self.CLS)
+        self.K = len(self.RULES)
 
     def fit(self, X, y):
-
+        """
+        Fits mixing weights for this mixing weight model's set of rules to the
+        provided data.
+        """
         random_state = check_random_state(self.random_state)
 
         if self.PHI is None:
@@ -62,7 +81,7 @@ class Mixing:
         else:
             raise NotImplementedError("phi is not None in Mixing")
 
-        M = np.hstack([cl.m_ for cl in self.CLS])
+        M = np.hstack([cl.m_ for cl in self.RULES])
 
         _, self.D_X_ = X.shape
         _, self.D_y_ = y.shape
@@ -80,7 +99,7 @@ class Mixing:
                                           scale=self.A_BETA / self.B_BETA,
                                           size=(N, 1))
         # lxi stands for λ(ξ) which is used in Bouchard's approximation. Its
-        # supremum value is one eighth.
+        # supremum value is one over eight.
         self.lxi_ = random_state.random(size=(N, self.K)) * 0.125
         self.alpha_, self.lxi_ = self._opt_bouchard(M=M,
                                                     Phi=Phi,
@@ -109,7 +128,6 @@ class Mixing:
                 lxi=self.lxi_,
                 alpha=self.alpha_)
 
-            # TODO How much faster would in-place ugliness be?
             self.alpha_, self.lxi_ = self._opt_bouchard(M=M,
                                                         Phi=Phi,
                                                         V=self.V_,
@@ -129,12 +147,13 @@ class Mixing:
                                           Lambda_V_1=self.Lambda_V_1_,
                                           a_beta=self.a_beta_,
                                           b_beta=self.b_beta_)
-            # LCSBookCode states: “as we are using an approximation, the variational
-            # bound might decrease, so we're not checking and need to take the
-            # abs()”. I guess with approximation he means the use of the Laplace
-            # approximation (which may violate the lower bound nature of L_M_q).
+            # LCSBookCode states: “as we are using an approximation, the
+            # variational bound might decrease, so we're not checking and need
+            # to take the abs()”. I guess with approximation he means the use of
+            # the Laplace approximation (which may violate the lower bound
+            # nature of L_M_q).
             delta_L_M_q = np.abs(self.L_M_q_ - L_M_q_prev)
-            # TODO Check whether the abs is necessary for Bouchard.
+            # TODO Check whether the abs is necessary for the Bouchard bound.
             # if self.L_M_q < L_M_q_prev:
             #     print(f"self.L_M_q < L_M_q_prev: {self.L_M_q} < {L_M_q_prev}")
             assert np.all(~ np.isnan(self.lxi_))
@@ -164,8 +183,9 @@ class Mixing:
 
         # TODO When predicting (which uses this mixing method), I currently
         # calculate M twice, once when matching for each rule and once in
-        # mixing (see same comment in Mixture).
-        M = matching_matrix([cl.match for cl in self.CLS], X)
+        # mixing (see same comment in Mixture). Add as an optional parameter to
+        # Mixing.predict/fit etc.
+        M = matching_matrix([cl.match for cl in self.RULES], X)
 
         return self._mixing(M, Phi, self.V_)
 
@@ -174,18 +194,33 @@ class Mixing:
         """
         Training routine for mixing weights based on Bouchard's upper bound.
 
-        :param M: matching matrix (N × K)
-        :param X: input matrix (N × D_X)
-        :param y: output matrix (N × D_y)
-        :param Phi: mixing feature matrix (N × D_V)
-        :param R: responsibility matrix (N × K)
-        :param V: mixing weight matrix (D_V × K)
-        :param a_beta: mixing weight prior parameter (row vector of length K)
-        :param b_beta: mixing weight prior parameter (row vector of length K)
-        :param lxi, alpha: Parameters of Bouchard's bound
+        Parameters
+        ----------
+        M : array of shape (N, K)
+            Matching matrix.
+        X : array of shape (N, D_X)
+            Input matrix.
+        y : array of shape (N, D_y)
+            Output matrix.
+        Phi : array of shape (N, D_V)
+            Mixing feature matrix.
+        R : array of shape (N, K)
+            Responsibility matrix.
+        V : array of shape (D_V, K)
+            Mixing weight matrix.
+        a_beta : array of shape (K,)
+            Mixing weight prior parameter (row vector).
+        b_beta : array of shape (K,)
+            Mixing weight prior parameter (row vector).
+        lxi : array of shape (N, K)
+            Parameter of Bouchard's bound.
+        alpha : array of shape (N, 1)
+            Parameter of Bouchard's bound.
 
-        :returns: mixing weight matrix (D_V × K), mixing weight covariance
-            matrix (K D_V × K D_V)
+        Returns
+        -------
+        V, Lambda_V_1 : tuple of arrays of shapes (D_V, K) and (K * D_V, K * D_V)
+            Updated mixing weight matrix and mixing weight covariance matrix.
         """
         N, _ = X.shape
         D_V, _ = V.shape
@@ -205,15 +240,32 @@ class Mixing:
             V[:, [k]] = np.linalg.pinv(Lambda_V_1[k]) @ Phi.T @ t
 
         # NOTE Doing this in-place instead of returning values doesn't seem to
-        # result in a significant speedup.
+        # result in a significant speedup. We thus opted for the more
+        # descriptive alternative.
         return V, Lambda_V_1
 
     def _opt_bouchard(self, M: np.ndarray, Phi: np.ndarray, V, alpha, lxi):
         """
-        Updates the parameters of Bouchard's lower bound to their optimal
-        values.
+        Update for the parameters of Bouchard's lower bound.
 
-        :returns: updates variational parameters λ(ξ), α in-place
+        Parameters
+        ----------
+        M : array of shape (N, K)
+            Matching matrix.
+        Phi : array of shape (N, D_V)
+            Mixing feature matrix.
+        V : array of shape (D_V, K)
+            Mixing weight matrix.
+        alpha : array of shape (N, 1)
+            Current value of ``alpha`` variational parameters of Bouchard's
+            bound.
+        lxi : array of shape (N, K)
+            Current value of ``lxi`` variational parameters of Bouchard's bound.
+
+        Returns
+        -------
+        lxi, alpha : tuple of arrays of shapes (N, 1) and (N, K)
+            New values for the variational parameters ``alpha`` and ``lxi``.
         """
         N, _ = Phi.shape
 
@@ -236,6 +288,9 @@ class Mixing:
         # the limit for `x -> 0` of `lambda(x)` which is `0.125`.
         lxi[np.where(np.logical_and(xi == 0, np.isnan(lxi)))] = 0.125
 
+        # NOTE Doing this in-place instead of returning values doesn't seem to
+        # result in a significant speedup. We thus opted for the more
+        # descriptive alternative.
         return alpha, lxi
 
     def _mixing(self, M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
@@ -244,11 +299,19 @@ class Mixing:
 
         Is zero wherever a rule does not match.
 
-        :param M: matching matrix (N × K)
-        :param Phi: mixing feature matrix (N × D_V)
-        :param V: mixing weight matrix (D_V × K)
+        Parameters
+        ----------
+        M : array of shape (N, K)
+            Matching matrix.
+        Phi : array of shape (N, D_V)
+            Mixing feature matrix.
+        V : array of shape (D_V, K)
+            Mixing weight matrix.
 
-        :returns: mixing matrix (N × K)
+        Returns
+        -------
+        G : array of shape (N, K)
+            Mixing (“gating”) matrix.
         """
         # If Phi is standard, this simply broadcasts V to a matrix [V, V, V, …]
         # of shape (N, D_V).
@@ -275,15 +338,19 @@ class Mixing:
         """
         [PDF p. 240]
 
-        :param X: input matrix (N × D_X)
-        :param y: output matrix (N × D_y)
-        :param G: mixing (“gating”) matrix (N × K)
-        :param W: submodel weight matrices (list of D_y × D_X)
-        :param Lambda_1: submodel covariance matrices (list of D_X × D_X)
-        :param a_tau: submodel noise precision parameters
-        :param b_tau: submodel noise precision parameters
+        Parameters
+        ----------
+        X : array of shape (N, D_X)
+            Input matrix.
+        y : array of shape (N, D_y)
+            Output matrix.
+        G : array of shape (N, K)
+            Mixing (“gating”) matrix.
 
-        :returns: responsibility matrix (N × K)
+        Returns
+        -------
+        R : array of shape (N, K)
+            Responsibility matrix.
         """
         N, D_y = y.shape
 
@@ -291,7 +358,7 @@ class Mixing:
         # transpose before multiplying elementwise with G.
         R_T = np.zeros((self.K, N))
         for k in range(self.K):
-            cl = self.CLS[k]
+            cl = self.RULES[k]
             R_T[k] = np.exp(
                 D_y / 2 * (ss.digamma(cl.a_tau_) - np.log(cl.b_tau_)) - 0.5
                 * (cl.a_tau_ / cl.b_tau_ * np.sum((y - X @ cl.W_.T)**2, 1)
@@ -304,7 +371,7 @@ class Mixing:
         with np.errstate(invalid="ignore"):
             R = R / np.sum(R, 1)[:, np.newaxis]
         # This is safer than Drugowitsch's plain `R = np.nan_to_num(R, nan=0)`
-        # (i.e. we checks whether the nan really came from the cause described
+        # (i.e. we check whether the nan really came from the cause described
         # above at the cost of an additional run over R to check for zeroes).
         R[np.where(np.logical_and(R_ == 0, np.isnan(R)))] = 0
         return R
@@ -313,10 +380,20 @@ class Mixing:
         """
         [PDF p. 244]
 
-        :param V: mixing weight matrix (D_V × K)
-        :param Lambda_V_1: list of K mixing covariance matrices (D_V × D_V)
+        TrainMixPriors but only the part concerned with ``b_beta`` since
+        ``a_beta`` is constant.
 
-        :returns: mixing weight vector prior parameter b_beta
+        Parameters
+        ----------
+        V : array of shape (D_V, K)
+            Mixing weight matrix.
+        Lambda_V_1 : list of arrays of shape (D_V, D_V)
+            List of mixing weight covariance matrices.
+
+        Returns
+        -------
+        b_beta : array of shape (K,)
+            mixing weight vector prior parameter
         """
         D_V, _ = V.shape
         b_beta = np.zeros(self.K)
@@ -342,14 +419,25 @@ class Mixing:
         """
         [PDF p. 245]
 
-        :param G: mixing matrix (N × K)
-        :param R: responsibilities matrix (N × K)
-        :param V: mixing weight matrix (D_V × K)
-        :param Lambda_V_1: list of K mixing covariance matrices (D_V × D_V)
-        :param a_beta: mixing weight prior parameter (row vector of length K)
-        :param b_beta: mixing weight prior parameter (row vector of length K)
+        Parameters
+        ----------
+        G : array of shape (N, K)
+            Mixing (“gating”) matrix.
+        R : array of shape (N, K)
+            Responsibility matrix.
+        V : array of shape (D_V, K)
+            Mixing weight matrix.
+        Lambda_V_1 : list of arrays of shape (D_V, D_V)
+            List of mixing weight covariance matrices.
+        a_beta : array of shape (K,)
+            Mixing weight prior parameter (row vector).
+        b_beta : array of shape (K,)
+            Mixing weight prior parameter (row vector).
 
-        :returns: mixing component L_M(q) of variational bound
+        Returns
+        -------
+        L_M_q : float
+            Mixing component L_M(q) of variational bound.
         """
         D_V, _ = V.shape
         L_M1q = self.K * (-ss.gammaln(self.A_BETA)

@@ -11,6 +11,7 @@ avoid the overloaded term “classifier” within this module since it is someti
 used by the original algorithms.
 
 The only deviations from the book are:
+
 * ``model_probability`` returns L(q) - ln K! instead of L(q) + ln K! as the
   latter is presumably a typographical error in the book (the corresponding
   formula in Section 7 uses ``-`` as well, which seems to be correct).
@@ -362,11 +363,16 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
                         * (a_tau[k] / b_tau[k] * np.sum((Y - X @ W[k].T)**2, 1)
                            + D_Y * np.sum(X * (X @ Lambda_1[k]), 1)))
     R = R_T.T * G
+    # Make a copy of the reference for checking for nans a few lines later.
+    R_ = R
     # The sum can be 0 meaning we do 0/0 (== NaN in Python) but we ignore it
     # because it is fixed one line later (this is how Drugowitsch does it).
     with np.errstate(invalid="ignore"):
         R = R / np.sum(R, 1)[:, np.newaxis]
-    R = np.nan_to_num(R, nan=0)
+    # This is safer than Drugowitsch's plain `R = np.nan_to_num(R, nan=0)`
+    # (i.e. we check whether the nan really came from the cause described above
+    # at the cost of an additional run over R to check for zeroes).
+    R[np.where(np.logical_and(R_ == 0, np.isnan(R)))] = 0
     return R
 
 
