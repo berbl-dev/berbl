@@ -114,8 +114,6 @@ class MixingLaplace(Mixing):
         KLRG = np.inf
         delta_KLRG = self.DELTA_S_KLRG + 1
         i = 0
-        KLRGs = np.repeat(-np.inf, 10)
-        j = 0
         while delta_KLRG > self.DELTA_S_KLRG and i < self.MAX_ITER:
             i += 1
             # Actually, this should probably be named nabla_E.
@@ -163,15 +161,6 @@ class MixingLaplace(Mixing):
                 KLRG = 0
             assert KLRG <= 0, (f"Kullback-Leibler divergence less than zero:"
             f" {KLRG}\n{G}\n{R}")
-
-            if KLRG in KLRGs and KLRG != KLRG_prev:
-                # We only log and break when we're at the best KLRG value of the
-                # current oscillation.
-                if (KLRG <= KLRGs).all():
-                    break
-
-            KLRGs[j] = KLRG
-            j = (j + 1) % 10
 
             delta_KLRG = np.abs(KLRG_prev - KLRG)
 
