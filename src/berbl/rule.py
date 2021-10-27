@@ -159,7 +159,9 @@ class Rule():
         Parameters
         ----------
         X : array of shape (N, D_X)
+            Input matrix.
         y : array of shape (N, D_y)
+            Output matrix.
         r : array of shape (N, 1)
             Responsibilities (during training replaced with matching array of
             this rule in order to enable independent submodel training).

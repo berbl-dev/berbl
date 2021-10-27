@@ -382,22 +382,42 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                       b_tau: np.ndarray, V: np.ndarray, a_beta: np.ndarray,
                       b_beta: np.ndarray):
     """
-    [PDF p. 241]
+    Training routine for mixing weights based on a Laplace approximation
+    (see Drugowitsch's book [PDF p. 241]).
 
-    :param M: matching matrix (N × K)
-    :param X: input matrix (N × D_X)
-    :param Y: output matrix (N × D_Y)
-    :param Phi: mixing feature matrix (N × D_V)
-    :param W: submodel weight matrices (list of D_Y × D_X)
-    :param Lambda_1: submodel covariance matrices (list of D_X × D_X)
-    :param a_tau: submodel noise precision parameters
-    :param b_tau: submodel noise precision parameters
-    :param V: mixing weight matrix (D_V × K)
-    :param a_beta: mixing weight prior parameter (row vector of length K)
-    :param b_beta: mixing weight prior parameter (row vector of length K)
+    Parameters
+    ----------
+    M : array of shape (N, K)
+        Matching matrix.
+    X : array of shape (N, D_X)
+        Input matrix.
+    y : array of shape (N, D_y)
+        Output matrix.
+    Phi : array of shape (N, D_V)
+        Mixing feature matrix.
+    W : list (length K) of arrays of shape (D_Y, D_X)
+        Submodel weight matrices.
+    Lambda_1 : list (length K) of arrays of shape (D_X, D_X)
+        Submodel covariance matrices.
+    a_tau : array of shape (K,)
+        Submodel noise precision parameter.
+    b_tau : array of shape (K,)
+        Submodel noise precision parameter.
+    V : array of shape (D_V, K)
+        Mixing weight matrix.
+    a_beta : array of shape (K,)
+        Mixing weight prior parameter (row vector).
+    b_beta : array of shape (K,)
+        Mixing weight prior parameter (row vector).
+    lxi : array of shape (N, K)
+        Parameter of Bouchard's bound.
+    alpha : array of shape (N, 1)
+        Parameter of Bouchard's bound.
 
-    :returns: mixing weight matrix (D_V × K), mixing weight covariance matrix (K
-        D_V × K D_V)
+    Returns
+    -------
+    V, Lambda_V_1 : tuple of arrays of shapes (D_V, K) and (K * D_V, K * D_V)
+        Updated mixing weight matrix and mixing weight covariance matrix.
     """
     D_V, K = V.shape
 
@@ -494,12 +514,21 @@ def hessian(Phi: np.ndarray, G: np.ndarray, a_beta: np.ndarray,
     """
     [PDF p. 243]
 
-    :param Phi: mixing feature matrix (N × D_V)
-    :param G: mixing matrix (N × K)
-    :param a_beta: mixing weight prior parameter (row vector of length K)
-    :param b_beta: mixing weight prior parameter (row vector of length K)
+    Parameters
+    ----------
+    Phi : array of shape (N, D_V)
+        Mixing feature matrix.
+    G : array of shape (N, K)
+        Mixing (“gating”) matrix.
+    a_beta : array of shape (K,)
+        Mixing weight prior parameter (row vector).
+    b_beta : array of shape (K,)
+        Mixing weight prior parameter (row vector).
 
-    :returns: Hessian matrix (K D_V × K D_V)
+    Returns
+    -------
+    array of shape (K * D_V, K * D_V)
+        Hessian matrix.
     """
     N, D_V = Phi.shape
     K, = a_beta.shape
@@ -662,14 +691,24 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     """
     [PDF p. 245]
 
-    :param G: mixing matrix (N × K)
-    :param R: responsibilities matrix (N × K)
-    :param V: mixing weight matrix (D_V × K)
-    :param Lambda_V_1: mixing covariance matrix (K D_V × K D_V)
-    :param a_beta: mixing weight prior parameter (row vector of length K)
-    :param b_beta: mixing weight prior parameter (row vector of length K)
+    Parameters
+    ----------
+    G : array of shape (N, K)
+        Mixing (“gating”) matrix.
+    R : array of shape (N, K)
+        Responsibility matrix.
+    V : array of shape (D_V, K)
+        Mixing weight matrix.
+    Lambda_V_1 : array of shape (K * D_V, K * D_V)
+        Mixing weight covariance matrix.
+    a_beta : array of shape (K,)
+        Mixing weight prior parameter (row vector).
+    b_beta : array of shape (K,)
 
-    :returns: mixing component L_M(q) of variational bound
+    Returns
+    -------
+    L_M_q : float
+        Mixing component L_M(q) of variational bound.
     """
     D_V, K = V.shape
 

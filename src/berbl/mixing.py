@@ -220,8 +220,8 @@ class Mixing:
 
         Returns
         -------
-        V, Lambda_V_1 : tuple of arrays of shapes (D_V, K) and (K * D_V, K * D_V)
-            Updated mixing weight matrix and mixing weight covariance matrix.
+        V, Lambda_V_1 : tuple of array of shapes (D_V, K) and list (length K) of arrays of shape (D_V, D_V)
+            Updated mixing weight matrix and mixing weight covariance matrices.
         """
         N, _ = X.shape
         D_V, _ = V.shape
@@ -375,7 +375,7 @@ class Mixing:
         ----------
         V : array of shape (D_V, K)
             Mixing weight matrix.
-        Lambda_V_1 : list of arrays of shape (D_V, D_V)
+        Lambda_V_1 : list (length K) of arrays of shape (D_V, D_V)
             List of mixing weight covariance matrices.
 
         Returns
@@ -415,7 +415,7 @@ class Mixing:
             Responsibility matrix.
         V : array of shape (D_V, K)
             Mixing weight matrix.
-        Lambda_V_1 : list of arrays of shape (D_V, D_V)
+        Lambda_V_1 : list (length K) of arrays of shape (D_V, D_V)
             List of mixing weight covariance matrices.
         a_beta : array of shape (K,)
             Mixing weight prior parameter (row vector).
