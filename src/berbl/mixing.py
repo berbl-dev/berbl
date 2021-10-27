@@ -4,6 +4,7 @@ from sklearn.utils import check_random_state  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 
 from .utils import matching_matrix
+from .literal import responsibilities
 
 
 
@@ -352,29 +353,16 @@ class Mixing:
         R : array of shape (N, K)
             Responsibility matrix.
         """
-        N, D_y = y.shape
-
-        # We first create the transpose of R because indexing is easier. We then
-        # transpose before multiplying elementwise with G.
-        R_T = np.zeros((self.K, N))
-        for k in range(self.K):
-            cl = self.RULES[k]
-            R_T[k] = np.exp(
-                D_y / 2 * (ss.digamma(cl.a_tau_) - np.log(cl.b_tau_)) - 0.5
-                * (cl.a_tau_ / cl.b_tau_ * np.sum((y - X @ cl.W_.T)**2, 1)
-                   + D_y * np.sum(X * (X @ cl.Lambda_1_), 1)))
-        R = R_T.T * G
-        # Make a copy of the reference for checking for nans a few lines later.
-        R_ = R
-        # The sum can be 0 meaning we do 0/0 (== NaN in Python) but we ignore it
-        # because it is fixed one line later (this is how Drugowitsch does it).
-        with np.errstate(invalid="ignore"):
-            R = R / np.sum(R, 1)[:, np.newaxis]
-        # This is safer than Drugowitsch's plain `R = np.nan_to_num(R, nan=0)`
-        # (i.e. we check whether the nan really came from the cause described
-        # above at the cost of an additional run over R to check for zeroes).
-        R[np.where(np.logical_and(R_ == 0, np.isnan(R)))] = 0
-        return R
+        # Is slower than the code duplication solution for larger
+        # len(self.RULES).
+        # W, Lambda_1, a_tau, b_tau = zip(
+        #     *[(cl.W_, cl.Lambda_1_, cl.a_tau_, cl.b_tau_) for cl in self.RULES]
+        # )
+        W = [cl.W_ for cl in self.RULES]
+        Lambda_1 = [cl.Lambda_1_ for cl in self.RULES]
+        a_tau =  [cl.a_tau_ for cl in self.RULES]
+        b_tau =  [cl.b_tau_ for cl in self.RULES]
+        return responsibilities(X=X, Y=y, G=G, W=W, Lambda_1=Lambda_1, a_tau=a_tau, b_tau=b_tau)
 
     def _train_b_beta(self, V: np.ndarray, Lambda_V_1: np.ndarray):
         """
