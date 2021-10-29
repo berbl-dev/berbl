@@ -3,7 +3,6 @@ from typing import *
 import numpy as np  # type: ignore
 from sklearn.utils import check_consistent_length  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
-from sklearn.utils.validation import check_is_fitted  # type: ignore
 
 from .utils import add_bias, check_phi
 from .rule import Rule
@@ -11,7 +10,7 @@ from .mixing import Mixing
 from .mixing_laplace import MixingLaplace
 
 
-class Mixture():
+class Mixture:
     def __init__(self,
                  matchs: List,
                  add_bias=True,
@@ -62,8 +61,6 @@ class Mixture():
             Output matrix.
         """
         # TODO Use NumPy style of param dimension descriptions
-
-        check_consistent_length(X, y)
 
         if self.add_bias:
             X = add_bias(X)
@@ -144,8 +141,6 @@ class Mixture():
         -------
         y, y_var : tuple of two arrays of shape (N, Dy)
         """
-        check_is_fitted(self)
-
         N, _ = X.shape
         Dy, DX = self.rules_[0].W_.shape
 
@@ -196,13 +191,16 @@ class Mixture():
         Returns this model's submodel's predictions, one by one, without mixing
         them.
 
+        Parameters
+        ----------
+        X : array of shape (N, DX)
+            Input matrix.
+
         Returns
         -------
         array of shape (K, N, Dy)
             Mean output vectors of each rule.
         """
-        check_is_fitted(self)
-
         if self.add_bias:
             X = add_bias(X)
 
@@ -210,12 +208,7 @@ class Mixture():
 
     def _predicts(self, X):
         """
-        No bias is added and no fitted check is performed.
-
-        Parameters
-        ----------
-        X : array of shape (N, DX)
-            Input matrix.
+        No bias is added.
         """
         N = len(X)
 
@@ -239,8 +232,6 @@ class Mixture():
         array of shape (K, N)
             Prediction variances of each submodel.
         """
-        check_is_fitted(self)
-
         if self.add_bias:
             X = add_bias(X)
 
@@ -248,7 +239,7 @@ class Mixture():
 
     def _predict_vars(self, X):
         """
-        No bias is added and no fitted check is performed.
+        No bias is added.
         """
         N = len(X)
 

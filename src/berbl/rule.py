@@ -1,6 +1,5 @@
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
-from sklearn.utils.validation import check_is_fitted # type: ignore
 
 
 class Rule():
@@ -122,8 +121,6 @@ class Rule():
         -------
         mean : array of shape (N, D_y)
         """
-        check_is_fitted(self)
-
         return X @ self.W_.T
 
     def predict_var(self, X):
@@ -142,8 +139,6 @@ class Rule():
         -------
         variance : array of shape (N, D_y)
         """
-        check_is_fitted(self)
-
         # TODO Check whether this vectorized form and reshaping is correct
         # The sum corresponds to x @ self.Lambda_1 @ x for each x in X.
         var = 2 * self.b_tau_ / (self.a_tau_
