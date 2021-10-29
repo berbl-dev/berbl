@@ -1,16 +1,14 @@
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
-from hypothesis import given, seed, settings  # type: ignore
-from hypothesis.extra.numpy import arrays  # type: ignore
 from berbl.literal.hyperparams import HParams
 from berbl.literal.model import Model
 from berbl.match.allmatch import AllMatch
-from berbl.match.radial1d_drugowitsch import RadialMatch1D
+from hypothesis import given, seed, settings  # type: ignore
+from hypothesis.extra.numpy import arrays  # type: ignore
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
 from sklearn.utils import check_random_state  # type: ignore
-
-from test_berbl import rmatch1ds, Xs, ys, seeds
+from test_berbl import Xs, random_states, rmatch1ds, seeds, ys
 
 # NOTE Matching functions always assume a bias column (``has_bias=True``)
 # whereas the ``Xs`` do not contain one (``bias_column=False``) because
@@ -18,7 +16,7 @@ from test_berbl import rmatch1ds, Xs, ys, seeds
 
 
 @given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
-       Xs(bias_column=False), ys())
+       Xs(bias_column=False), ys(), random_states())
 @settings(deadline=None, max_examples=20)
 # hypothesis.errors.FailedHealthCheck: Examples routinely exceeded the max
 # allowable size. (20 examples overran while generating 9 valid ones).
@@ -26,24 +24,24 @@ from test_berbl import rmatch1ds, Xs, ys, seeds
 # setting max_size parameters on your collections and turning max_leaves down on
 # recursive() calls.
 @seed(338435219230913684853574049358930463006)
-def test_fit(matchs, X, y):
+def test_fit(matchs, X, y, random_state):
     """
     Only tests whether fit runs through without errors.
     """
-    m = Model(matchs)
+    m = Model(matchs, random_state=random_state)
     m.fit(X, y)
 
 
 @given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
-       Xs(bias_column=False), ys(), Xs(bias_column=False))
+       Xs(bias_column=False), ys(), Xs(bias_column=False), random_states())
 @settings(deadline=None, max_examples=20)
 # Disable shrink
 # phases=(Phase.explicit, Phase.reuse, Phase.generate, Phase.target))
-def test_fit_predict(matchs, X, y, X_test):
+def test_fit_predict(matchs, X, y, X_test, random_state):
     """
     Only tests whether fit and then predict run through without errors.
     """
-    m = Model(matchs)
+    m = Model(matchs, random_state=random_state)
     m.fit(X, y)
     m.predict(X_test)
 
@@ -75,9 +73,9 @@ def linears(draw, N=10, slope_range=(0, 1), intercept_range=(0, 1)):
     return (X, y, slope, intercept)
 
 
-@given(linears(N=10, slope_range=(0, 1), intercept_range=(0, 1)))
+@given(linears(N=10, slope_range=(0, 1), intercept_range=(0, 1)), random_states())
 @settings(max_examples=50)
-def test_fit_linear_functions(data):
+def test_fit_linear_functions(data, random_state):
     """
     Learning one-dimensional (affine) linear functions should be doable for a
     single rule that is responsible for/matches all inputs (i.e. it should be
@@ -92,7 +90,7 @@ def test_fit_linear_functions(data):
 
     # The default MAX_ITER_CLS seems to be too small for good approximations.
     HParams().MAX_ITER_CLS = 100
-    m = Model([match]).fit(X, y)
+    m = Model([match], random_state=random_state).fit(X, y)
     HParams().MAX_ITER_CLS = 20  # Reset to the default.
 
     y_pred = m.predicts(X)[0]
@@ -138,9 +136,9 @@ def random_data(draw, N=100):
 
 # We may need to use more samples here to make sure that the algorithms' scores
 # are really close.
-@given(random_data(N=1000), seeds())
+@given(random_data(N=1000), random_states())
 @settings(deadline=None)
-def test_fit_non_linear(data, seed):
+def test_fit_non_linear(data, random_state):
     """
     A single rule should behave better or very similar to a
     ``sklearn.linear_model.LinearRegression`` on random data.
@@ -156,8 +154,6 @@ def test_fit_non_linear(data, seed):
     # The default MAX_ITER_CLS seems to be too small for good approximations.
     HParams().MAX_ITER_CLS = 100
 
-    # We seed this so we don't get flaky tests.
-    random_state = check_random_state(seed)
     m = Model([match, match2], random_state=random_state).fit(X, y)
 
     # Reset to the default.

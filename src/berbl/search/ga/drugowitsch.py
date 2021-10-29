@@ -5,7 +5,6 @@ import numpy as np  # type: ignore
 from deap import creator, tools
 from mlflow import log_metric
 from sklearn.utils import check_random_state  # type: ignore
-from sklearn.utils.validation import check_is_fitted  # type: ignore
 
 from ...utils import randseed
 
@@ -136,13 +135,9 @@ class GADrugowitsch:
         return self.elitist_[0].phenotype.predict(X)
 
     def predict_mean_var(self, X):
-        check_is_fitted(self)
-
         return self.elitist_[0].phenotype.predict_mean_var(X)
 
     def predicts(self, X):
-        check_is_fitted(self)
-
         return self.elitist_[0].phenotype.predicts(X)
 
     def frozen(self):

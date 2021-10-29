@@ -1,5 +1,4 @@
 import numpy as np  # type: ignore
-from sklearn.utils import check_random_state  # type: ignore
 
 
 class SoftInterval1D():
@@ -48,7 +47,6 @@ class SoftInterval1D():
         """
         [PDF p. 260]
         """
-        random_state = check_random_state(random_state)
         bounds = random_state.uniform(-1, 1, size=2)
         return SoftInterval1D(*bounds)
 

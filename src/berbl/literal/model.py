@@ -1,20 +1,17 @@
 from typing import *
 
 import numpy as np  # type: ignore
-from sklearn.utils import check_consistent_length  # type: ignore
-from sklearn.utils import check_random_state  # type: ignore
-from sklearn.utils.validation import check_is_fitted  # type: ignore
 
-from ..utils import add_bias,check_phi, matching_matrix
+from ..utils import add_bias, check_phi, matching_matrix
 from . import mixing, model_probability
 
 
-class Model():
+class Model:
     def __init__(self,
                  matchs: List,
+                 random_state,
                  add_bias=True,
-                 phi=None,
-                 random_state=None):
+                 phi=None):
         """
         A model based on mixing localized linear submodels using the given model
         structure.
@@ -24,13 +21,12 @@ class Model():
         matchs
             A list of matching functions (i.e. objects implementing a ``match``
             attribute) defining the structure of this mixture.
+        random_state : RandomState object
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi
             mixing feature extractor (N × Dx → N × D_V); if ``None`` uses the
             default LCS mixing feature matrix based on ``phi(x) = 1``
-        random_state
-            See ``n_cls``.
         """
         self.matchs = matchs
         self.add_bias = add_bias
@@ -38,12 +34,9 @@ class Model():
         self.random_state = random_state
 
     def fit(self, X: np.ndarray, y: np.ndarray):
-        check_consistent_length(X, y)
 
         if self.add_bias:
             X = add_bias(X)
-
-        random_state = check_random_state(self.random_state)
 
         self.K_ = len(self.matchs)
         _, self.Dx_ = X.shape
@@ -51,11 +44,12 @@ class Model():
 
         Phi = check_phi(self.phi, X)
 
-        self.metrics_, self.params_ = model_probability(matchs=self.matchs,
-                                                        X=X,
-                                                        Y=y,
-                                                        Phi=Phi,
-                                                        random_state=random_state)
+        self.metrics_, self.params_ = model_probability(
+            matchs=self.matchs,
+            X=X,
+            Y=y,
+            Phi=Phi,
+            random_state=self.random_state)
 
         self.L_q_ = self.metrics_["L_q"]
         self.ln_p_M_ = self.metrics_["ln_p_M"]
@@ -101,8 +95,6 @@ class Model():
 
         Literal (and inefficient) version given in Drugowitsch's book.
         """
-        check_is_fitted(self)
-
         Dy, Dx = self.W_[0].shape
 
         if self.add_bias:
@@ -150,8 +142,6 @@ class Model():
 
         :returns: mean output vector (N × Dy), variance of output (N × Dy)
         """
-        check_is_fitted(self)
-
         N, _ = X.shape
         Dy, Dx = self.W_[0].shape
 
@@ -205,8 +195,6 @@ class Model():
         array of shape (K, N, Dy)
             Mean output vectors of each submodel.
         """
-        check_is_fitted(self)
-
         if self.add_bias:
             X = add_bias(X)
 
@@ -214,7 +202,7 @@ class Model():
 
     def _predicts(self, X):
         """
-        No bias is added and no fitted check is performed.
+        No bias is added.
         """
         N = len(X)
 
@@ -235,8 +223,6 @@ class Model():
         array of shape (K, N)
             Prediction variances of each submodel.
         """
-        check_is_fitted(self)
-
         if self.add_bias:
             X = add_bias(X)
 
@@ -244,7 +230,7 @@ class Model():
 
     def _predict_vars(self, X):
         """
-        No bias is added and no fitted check is performed.
+        No bias is added.
         """
         N = len(X)
 

@@ -1,6 +1,5 @@
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
-from sklearn.utils import check_random_state  # type: ignore
 
 from .literal import hessian
 from .mixing import Mixing
@@ -39,8 +38,6 @@ class MixingLaplace(Mixing):
 
     def fit(self, X, y):
 
-        random_state = check_random_state(self.random_state)
-
         if self.PHI is None:
             Phi = np.ones((len(X), 1))
         else:
@@ -52,9 +49,9 @@ class MixingLaplace(Mixing):
         _, self.D_y_ = y.shape
         N, self.D_V_ = Phi.shape
 
-        self.V_ = random_state.normal(loc=0,
-                                     scale=self.A_BETA / self.B_BETA,
-                                     size=(self.D_V_, self.K))
+        self.V_ = self.random_state.normal(loc=0,
+                                           scale=self.A_BETA / self.B_BETA,
+                                           size=(self.D_V_, self.K))
         # a_beta is actually constant so we can set it here and be done with it.
         self.a_beta_ = np.repeat(self.A_BETA + self.D_V_ / 2, self.K)
         self.b_beta_ = np.repeat(self.B_BETA, self.K)
@@ -87,10 +84,10 @@ class MixingLaplace(Mixing):
 
             L_M_q_prev = self.L_M_q_
             self.L_M_q_ = self._var_bound(G=self.G_,
-                                         R=self.R_,
-                                         V=self.V_,
-                                         Lambda_V_1=self.Lambda_V_1_,
-                                         a_beta=self.a_beta_,
+                                          R=self.R_,
+                                          V=self.V_,
+                                          Lambda_V_1=self.Lambda_V_1_,
+                                          a_beta=self.a_beta_,
                                           b_beta=self.b_beta_)
             # LCSBookCode states: “as we are using an approximation, the variational
             # bound might decrease, so we're not checking and need to take the
@@ -194,7 +191,7 @@ class MixingLaplace(Mixing):
             if KLRG > 0 and np.isclose(KLRG, 0):
                 KLRG = 0
             assert KLRG <= 0, (f"Kullback-Leibler divergence less than zero:"
-            f" {KLRG}\n{G}\n{R}")
+                               f" {KLRG}\n{G}\n{R}")
 
             delta_KLRG = np.abs(KLRG_prev - KLRG)
 
@@ -274,7 +271,7 @@ class MixingLaplace(Mixing):
         L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
         if np.any(~np.isfinite([L_M1q, L_M2q, L_M3q])):
             print(f"Non-finite var_mix_bound: "
-                f"L_M1q = {L_M1q}, "
-                f"L_M2q = {L_M2q}, "
-                f"L_M3q = {L_M3q}")
+                  f"L_M1q = {L_M1q}, "
+                  f"L_M2q = {L_M2q}, "
+                  f"L_M3q = {L_M3q}")
         return L_M1q + L_M2q + L_M3q

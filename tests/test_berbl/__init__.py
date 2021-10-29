@@ -4,12 +4,18 @@ from hypothesis.extra.numpy import arrays  # type: ignore
 from berbl.match.radial1d_drugowitsch import RadialMatch1D
 from berbl.match.softinterval1d_drugowitsch import SoftInterval1D
 from berbl.utils import add_bias
+from sklearn.utils import check_random_state  # type: ignore
 
 
 @st.composite
 def seeds(draw):
     # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
     return draw(st.integers(min_value=0, max_value=2**32 - 1))
+
+@st.composite
+def random_states(draw):
+    seed = draw(seeds())
+    return check_random_state(seed)
 
 
 @st.composite

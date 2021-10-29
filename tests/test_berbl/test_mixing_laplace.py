@@ -5,17 +5,17 @@ from berbl.rule import Rule
 from berbl.match.allmatch import AllMatch
 from berbl.match.nomatch import NoMatch
 from berbl.mixing_laplace import MixingLaplace
-from test_berbl import Xs, rmatch1ds, ys
+from test_berbl import Xs, rmatch1ds, random_states, ys
 
 
-@given(rmatch1ds(), Xs(), ys())
+@given(rmatch1ds(), Xs(), ys(), random_states())
 @settings(max_examples=50)
-def test_same_match_equal_weights(match, X, y):
+def test_same_match_equal_weights(match, X, y, random_state):
     """
     Mixing two instances of the same rule should result in 50/50 mixing weights.
     """
     cl = Rule(match).fit(X, y)
-    mix = MixingLaplace(rules=[cl, cl], phi=None).fit(X, y)
+    mix = MixingLaplace(rules=[cl, cl], phi=None, random_state=random_state).fit(X, y)
     G = mix.mixing(X)
 
     assert np.all(np.isclose(
@@ -24,9 +24,9 @@ def test_same_match_equal_weights(match, X, y):
                           f"{mix.V_}")
 
 
-@given(Xs(), ys())
+@given(Xs(), ys(), random_states())
 @settings(max_examples=50)
-def test_no_match_no_weight(X, y):
+def test_no_match_no_weight(X, y, random_state):
     """
     Mixing a matching and a non-matching rule should result in 100/0 mixing
     weights.
@@ -34,7 +34,7 @@ def test_no_match_no_weight(X, y):
     cl1 = Rule(AllMatch()).fit(X, y)
     cl2 = Rule(NoMatch()).fit(X, y)
 
-    mix = MixingLaplace(rules=[cl1, cl2], phi=None).fit(X, y)
+    mix = MixingLaplace(rules=[cl1, cl2], phi=None, random_state=random_state).fit(X, y)
     G = mix.mixing(X)
 
     msg = (f"Mixing a not matching and a matching rule isn't correct"

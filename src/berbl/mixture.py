@@ -1,8 +1,6 @@
 from typing import *
 
 import numpy as np  # type: ignore
-from sklearn.utils import check_consistent_length  # type: ignore
-from sklearn.utils import check_random_state  # type: ignore
 
 from .utils import add_bias, check_phi
 from .rule import Rule
@@ -13,10 +11,10 @@ from .mixing_laplace import MixingLaplace
 class Mixture:
     def __init__(self,
                  matchs: List,
+                 random_state,
                  add_bias=True,
                  phi=None,
                  fit_mixing="bouchard",
-                 random_state=None,
                  **kwargs):
         """
         A model based on mixing linear regression rules using the given model
@@ -27,6 +25,7 @@ class Mixture:
         matchs
             A list of matching functions (i.e. objects implementing a ``match``
             attribute) defining the structure of this mixture.
+        random_state : RandomState object
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi : callable
@@ -34,8 +33,6 @@ class Mixture:
             default LCS mixing feature matrix based on ``phi(x) = 1``.
         fit_mixing : str
             Either of "bouchard" or "laplace"
-        random_state : int, RandomState instance
-            See ``n_cls``.
         **kwargs
             This is passed through unchanged to both ``Mixing`` and ``Rule``.
         """
@@ -65,8 +62,6 @@ class Mixture:
         if self.add_bias:
             X = add_bias(X)
 
-        random_state = check_random_state(self.random_state)
-
         self.K_ = len(self.matchs)
         _, self.DX_ = X.shape
         y = y.reshape((len(X), -1))
@@ -86,12 +81,12 @@ class Mixture:
         if self.fit_mixing == "bouchard":
             self.mixing_ = Mixing(rules=self.rules_,
                                   phi=self.phi,
-                                  random_state=random_state,
+                                  random_state=self.random_state,
                                   **self.__kwargs)
         elif self.fit_mixing == "laplace":
             self.mixing_ = MixingLaplace(rules=self.rules_,
                                          phi=self.phi,
-                                         random_state=random_state,
+                                         random_state=self.random_state,
                                          **self.__kwargs)
         else:
             raise NotImplementedError(

@@ -1,6 +1,5 @@
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
-from sklearn.utils import check_random_state  # type: ignore
 
 from .utils import matching_matrix
 from .literal import responsibilities
@@ -14,13 +13,13 @@ class Mixing:
     def __init__(self,
                  rules,
                  phi,
+                 random_state,
                  A_BETA=10**-2,
                  B_BETA=10**-4,
                  DELTA_S_L_M_Q=10**-2,
                  MAX_ITER=40,
                  EXP_MIN=np.log(np.finfo(None).tiny),
                  LN_MAX=np.log(np.finfo(None).max),
-                 random_state=None,
                  **kwargs):
         """
         Parameters
@@ -31,6 +30,7 @@ class Mixing:
             Mixing feature function taking input matrices of shape (N, D_X) and
             returning mixing feature matrices of shape (n, V). If ``None`` use
             the LCS default of ``phi(x) = 1``.
+        random_state : RandomState object
         A_BETA : float
             Scale parameter of mixing weight vector variance prior.
         B_BETA : float
@@ -74,8 +74,6 @@ class Mixing:
         Fits mixing weights for this mixing weight model's set of rules to the
         provided data.
         """
-        random_state = check_random_state(self.random_state)
-
         if self.PHI is None:
             Phi = np.ones((len(X), 1))
         else:
@@ -87,7 +85,7 @@ class Mixing:
         _, self.D_y_ = y.shape
         N, self.D_V_ = Phi.shape
 
-        self.V_ = random_state.normal(loc=0,
+        self.V_ = self.random_state.normal(loc=0,
                                       scale=self.A_BETA / self.B_BETA,
                                       size=(self.D_V_, self.K))
         # a_beta is actually constant so we can set it here and be done with it.
@@ -95,12 +93,12 @@ class Mixing:
         self.b_beta_ = np.repeat(self.B_BETA, self.K)
 
         # Initialize parameters for the Bouchard approximation.
-        self.alpha_ = random_state.normal(loc=0,
+        self.alpha_ = self.random_state.normal(loc=0,
                                           scale=self.A_BETA / self.B_BETA,
                                           size=(N, 1))
         # lxi stands for λ(ξ) which is used in Bouchard's approximation. Its
         # supremum value is one over eight.
-        self.lxi_ = random_state.random(size=(N, self.K)) * 0.125
+        self.lxi_ = self.random_state.random(size=(N, self.K)) * 0.125
         self.alpha_, self.lxi_ = self._opt_bouchard(M=M,
                                                     Phi=Phi,
                                                     V=self.V_,
@@ -174,8 +172,6 @@ class Mixing:
         array of shape (N, K)
             Mixing matrix containing the rules' mixing weights for each input.
         """
-        check_is_fitted(self)
-
         if self.PHI is None:
             Phi = np.ones((len(X), 1))
         else:
