@@ -2,7 +2,7 @@ import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
-import literal
+from .literal import hessian
 from .mixing import Mixing
 
 
@@ -153,7 +153,7 @@ class MixingLaplace(Mixing):
             # Actually, this should probably be named nabla_E.
             E = Phi.T @ (G - R) + V * E_beta_beta
             e = E.T.ravel()
-            H = literal.hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
+            H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
             # Preference of `-` and `@` is OK here, we checked.
             #
             # While, in theory, H is always invertible here and we thus should
@@ -198,7 +198,7 @@ class MixingLaplace(Mixing):
 
             delta_KLRG = np.abs(KLRG_prev - KLRG)
 
-        H = literal.hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
+        H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
         # While, in theory, H is always invertible here and we thus should be
         # able to use inv (as it is described in the algorithm we implement), we
         # (seldomly) get a singular H, probably due to numerical issues. Thus we
