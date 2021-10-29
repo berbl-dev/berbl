@@ -54,8 +54,12 @@ class Mixture():
         """
         Fits this model to the provided data.
 
-        :param X: input matrix (N × D_X)
-        :param y: output matrix (N × Dy)
+        Parameters
+        ----------
+        X : array of shape (N, D_X)
+            Input matrix.
+        y : array of shape (N, D_y)
+            Output matrix.
         """
         # TODO Use NumPy style of param dimension descriptions
 
@@ -161,7 +165,6 @@ class Mixture():
 
         y = np.sum(G * ys, axis=0)
 
-        # 99% sure that the first squared term should be ys and not y.
         y_var = np.sum(G * (y_vars + ys**2), axis=0) - y**2
 
         # TODO Re-check this for correctness (should(?) probably be the same as
@@ -203,6 +206,11 @@ class Mixture():
     def _predicts(self, X):
         """
         No bias is added and no fitted check is performed.
+
+        Parameters
+        ----------
+        X : array of shape (N, D_X)
+            Input matrix.
         """
         N = len(X)
 
@@ -215,6 +223,11 @@ class Mixture():
         """
         Returns this model's submodel's prediction variances, one by one, without
         mixing them.
+
+        Parameters
+        ----------
+        X : array of shape (N, D_X)
+            Input matrix.
 
         Returns
         -------

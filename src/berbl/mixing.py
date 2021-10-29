@@ -167,8 +167,8 @@ class Mixing:
 
         Parameters
         ----------
-        X : array
-            input data
+        X : array of shape (N, D_X)
+            Input matrix.
 
         Returns
         -------

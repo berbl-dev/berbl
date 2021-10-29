@@ -29,7 +29,8 @@ class Toolbox(base.Toolbox):
         ----------
         literal : bool
             Whether to use the literal backend (unoptimized but close to the
-            main reference). May be used to check whether a new
+            main reference, uses the Laplace approximation–based mixing
+            training). May be used to check whether a new
             implementation's/idea's behaviour is still close to the original
             reference.
         add_bias : bool
@@ -38,10 +39,10 @@ class Toolbox(base.Toolbox):
             Mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
             default LCS mixing feature matrix based on ``phi(x) = 1``.
         fit_mixing : str
-            How mixing weights should be fitted. One of ``"bouchard"``
-            (experimental but may be faster and better-behaving) and
-            ``"laplace"`` (the original method, very slow and possibly
-            suboptimal in terms of the variational bound).
+            Only applies if ``literal`` is ``False``.  How mixing weights should
+            be fitted. One of ``"bouchard"`` (experimental but may be faster and
+            better-behaving) and ``"laplace"`` (the original method, very slow
+            and possibly suboptimal in terms of the variational bound).
         random_state : int, RandomState instance
         """
         super().__init__()
