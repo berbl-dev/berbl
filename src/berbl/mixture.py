@@ -30,12 +30,12 @@ class Mixture():
             attribute) defining the structure of this mixture.
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
-        phi
-            Mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
+        phi : callable
+            Mixing feature extractor (N × DX → N × D_V); if ``None`` uses the
             default LCS mixing feature matrix based on ``phi(x) = 1``.
-        fit_mixing
+        fit_mixing : str
             Either of "bouchard" or "laplace"
-        random_state
+        random_state : int, RandomState instance
             See ``n_cls``.
         **kwargs
             This is passed through unchanged to both ``Mixing`` and ``Rule``.
@@ -56,9 +56,9 @@ class Mixture():
 
         Parameters
         ----------
-        X : array of shape (N, D_X)
+        X : array of shape (N, DX)
             Input matrix.
-        y : array of shape (N, D_y)
+        y : array of shape (N, Dy)
             Output matrix.
         """
         # TODO Use NumPy style of param dimension descriptions
@@ -71,7 +71,7 @@ class Mixture():
         random_state = check_random_state(self.random_state)
 
         self.K_ = len(self.matchs)
-        _, self.D_X_ = X.shape
+        _, self.DX_ = X.shape
         y = y.reshape((len(X), -1))
         _, self.Dy_ = y.shape
 
@@ -135,14 +135,19 @@ class Mixture():
         in [118].  Here, we take the variance as a sufficient indicator of the
         prediction’s confidence.” [PDF p. 224]
 
-        :param X: input vector (N × D_X)
+        Parameters
+        ----------
+        X : array of shape (N, DX)
+            Input matrix.
 
-        :returns: mean output vector (N × Dy), variance of output (N × Dy)
+        Returns
+        -------
+        y, y_var : tuple of two arrays of shape (N, Dy)
         """
         check_is_fitted(self)
 
         N, _ = X.shape
-        Dy, D_X = self.rules_[0].W_.shape
+        Dy, DX = self.rules_[0].W_.shape
 
         Phi = check_phi(self.phi, X)
 
@@ -209,7 +214,7 @@ class Mixture():
 
         Parameters
         ----------
-        X : array of shape (N, D_X)
+        X : array of shape (N, DX)
             Input matrix.
         """
         N = len(X)
@@ -226,7 +231,7 @@ class Mixture():
 
         Parameters
         ----------
-        X : array of shape (N, D_X)
+        X : array of shape (N, DX)
             Input matrix.
 
         Returns

@@ -9,7 +9,9 @@ search_methods = {"drugowitsch": GADrugowitsch}
 
 class BERBL(BaseEstimator, RegressorMixin):
     """
-    TODO
+    An implementation of a Bayesian evolutionary rule-based learning system.
+    Based on (but also extending) the book ‘Design and Analysis of Learning
+    Classifier Systems – A Probabilistic Approach’ by Jan Drugowitsch.
     """
     def __init__(self,
                  toolbox=DefaultToolbox,
@@ -21,6 +23,11 @@ class BERBL(BaseEstimator, RegressorMixin):
         toolbox : Toolbox object
             A DEAP ``Toolbox`` object that specifies all the operators required
             by the selected search algorithm (``search`` parameter).
+        search : str
+            Which search algorithm to use to perform model selection. Also see
+            ``toolbox`` parameter.
+        n_iter : int
+            Number of iterations to run the search.
         """
         self.toolbox = toolbox
         self.search = search
