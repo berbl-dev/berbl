@@ -63,8 +63,8 @@ class Rule():
 
         self.m_ = self.match.match(X)
 
-        N, self.D_X_ = X.shape
-        N, self.D_y_ = y.shape
+        N, self.DX_ = X.shape
+        N, self.Dy_ = y.shape
         X_ = X * np.sqrt(self.m_)
         y_ = y * np.sqrt(self.m_)
 
@@ -74,14 +74,14 @@ class Rule():
         delta_L_q = self.DELTA_S_L_K_Q + 1
 
         # Since this is constant, there's no need to put it into the loop.
-        self.a_alpha_ = self.A_ALPHA + self.D_X_ * self.D_y_ / 2
+        self.a_alpha_ = self.A_ALPHA + self.DX_ * self.Dy_ / 2
         self.a_tau_ = self.A_TAU + 0.5 * np.sum(self.m_)
 
         iter = 0
         while delta_L_q > self.DELTA_S_L_K_Q and iter < self.MAX_ITER:
             iter += 1
             E_alpha_alpha = self.a_alpha_ / self.b_alpha_
-            self.Lambda_ = np.diag([E_alpha_alpha] * self.D_X_) + X_.T @ X_
+            self.Lambda_ = np.diag([E_alpha_alpha] * self.DX_) + X_.T @ X_
             # While, in theory, Lambda is always invertible here and we thus
             # should be able to use inv (as it is described in the algorithm we
             # implement), we (seldomly) get a singular matrix, probably due to
@@ -90,12 +90,12 @@ class Rule():
             # in his own code, Drugowitsch always uses pseudo inverse here.
             self.Lambda_1_ = np.linalg.pinv(self.Lambda_)
             self.W_ = y_.T @ X_ @ self.Lambda_1_
-            self.b_tau_ = self.B_TAU + 1 / (2 * self.D_y_) * (
+            self.b_tau_ = self.B_TAU + 1 / (2 * self.Dy_) * (
                 np.sum(y_ * y_) - np.sum(self.W_ * (self.W_ @ self.Lambda_)))
             E_tau_tau = self.a_tau_ / self.b_tau_
-            # D_y factor in front of trace due to sum over D_y elements (7.100).
+            # Dy factor in front of trace due to sum over Dy elements (7.100).
             self.b_alpha_ = self.B_ALPHA + 0.5 * (E_tau_tau * np.sum(
-                self.W_ * self.W_) + self.D_y_ * np.trace(self.Lambda_1_))
+                self.W_ * self.W_) + self.Dy_ * np.trace(self.Lambda_1_))
             L_q_prev = self.L_q_
             self.L_q_ = self.var_bound(
                 X=X,
@@ -115,11 +115,11 @@ class Rule():
 
         Parameters
         ----------
-        X : array of shape (N, D_X)
+        X : array of shape (N, DX)
 
         Returns
         -------
-        mean : array of shape (N, D_y)
+        mean : array of shape (N, Dy)
         """
         return X @ self.W_.T
 
@@ -133,11 +133,11 @@ class Rule():
 
         Parameters
         ----------
-        X : array of shape (N, D_X)
+        X : array of shape (N, DX)
 
         Returns
         -------
-        variance : array of shape (N, D_y)
+        variance : array of shape (N, Dy)
         """
         # The sum corresponds to x @ self.Lambda_1 @ x for each x in X (i.e.
         # np.diag(X @ self.Lambda_1_ @ X.T)).
@@ -145,7 +145,7 @@ class Rule():
             1 + np.sum((X @ self.Lambda_1_) * X, axis=1))
         # The same value is repeated for each dimension since the model
         # currently assumes the same variance in all dimensions.
-        return var[:,np.newaxis].repeat(self.D_y_, axis=1)
+        return var[:,np.newaxis].repeat(self.Dy_, axis=1)
 
     def var_bound(self, X: np.ndarray, y: np.ndarray, r: np.ndarray):
         """
@@ -155,28 +155,28 @@ class Rule():
 
         Parameters
         ----------
-        X : array of shape (N, D_X)
+        X : array of shape (N, DX)
             Input matrix.
-        y : array of shape (N, D_y)
+        y : array of shape (N, Dy)
             Output matrix.
         r : array of shape (N, 1)
             Responsibilities (during training replaced with matching array of
             this rule in order to enable independent submodel training).
         """
         E_tau_tau = self.a_tau_ / self.b_tau_
-        L_1_q = self.D_y_ / 2 * (ss.digamma(self.a_tau_) - np.log(self.b_tau_)
+        L_1_q = self.Dy_ / 2 * (ss.digamma(self.a_tau_) - np.log(self.b_tau_)
                                  - np.log(2 * np.pi)) * np.sum(r)
         # We reshape r to a NumPy row vector since NumPy seems to understand
         # what we want to do when we multiply two row vectors (i.e. a^T a).
         L_2_q = (-0.5 * r).reshape(
             (-1)) @ (E_tau_tau * np.sum((y - X @ self.W_.T)**2, 1)
-                     + self.D_y_ * np.sum(X * (X @ self.Lambda_1_), 1))
+                     + self.Dy_ * np.sum(X * (X @ self.Lambda_1_), 1))
         L_3_q = -ss.gammaln(self.A_ALPHA) + self.A_ALPHA * np.log(
             self.B_ALPHA) + ss.gammaln(self.a_alpha_) - self.a_alpha_ * np.log(
                 self.b_alpha_
-            ) + self.D_X_ * self.D_y_ / 2 + self.D_y_ / 2 * np.log(
+            ) + self.DX_ * self.Dy_ / 2 + self.Dy_ / 2 * np.log(
                 np.linalg.det(self.Lambda_1_))
-        L_4_q = self.D_y_ * (
+        L_4_q = self.Dy_ * (
             -ss.gammaln(self.A_TAU) + self.A_TAU * np.log(self.B_TAU) +
             (self.A_TAU - self.a_tau_) * ss.digamma(self.a_tau_)
             - self.A_TAU * np.log(self.b_tau_) - self.B_TAU * E_tau_tau

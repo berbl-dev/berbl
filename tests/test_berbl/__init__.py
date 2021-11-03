@@ -35,9 +35,9 @@ def imatch1ds(draw, has_bias=True):
 
 
 @st.composite
-def Xs(draw, N=10, D_X=1, bias_column=True):
+def Xs(draw, N=10, DX=1, bias_column=True):
     X = draw(
-        arrays(np.float64, (N, D_X),
+        arrays(np.float64, (N, DX),
                elements=st.floats(min_value=-1, max_value=1),
                unique=True))
     if bias_column:
@@ -46,14 +46,14 @@ def Xs(draw, N=10, D_X=1, bias_column=True):
 
 
 @st.composite
-def ys(draw, N=10, D_y=1):
+def ys(draw, N=10, Dy=1):
     return draw(
-        arrays(np.float64, (N, D_y),
+        arrays(np.float64, (N, Dy),
                elements=st.floats(min_value=-1, max_value=1)))
 
 
 @st.composite
-def Xs_and_match1ds(draw, matchgen, N=10, D_X=1):
+def Xs_and_match1ds(draw, matchgen, N=10, DX=1):
     """
     Generator for input matrices and match functions that respect whether the
     input matrix contains a bias column or not.
@@ -64,6 +64,6 @@ def Xs_and_match1ds(draw, matchgen, N=10, D_X=1):
         Match function test case generator (probably ``rmatch1ds`` or ``imatch1ds``).
     """
     bias_column = draw(st.booleans())
-    X = draw(Xs(N=N, D_X=D_X, bias_column=bias_column))
+    X = draw(Xs(N=N, DX=DX, bias_column=bias_column))
     rmatch1d = draw(matchgen(has_bias=bias_column))
     return X, rmatch1d

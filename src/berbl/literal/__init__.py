@@ -65,7 +65,7 @@ def model_probability(matchs: List,
     providing it to it.
 
     :param M: matching matrix (N × K)
-    :param X: input matrix (N × D_X)
+    :param X: input matrix (N × DX)
     :param Y: output matrix (N × D_Y)
     :param Phi: mixing feature matrix (N × D_V)
 
@@ -147,14 +147,14 @@ def model_probability(matchs: List,
 def train_classifier(m_k, X, Y):
     """
     :param m_k: matching vector (N)
-    :param X: input matrix (N × D_X)
+    :param X: input matrix (N × DX)
     :param Y: output matrix (N × D_Y)
     :param Phi: mixing feature matrix (N × D_V)
 
-    :returns: weight matrix (D_Y × D_X), covariance matrix (D_X × D_X), two
+    :returns: weight matrix (D_Y × DX), covariance matrix (DX × DX), two
         noise precision parameters, two weight vector parameters
     """
-    N, D_X = X.shape
+    N, DX = X.shape
     N, D_Y = Y.shape
     X_k = X * np.sqrt(m_k)
     Y_k = Y * np.sqrt(m_k)
@@ -164,7 +164,7 @@ def train_classifier(m_k, X, Y):
     delta_L_k_q = HParams().DELTA_S_L_K_Q + 1
     # This is constant; Drugowitsch nevertheless puts it into the while loop
     # (probably for readability).
-    a_alpha_k = HParams().A_ALPHA + D_X * D_Y / 2
+    a_alpha_k = HParams().A_ALPHA + DX * D_Y / 2
     # Drugowitsch reaches convergence usually after 3-4 iterations [PDF p. 237].
     # NOTE Deviation from the original text (but not from LCSBookCode) since we
     # add a maximum number of iterations (see module doc string).
@@ -173,7 +173,7 @@ def train_classifier(m_k, X, Y):
         i += 1
         # print(f"train_classifier: {delta_L_k_q} > {DELTA_S_L_K_Q}")
         E_alpha_alpha_k = a_alpha_k / b_alpha_k
-        Lambda_k = np.diag([E_alpha_alpha_k] * D_X) + X_k.T @ X_k
+        Lambda_k = np.diag([E_alpha_alpha_k] * DX) + X_k.T @ X_k
         # While, in theory, Lambda_k is always invertible here and we thus
         # should be able to use inv (as it is described in the algorithm we
         # implement), we (seldomly) get a singular matrix, probably due to
@@ -222,11 +222,11 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     [PDF p. 238]
 
     :param M: matching matrix (N × K)
-    :param X: input matrix (N × D_X)
+    :param X: input matrix (N × DX)
     :param Y: output matrix (N × D_Y)
     :param Phi: mixing feature matrix (N × D_V)
-    :param W: submodel weight matrices (list of D_Y × D_X)
-    :param Lambda_1: submodel covariance matrices (list of D_X × D_X)
+    :param W: submodel weight matrices (list of D_Y × DX)
+    :param Lambda_1: submodel covariance matrices (list of DX × DX)
     :param a_tau: submodel noise precision parameters
     :param b_tau: submodel noise precision parameters
 
@@ -234,7 +234,7 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
         D_V × K D_V), mixing weight vector prior parameters a_beta/b_beta
     """
     N, K = M.shape
-    N, D_X = X.shape
+    N, DX = X.shape
     N, D_Y = Y.shape
     N, D_V = Phi.shape
 
@@ -341,11 +341,11 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
     """
     [PDF p. 240]
 
-    :param X: input matrix (N × D_X)
+    :param X: input matrix (N × DX)
     :param Y: output matrix (N × D_Y)
     :param G: mixing (“gating”) matrix (N × K)
-    :param W: submodel weight matrices (list of D_Y × D_X)
-    :param Lambda_1: submodel covariance matrices (list of D_X × D_X)
+    :param W: submodel weight matrices (list of D_Y × DX)
+    :param Lambda_1: submodel covariance matrices (list of DX × DX)
     :param a_tau: submodel noise precision parameters
     :param b_tau: submodel noise precision parameters
 
@@ -389,15 +389,15 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     ----------
     M : array of shape (N, K)
         Matching matrix.
-    X : array of shape (N, D_X)
+    X : array of shape (N, DX)
         Input matrix.
-    y : array of shape (N, D_y)
+    y : array of shape (N, Dy)
         Output matrix.
     Phi : array of shape (N, D_V)
         Mixing feature matrix.
-    W : list (length K) of arrays of shape (D_Y, D_X)
+    W : list (length K) of arrays of shape (D_Y, DX)
         Submodel weight matrices.
-    Lambda_1 : list (length K) of arrays of shape (D_X, D_X)
+    Lambda_1 : list (length K) of arrays of shape (DX, DX)
         Submodel covariance matrices.
     a_tau : array of shape (K,)
         Submodel noise precision parameter.
@@ -602,11 +602,11 @@ def var_bound(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     [PDF p. 244]
 
     :param M: matching matrix (N × K)
-    :param X: input matrix (N × D_X)
+    :param X: input matrix (N × DX)
     :param Y: output matrix (N × D_Y)
     :param Phi: mixing feature matrix (N × D_V)
-    :param W: submodel weight matrices (list of D_Y × D_X)
-    :param Lambda_1: submodel covariance matrices (list of D_X × D_X)
+    :param W: submodel weight matrices (list of D_Y × DX)
+    :param Lambda_1: submodel covariance matrices (list of DX × DX)
     :param a_tau: submodel noise precision parameters
     :param b_tau: submodel noise precision parameters
     :param a_alpha: weight vector prior parameters
@@ -652,10 +652,10 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
     """
     [PDF p. 245]
 
-    :param X: input matrix (N × D_X)
+    :param X: input matrix (N × DX)
     :param Y: output matrix (N × D_Y)
-    :param W_k: submodel weight matrix (D_Y × D_X)
-    :param Lambda_k_1: submodel covariance matrix (D_X × D_X)
+    :param W_k: submodel weight matrix (D_Y × DX)
+    :param Lambda_k_1: submodel covariance matrix (DX × DX)
     :param a_tau_k: submodel noise precision parameter
     :param b_tau_k: submodel noise precision parameter
     :param a_alpha_k: weight vector prior parameter
@@ -665,7 +665,7 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
 
     :returns: rule component L_k(q) of variational bound
     """
-    D_Y, D_X = W_k.shape
+    D_Y, DX = W_k.shape
     E_tau_tau_k = a_tau_k / b_tau_k
     L_k_1_q = D_Y / 2 * (ss.digamma(a_tau_k) - np.log(b_tau_k)
                          - np.log(2 * np.pi)) * np.sum(r_k)
@@ -675,7 +675,7 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
         (Y - X @ W_k.T)**2, 1) + D_Y * np.sum(X * (X @ Lambda_k_1), 1))
     L_k_3_q = -ss.gammaln(HParams().A_ALPHA) + HParams().A_ALPHA * np.log(
         HParams().B_ALPHA) + ss.gammaln(a_alpha_k) - a_alpha_k * np.log(
-            b_alpha_k) + D_X * D_Y / 2 + D_Y / 2 * np.log(
+            b_alpha_k) + DX * D_Y / 2 + D_Y / 2 * np.log(
                 np.linalg.det(Lambda_k_1))
     L_k_4_q = D_Y * (-ss.gammaln(HParams().A_TAU)
                      + HParams().A_TAU * np.log(HParams().B_TAU) +

@@ -5,7 +5,6 @@ from .utils import matching_matrix
 from .literal import responsibilities
 
 
-
 class Mixing:
     """
     Model for the mixing weights of a set of linear regression rules.
@@ -27,7 +26,7 @@ class Mixing:
         rules : list of rule object
             List of rules (which are held fixed during mixing training).
         phi : callable
-            Mixing feature function taking input matrices of shape (N, D_X) and
+            Mixing feature function taking input matrices of shape (N, DX) and
             returning mixing feature matrices of shape (n, V). If ``None`` use
             the LCS default of ``phi(x) = 1``.
         random_state : RandomState object
@@ -81,21 +80,21 @@ class Mixing:
 
         M = np.hstack([cl.m_ for cl in self.RULES])
 
-        _, self.D_X_ = X.shape
-        _, self.D_y_ = y.shape
+        _, self.DX_ = X.shape
+        _, self.Dy_ = y.shape
         N, self.D_V_ = Phi.shape
 
         self.V_ = self.random_state.normal(loc=0,
-                                      scale=self.A_BETA / self.B_BETA,
-                                      size=(self.D_V_, self.K))
+                                           scale=self.A_BETA / self.B_BETA,
+                                           size=(self.D_V_, self.K))
         # a_beta is actually constant so we can set it here and be done with it.
         self.a_beta_ = np.repeat(self.A_BETA + self.D_V_ / 2, self.K)
         self.b_beta_ = np.repeat(self.B_BETA, self.K)
 
         # Initialize parameters for the Bouchard approximation.
         self.alpha_ = self.random_state.normal(loc=0,
-                                          scale=self.A_BETA / self.B_BETA,
-                                          size=(N, 1))
+                                               scale=self.A_BETA / self.B_BETA,
+                                               size=(N, 1))
         # lxi stands for λ(ξ) which is used in Bouchard's approximation. Its
         # supremum value is one over eight.
         self.lxi_ = self.random_state.random(size=(N, self.K)) * 0.125
@@ -154,7 +153,7 @@ class Mixing:
             # TODO Check whether the abs is necessary for the Bouchard bound.
             # if self.L_M_q < L_M_q_prev:
             #     print(f"self.L_M_q < L_M_q_prev: {self.L_M_q} < {L_M_q_prev}")
-            assert np.all(~ np.isnan(self.lxi_))
+            assert np.all(~np.isnan(self.lxi_))
 
         return self
 
@@ -164,7 +163,7 @@ class Mixing:
 
         Parameters
         ----------
-        X : array of shape (N, D_X)
+        X : array of shape (N, DX)
             Input matrix.
 
         Returns
@@ -194,9 +193,9 @@ class Mixing:
         ----------
         M : array of shape (N, K)
             Matching matrix.
-        X : array of shape (N, D_X)
+        X : array of shape (N, DX)
             Input matrix.
-        y : array of shape (N, D_y)
+        y : array of shape (N, Dy)
             Output matrix.
         Phi : array of shape (N, D_V)
             Mixing feature matrix.
@@ -336,9 +335,9 @@ class Mixing:
 
         Parameters
         ----------
-        X : array of shape (N, D_X)
+        X : array of shape (N, DX)
             Input matrix.
-        y : array of shape (N, D_y)
+        y : array of shape (N, Dy)
             Output matrix.
         G : array of shape (N, K)
             Mixing (“gating”) matrix.
@@ -355,9 +354,15 @@ class Mixing:
         # )
         W = [cl.W_ for cl in self.RULES]
         Lambda_1 = [cl.Lambda_1_ for cl in self.RULES]
-        a_tau =  [cl.a_tau_ for cl in self.RULES]
-        b_tau =  [cl.b_tau_ for cl in self.RULES]
-        return responsibilities(X=X, Y=y, G=G, W=W, Lambda_1=Lambda_1, a_tau=a_tau, b_tau=b_tau)
+        a_tau = [cl.a_tau_ for cl in self.RULES]
+        b_tau = [cl.b_tau_ for cl in self.RULES]
+        return responsibilities(X=X,
+                                Y=y,
+                                G=G,
+                                W=W,
+                                Lambda_1=Lambda_1,
+                                a_tau=a_tau,
+                                b_tau=b_tau)
 
     def _train_b_beta(self, V: np.ndarray, Lambda_V_1: np.ndarray):
         """

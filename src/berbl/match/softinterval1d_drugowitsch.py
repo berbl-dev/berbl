@@ -95,7 +95,7 @@ class SoftInterval1D():
 
         Parameters
         ----------
-        X : input matrix of shape ``(N, D_X)`` with ``D_X == 1``
+        X : input matrix of shape ``(N, DX)`` with ``DX == 1``
 
         Returns
         -------

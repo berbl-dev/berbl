@@ -45,8 +45,8 @@ class MixingLaplace(Mixing):
 
         M = np.hstack([rule.m_ for rule in self.RULES])
 
-        _, self.D_X_ = X.shape
-        _, self.D_y_ = y.shape
+        _, self.DX_ = X.shape
+        _, self.Dy_ = y.shape
         N, self.D_V_ = Phi.shape
 
         self.V_ = self.random_state.normal(loc=0,
@@ -108,9 +108,9 @@ class MixingLaplace(Mixing):
         ----------
         M : array of shape (N, K)
             Matching matrix.
-        X : array of shape (N, D_X)
+        X : array of shape (N, DX)
             Input matrix.
-        y : array of shape (N, D_y)
+        y : array of shape (N, Dy)
             Output matrix.
         Phi : array of shape (N, D_V)
             Mixing feature matrix.

@@ -52,7 +52,7 @@ def linears(draw, N=10, slope_range=(0, 1), intercept_range=(0, 1)):
     Creates a “perfectly” sampled sample for a random affine linear function on
     [-1, 1].
     """
-    D_X = 1
+    DX = 1
     # We create perfect values for X here so we don't run into sampling issues
     # (i.e. evenly spaced).
     X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
@@ -117,7 +117,7 @@ def random_data(draw, N=100):
     Creates a “perfectly” sampled sample for a random (non-smooth) function on
     [-1, 1] in 1 to 10 input or output dimensions.
     """
-    D_X = draw(st.integers(min_value=1, max_value=10))
+    DX = draw(st.integers(min_value=1, max_value=10))
     D_Y = draw(st.integers(min_value=1, max_value=10))
 
     # We create perfect values for X here so we don't run into sampling issues

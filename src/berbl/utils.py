@@ -54,9 +54,9 @@ def get_ranges(X: np.ndarray):
     """
     Computes the value range for each dimension.
 
-    :param X: input data as an ``(N, D_X)`` matrix
+    :param X: input data as an ``(N, DX)`` matrix
 
-    :returns: a ``(D_X, 2)`` matrix where each row consists the minimum and
+    :returns: a ``(DX, 2)`` matrix where each row consists the minimum and
         maximum in the respective dimension
     """
     return np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
@@ -67,12 +67,12 @@ def add_bias(X: np.ndarray):
     Prefixes each input vector (i.e. row) in the given input matrix with 1 for
     fitting the intercept.
 
-    :param X: input data as an ``(N, D_X)`` matrix
+    :param X: input data as an ``(N, DX)`` matrix
 
-    :returns: a ``(N, D_X + 1)`` matrix where each row is the corresponding
+    :returns: a ``(N, DX + 1)`` matrix where each row is the corresponding
         original matrix's row prefixed with 1
     """
-    N, D_X = X.shape
+    N, DX = X.shape
     return np.hstack([np.ones((N, 1)), X])
 
 
@@ -206,9 +206,9 @@ def check_phi(phi, X: np.ndarray):
     Parameters
     ----------
     phi : callable receiving ``X`` or ``None``
-        Mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
+        Mixing feature extractor (N × DX → N × D_V); if ``None`` uses the
         default LCS mixing feature matrix based on ``phi(x) = 1``.
-    X : array of shape (N, D_X)
+    X : array of shape (N, DX)
         Input matrix.
 
     Returns
@@ -232,7 +232,7 @@ def check_phi(phi, X: np.ndarray):
 def matching_matrix(matchs: List, X: np.ndarray):
     """
     :param ind: an individual for which the matching matrix is returned
-    :param X: input matrix (N × D_X)
+    :param X: input matrix (N × DX)
 
     :returns: matching matrix (N × K)
     """

@@ -39,7 +39,7 @@ def linears(draw, N=10, slope_range=(0, 1), intercept_range=(0, 1)):
     Creates a “perfectly” sampled sample for a random affine linear function on
     [-1, 1].
     """
-    D_X = 1
+    DX = 1
     # We create perfect values for X here so we don't run into sampling issues
     # (i.e. evenly spaced).
     X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
@@ -98,7 +98,7 @@ def random_data(draw, N=100):
     Creates a “perfectly” sampled sample for a random (non-smooth) function on
     [-1, 1] in 1 to 10 input or output dimensions.
     """
-    D_X = draw(st.integers(min_value=1, max_value=10))
+    DX = draw(st.integers(min_value=1, max_value=10))
     D_Y = draw(st.integers(min_value=1, max_value=10))
 
     # We create perfect values for X here so we don't run into sampling issues
@@ -155,7 +155,7 @@ def test_predict_var_batch_equals_point(data):
     match = AllMatch()
     cl = Rule(match, MAX_ITER=100).fit(X, y)
 
-    Dy = cl.D_y_
+    Dy = cl.Dy_
     y_var = cl.predict_var(X)
     assert y_var.shape == (len(X), Dy)
 
@@ -167,8 +167,8 @@ def test_predict_var_batch_equals_point(data):
                               rtol=1e-3), (y_var[n][j] - y_var_n_j)
 
 
-# D_X = 5, N = 10
-@given(Xs(N=10, D_X=5, bias_column=False),
+# DX = 5, N = 10
+@given(Xs(N=10, DX=5, bias_column=False),
        arrays(np.float64, (5, 5),
               elements=st.floats(min_value=0,
                                  max_value=100,
