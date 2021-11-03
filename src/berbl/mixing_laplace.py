@@ -3,6 +3,7 @@ import scipy.special as ss  # type: ignore
 
 from .literal import hessian
 from .mixing import Mixing
+from .utils import check_phi
 
 
 # It's not *that* nice to inherit from Mixing because they should be siblings
@@ -37,11 +38,7 @@ class MixingLaplace(Mixing):
         super().__init__(**kwargs)
 
     def fit(self, X, y):
-
-        if self.PHI is None:
-            Phi = np.ones((len(X), 1))
-        else:
-            raise NotImplementedError("phi is not None in Mixing")
+        Phi = check_phi(self.phi, X)
 
         M = np.hstack([rule.m_ for rule in self.RULES])
 

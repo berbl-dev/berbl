@@ -1,8 +1,8 @@
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 
-from .utils import matching_matrix
 from .literal import responsibilities
+from .utils import check_phi, matching_matrix
 
 
 class Mixing:
@@ -57,8 +57,7 @@ class Mixing:
         """
         # The set of rules is constant here.
         self.RULES = rules
-        # … as is phi.
-        self.PHI = phi
+        self.phi = phi
         self.A_BETA = A_BETA
         self.B_BETA = B_BETA
         self.DELTA_S_L_M_Q = DELTA_S_L_M_Q
@@ -73,10 +72,7 @@ class Mixing:
         Fits mixing weights for this mixing weight model's set of rules to the
         provided data.
         """
-        if self.PHI is None:
-            Phi = np.ones((len(X), 1))
-        else:
-            raise NotImplementedError("phi is not None in Mixing")
+        Phi = check_phi(self.phi, X)
 
         M = np.hstack([cl.m_ for cl in self.RULES])
 
@@ -171,10 +167,7 @@ class Mixing:
         array of shape (N, K)
             Mixing matrix containing the rules' mixing weights for each input.
         """
-        if self.PHI is None:
-            Phi = np.ones((len(X), 1))
-        else:
-            raise NotImplementedError("phi is not None in Mixing")
+        Phi = check_phi(self.phi, X)
 
         # TODO When predicting (which uses this mixing method), I currently
         # calculate M twice, once when matching for each rule and once in
@@ -347,8 +340,8 @@ class Mixing:
         R : array of shape (N, K)
             Responsibility matrix.
         """
-        # Is slower than the code duplication solution for larger
-        # len(self.RULES).
+        # NOTE: The code duplication solution used is faster for larger
+        # len(self.RULES) than the technically cleaner
         # W, Lambda_1, a_tau, b_tau = zip(
         #     *[(cl.W_, cl.Lambda_1_, cl.a_tau_, cl.b_tau_) for cl in self.RULES]
         # )
