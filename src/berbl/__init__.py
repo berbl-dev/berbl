@@ -37,8 +37,6 @@ class BERBL(BaseEstimator, RegressorMixin):
         """
         Note: Input is assumed to be standardized.
         """
-        # TODO Consider to perform input checking only here (and not in
-        # rule/mixing etc. as well)
 
         # See SLEP010.
         X, y = self._validate_data(X, y, multi_output=True)
@@ -68,7 +66,21 @@ class BERBL(BaseEstimator, RegressorMixin):
         check_is_fitted(self)
         return self.search_.predicts(X)
 
-    def predict_distribution(self, X):
+    def predict_distribution(self, x):
+        """
+        The distribution over all outputs for the given input.
+
+        Parameters
+        ----------
+        x : array of shape (DX,)
+
+        Returns
+        -------
+        pdf : callable
+            A callable that, when given a possible output value ``y`` (an array
+            of shape ``(Dy, )``) returns the value of the predictive
+            distribution at that point.
+        """
         # See SLEP010.
         X = self._validate_data(X, reset=False)
         check_is_fitted(self)
