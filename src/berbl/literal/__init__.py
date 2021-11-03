@@ -221,17 +221,30 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     """
     [PDF p. 238]
 
-    :param M: matching matrix (N × K)
-    :param X: input matrix (N × DX)
-    :param Y: output matrix (N × D_Y)
-    :param Phi: mixing feature matrix (N × D_V)
-    :param W: submodel weight matrices (list of D_Y × DX)
-    :param Lambda_1: submodel covariance matrices (list of DX × DX)
-    :param a_tau: submodel noise precision parameters
-    :param b_tau: submodel noise precision parameters
+    Parameters
+    ----------
+    M : array of shape (N, K)
+        Matching matrix.
+    X : array of shape (N, DX)
+        Input matrix.
+    Y : array of shape (N, DY)
+        Output matrix.
+    Phi : array of shape (N, DV)
+        Mixing feature matrix.
+    W : list (length K) of arrays of shape (DY, DX)
+        Submodel weight matrices.
+    Lambda_1 : list (length K) of arrays of shape (DX, DX)
+        Submodel covariance matrices.
+    a_tau : array of shape (K,)
+        Submodel noise precision parameter.
+    b_tau : array of shape (K,)
+        Submodel noise precision parameter.
 
-    :returns: mixing weight matrix (D_V × K), mixing weight covariance matrix (K
-        D_V × K D_V), mixing weight vector prior parameters a_beta/b_beta
+    Returns
+    -------
+    V, Lambda_V_1, a_beta, b_beta : tuple of arrays of shapes (DV, K), (K * DV, K * DV), (K,) and (K,)
+        Mixing weight matrix, mixing weight covariance matrix, mixing weight
+        prior parameter vectors.
     """
     N, K = M.shape
     N, DX = X.shape
