@@ -57,7 +57,6 @@ class Mixture:
         y : array of shape (N, Dy)
             Output matrix.
         """
-        # TODO Use NumPy style of param dimension descriptions
 
         if self.add_bias:
             X = add_bias(X)
@@ -162,23 +161,6 @@ class Mixture:
 
         y_var = np.sum(G * (y_vars + ys**2), axis=0) - y**2
 
-        # TODO Re-check this for correctness (should(?) probably be the same as
-        # the following loop but is not?)
-        # var = np.zeros((N, Dy))
-        # for n in range(N):
-        #     x_ = X[n]
-        #     g = G_.T[n]
-        #     for j in range(Dy):
-        #         for k in range(self.K_):
-        #             cl = self.rules_[k]
-        #             var[n][j] += g[k] * (2 * cl.b_tau / (cl.a_tau - 1) *
-        #                                  (1 + x_ @ cl.Lambda_1 @ x_) +
-        #                                  (cl.W[j] @ x_)**2)
-        #         var[n][j] -= y[j]**2
-        # assert np.all(np.isclose(
-        #     y_var, var)), (y_var - var)[np.where(~(np.isclose(y_var - var,
-        #     0)))]
-
         return y, y_var
 
     def predicts(self, X):
@@ -224,7 +206,7 @@ class Mixture:
 
         Returns
         -------
-        array of shape (K, N)
+        array of shape (K, N, Dy)
             Prediction variances of each submodel.
         """
         if self.add_bias:

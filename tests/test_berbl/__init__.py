@@ -38,7 +38,8 @@ def imatch1ds(draw, has_bias=True):
 def Xs(draw, N=10, D_X=1, bias_column=True):
     X = draw(
         arrays(np.float64, (N, D_X),
-               elements=st.floats(min_value=-1, max_value=1)))
+               elements=st.floats(min_value=-1, max_value=1),
+               unique=True))
     if bias_column:
         X = add_bias(X)
     return X

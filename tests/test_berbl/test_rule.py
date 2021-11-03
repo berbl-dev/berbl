@@ -1,36 +1,17 @@
 # import pytest  # type: ignore
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
-from hypothesis import given, settings  # type: ignore
-from hypothesis.extra.numpy import arrays  # type: ignore
 from berbl.match.allmatch import AllMatch
 from berbl.rule import Rule
-from berbl.match.radial1d_drugowitsch import RadialMatch1D
 from berbl.utils import add_bias
-from sklearn.metrics import mean_absolute_error
+from hypothesis import given, settings  # type: ignore
+from hypothesis.extra.numpy import arrays  # type: ignore
 from sklearn.linear_model import LinearRegression
-
+from sklearn.metrics import mean_absolute_error
+from test_berbl import Xs, ys
 
 # TODO Expand to n-dim radial matching. Currently this is only for
 # one-dimensional data (possibly with a bias column)
-
-
-@st.composite
-def Xs(draw, N=10, D_X=1, bias_column=True):
-    X = draw(
-        arrays(np.float64, (N, D_X),
-               elements=st.floats(min_value=-1, max_value=1),
-               unique=True))
-    if bias_column:
-        X = add_bias(X)
-    return X
-
-
-@st.composite
-def ys(draw, N=10, D_y=1):
-    return draw(
-        arrays(np.float64, (N, D_y),
-               elements=st.floats(min_value=-1000, max_value=1000)))
 
 
 @given(Xs(), ys())
@@ -165,6 +146,43 @@ def test_fit_non_linear(data):
                 f"linear regression oracle score ({score_oracle})")
 
 
-# TODO Test submodel variance: Vectorized form (berbl) vs. point form
+@given(random_data())
+def test_predict_var_batch_equals_point(data):
+    """
+    Vectorized form of predict_var equals point-wise form.
+    """
+    X, y = data
+    match = AllMatch()
+    cl = Rule(match, MAX_ITER=100).fit(X, y)
+
+    Dy = cl.D_y_
+    y_var = cl.predict_var(X)
+    assert y_var.shape == (len(X), Dy)
+
+    for n in range(len(X)):
+        for j in range(Dy):
+            y_var_n_j = 2 * cl.b_tau_ / (cl.a_tau_ - 1) * (
+                1 + X[n].T @ cl.Lambda_1_ @ X[n])
+            assert np.isclose(y_var[n][j], y_var_n_j, atol=1e-3,
+                              rtol=1e-3), (y_var[n][j] - y_var_n_j)
+
+
+# D_X = 5, N = 10
+@given(Xs(N=10, D_X=5, bias_column=False),
+       arrays(np.float64, (5, 5),
+              elements=st.floats(min_value=0,
+                                 max_value=100,
+                                 allow_infinity=False,
+                                 allow_nan=False)))
+def test_square_with_matrix(X, Lambda_1_):
+    y1 = np.sum((X @ Lambda_1_) * X, axis=1)
+    y2 = np.zeros((10, ))
+    y3 = np.diag(X @ Lambda_1_ @ X.T)
+    for n in range(10):
+        y2[n] = X[n].T @ Lambda_1_ @ X[n]
+
+    assert np.all(np.isclose(y1, y2, rtol=1e-7)), (y1 - y2)
+    assert np.all(np.isclose(y1, y3, rtol=1e-7)), (y1 - y3)
+
 
 # TODO Add tests for all the other hyperparameters of Rule.

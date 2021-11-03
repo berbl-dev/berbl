@@ -139,11 +139,13 @@ class Rule():
         -------
         variance : array of shape (N, D_y)
         """
-        # TODO Check whether this vectorized form and reshaping is correct
-        # The sum corresponds to x @ self.Lambda_1 @ x for each x in X.
-        var = 2 * self.b_tau_ / (self.a_tau_
-                                 - 1) * (1 + np.sum(X * X @ self.Lambda_1_, 1))
-        return var.reshape((len(X), self.D_y_)).repeat(self.D_y_, axis=1)
+        # The sum corresponds to x @ self.Lambda_1 @ x for each x in X (i.e.
+        # np.diag(X @ self.Lambda_1_ @ X.T)).
+        var = 2 * self.b_tau_ / (self.a_tau_ - 1) * (
+            1 + np.sum((X @ self.Lambda_1_) * X, axis=1))
+        # The same value is repeated for each dimension since the model
+        # currently assumes the same variance in all dimensions.
+        return var[:,np.newaxis].repeat(self.D_y_, axis=1)
 
     def var_bound(self, X: np.ndarray, y: np.ndarray, r: np.ndarray):
         """
