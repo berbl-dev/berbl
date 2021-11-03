@@ -14,7 +14,7 @@ class MixingLaplace(Mixing):
     using Drugowitsch's Laplace approximation.
 
     Structurally, the main difference to ``Mixing`` is that ``Lambda_V_1`` is a
-    matrix of shape ``(K * D_V, K * D_V)`` (i.e. the mixing problem is solved
+    matrix of shape ``(K * DV, K * DV)`` (i.e. the mixing problem is solved
     for all submodels at once), whereas ``Mixing`` has ``K`` mixing matrices
     (one for each submodel).
     """
@@ -44,13 +44,13 @@ class MixingLaplace(Mixing):
 
         _, self.DX_ = X.shape
         _, self.Dy_ = y.shape
-        N, self.D_V_ = Phi.shape
+        N, self.DV_ = Phi.shape
 
         self.V_ = self.random_state.normal(loc=0,
                                            scale=self.A_BETA / self.B_BETA,
-                                           size=(self.D_V_, self.K))
+                                           size=(self.DV_, self.K))
         # a_beta is actually constant so we can set it here and be done with it.
-        self.a_beta_ = np.repeat(self.A_BETA + self.D_V_ / 2, self.K)
+        self.a_beta_ = np.repeat(self.A_BETA + self.DV_ / 2, self.K)
         self.b_beta_ = np.repeat(self.B_BETA, self.K)
 
         self.G_ = self._mixing(M, Phi, self.V_)
@@ -109,13 +109,13 @@ class MixingLaplace(Mixing):
             Input matrix.
         y : array of shape (N, Dy)
             Output matrix.
-        Phi : array of shape (N, D_V)
+        Phi : array of shape (N, DV)
             Mixing feature matrix.
         G : array of shape (N, K)
             Mixing (“gating”) matrix.
         R : array of shape (N, K)
             Responsibility matrix.
-        V : array of shape (D_V, K)
+        V : array of shape (DV, K)
             Mixing weight matrix.
         a_beta : array of shape (K,)
             Mixing weight prior parameter (row vector).
@@ -128,14 +128,14 @@ class MixingLaplace(Mixing):
 
         Returns
         -------
-        V, Lambda_V_1 : tuple of arrays of shapes (D_V, K) and (K * D_V, K * D_V)
+        V, Lambda_V_1 : tuple of arrays of shapes (DV, K) and (K * DV, K * DV)
             Updated mixing weight matrix and mixing weight covariance matrix.
         """
         # NOTE We don't use the version from literal here because we
         # cache/precompute several values that are computed each time
         # literal.train_mix_weights is called.
         N, _ = X.shape
-        D_V, _ = V.shape
+        DV, _ = V.shape
 
         E_beta_beta = a_beta / b_beta
 
@@ -157,9 +157,9 @@ class MixingLaplace(Mixing):
             # result as inv anyways if H is non-singular. Also, in his own code,
             # Drugowitsch always uses pseudo inverse here.
             delta_v = -np.linalg.pinv(H) @ e
-            # “D_V × K matrix with jk'th element given by ((k - 1) K + j)'th
+            # “DV × K matrix with jk'th element given by ((k - 1) K + j)'th
             # element of v.” (Probably means “delta_v”.)
-            delta_V = delta_v.reshape((self.K, D_V)).T
+            delta_V = delta_v.reshape((self.K, DV)).T
             V = V + delta_V
 
             G = self._mixing(M, Phi, V)
@@ -219,9 +219,9 @@ class MixingLaplace(Mixing):
             Mixing (“gating”) matrix.
         R : array of shape (N, K)
             Responsibility matrix.
-        V : array of shape (D_V, K)
+        V : array of shape (DV, K)
             Mixing weight matrix.
-        Lambda_V_1 : array of shape (K * D_V, K * D_V)
+        Lambda_V_1 : array of shape (K * DV, K * DV)
             Mixing weight covariance matrix.
         a_beta : array of shape (K,)
             Mixing weight prior parameter (row vector).
@@ -235,7 +235,7 @@ class MixingLaplace(Mixing):
         # NOTE We don't use the version from literal here because we
         # can cache/precompute several values that are computed each time
         # literal.train_mix_weights is called.
-        D_V, K = V.shape
+        DV, K = V.shape
 
         L_M1q = K * (-ss.gammaln(self.A_BETA)
                      + self.A_BETA * np.log(self.B_BETA))
@@ -265,7 +265,7 @@ class MixingLaplace(Mixing):
             L_M2q = 0
         assert L_M2q <= 0, f"Kullback-Leibler divergence less than zero: {L_M2q}"
         # TODO Performance: slogdet can be cached, is computed more than once
-        L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
+        L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * DV / 2
         if np.any(~np.isfinite([L_M1q, L_M2q, L_M3q])):
             print(f"Non-finite var_mix_bound: "
                   f"L_M1q = {L_M1q}, "

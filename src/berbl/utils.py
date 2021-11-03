@@ -206,14 +206,14 @@ def check_phi(phi, X: np.ndarray):
     Parameters
     ----------
     phi : callable receiving ``X`` or ``None``
-        Mixing feature extractor (N × DX → N × D_V); if ``None`` uses the
+        Mixing feature extractor (N × DX → N × DV); if ``None`` uses the
         default LCS mixing feature matrix based on ``phi(x) = 1``.
     X : array of shape (N, DX)
         Input matrix.
 
     Returns
     -------
-    Phi : array of shape (N, D_V)
+    Phi : array of shape (N, DV)
         Mixing feature matrix.
     """
     # NOTE This is named like this in order to stay close to sklearn's naming

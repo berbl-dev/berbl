@@ -36,7 +36,7 @@ class Toolbox(base.Toolbox):
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi : callable
-            Mixing feature extractor (N × D_X → N × D_V); if ``None`` uses the
+            Mixing feature extractor (N × D_X → N × DV); if ``None`` uses the
             default LCS mixing feature matrix based on ``phi(x) = 1``.
         fit_mixing : str
             Only applies if ``literal`` is ``False``.  How mixing weights should

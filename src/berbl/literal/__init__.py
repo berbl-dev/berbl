@@ -66,8 +66,8 @@ def model_probability(matchs: List,
 
     :param M: matching matrix (N × K)
     :param X: input matrix (N × DX)
-    :param Y: output matrix (N × D_Y)
-    :param Phi: mixing feature matrix (N × D_V)
+    :param Y: output matrix (N × DY)
+    :param Phi: mixing feature matrix (N × DV)
 
     :returns: two dicts: model metrics and model parameters
     """
@@ -148,14 +148,14 @@ def train_classifier(m_k, X, Y):
     """
     :param m_k: matching vector (N)
     :param X: input matrix (N × DX)
-    :param Y: output matrix (N × D_Y)
-    :param Phi: mixing feature matrix (N × D_V)
+    :param Y: output matrix (N × DY)
+    :param Phi: mixing feature matrix (N × DV)
 
-    :returns: weight matrix (D_Y × DX), covariance matrix (DX × DX), two
+    :returns: weight matrix (DY × DX), covariance matrix (DX × DX), two
         noise precision parameters, two weight vector parameters
     """
     N, DX = X.shape
-    N, D_Y = Y.shape
+    N, DY = Y.shape
     X_k = X * np.sqrt(m_k)
     Y_k = Y * np.sqrt(m_k)
     a_alpha_k, b_alpha_k = HParams().A_ALPHA, HParams().B_ALPHA
@@ -164,7 +164,7 @@ def train_classifier(m_k, X, Y):
     delta_L_k_q = HParams().DELTA_S_L_K_Q + 1
     # This is constant; Drugowitsch nevertheless puts it into the while loop
     # (probably for readability).
-    a_alpha_k = HParams().A_ALPHA + DX * D_Y / 2
+    a_alpha_k = HParams().A_ALPHA + DX * DY / 2
     # Drugowitsch reaches convergence usually after 3-4 iterations [PDF p. 237].
     # NOTE Deviation from the original text (but not from LCSBookCode) since we
     # add a maximum number of iterations (see module doc string).
@@ -183,12 +183,12 @@ def train_classifier(m_k, X, Y):
         Lambda_k_1 = np.linalg.pinv(Lambda_k)
         W_k = Y_k.T @ X_k @ Lambda_k_1
         a_tau_k = HParams().A_TAU + 0.5 * np.sum(m_k)
-        b_tau_k = HParams().B_TAU + 1 / (2 * D_Y) * (
+        b_tau_k = HParams().B_TAU + 1 / (2 * DY) * (
             np.sum(Y_k * Y_k) - np.sum(W_k * (W_k @ Lambda_k)))
         E_tau_tau_k = a_tau_k / b_tau_k
-        # D_Y factor in front of trace due to sum over D_Y elements (7.100).
+        # DY factor in front of trace due to sum over DY elements (7.100).
         b_alpha_k = HParams().B_ALPHA + 0.5 * (E_tau_tau_k * np.sum(W_k * W_k)
-                                               + D_Y * np.trace(Lambda_k_1))
+                                               + DY * np.trace(Lambda_k_1))
         L_k_q_prev = L_k_q
         L_k_q = var_cl_bound(
             X=X,
@@ -235,12 +235,12 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     """
     N, K = M.shape
     N, DX = X.shape
-    N, D_Y = Y.shape
-    N, D_V = Phi.shape
+    N, DY = Y.shape
+    N, DV = Phi.shape
 
     V = random_state.normal(loc=0,
                             scale=HParams().A_BETA / HParams().B_BETA,
-                            size=(D_V, K))
+                            size=(DV, K))
     a_beta = np.repeat(HParams().A_BETA, K)
     b_beta = np.repeat(HParams().B_BETA, K)
     L_M_q = -np.inf
@@ -307,14 +307,14 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     Is zero wherever a rule does not match.
 
     :param M: matching matrix (N × K)
-    :param Phi: mixing feature matrix (N × D_V)
-    :param V: mixing weight matrix (D_V × K)
+    :param Phi: mixing feature matrix (N × DV)
+    :param V: mixing weight matrix (DV × K)
 
     :returns: mixing matrix (N × K)
     """
-    D_V, K = V.shape
+    DV, K = V.shape
     # If Phi is standard, this simply broadcasts V to a matrix [V, V, V, …] of
-    # shape (N, D_V).
+    # shape (N, DV).
     G = Phi @ V
 
     # This quasi never happens (at least for the run I checked it did not). That
@@ -342,9 +342,9 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
     [PDF p. 240]
 
     :param X: input matrix (N × DX)
-    :param Y: output matrix (N × D_Y)
+    :param Y: output matrix (N × DY)
     :param G: mixing (“gating”) matrix (N × K)
-    :param W: submodel weight matrices (list of D_Y × DX)
+    :param W: submodel weight matrices (list of DY × DX)
     :param Lambda_1: submodel covariance matrices (list of DX × DX)
     :param a_tau: submodel noise precision parameters
     :param b_tau: submodel noise precision parameters
@@ -352,16 +352,16 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
     :returns: responsibility matrix (N × K)
     """
     N, K = G.shape
-    N, D_Y = Y.shape
+    N, DY = Y.shape
 
     # We first create the transpose of R because indexing is easier. We then
     # transpose before multiplying elementwise with G.
     R_T = np.zeros((K, N))
     for k in range(K):
-        R_T[k] = np.exp(D_Y / 2 * (ss.digamma(a_tau[k]) - np.log(b_tau[k]))
+        R_T[k] = np.exp(DY / 2 * (ss.digamma(a_tau[k]) - np.log(b_tau[k]))
                         - 0.5
                         * (a_tau[k] / b_tau[k] * np.sum((Y - X @ W[k].T)**2, 1)
-                           + D_Y * np.sum(X * (X @ Lambda_1[k]), 1)))
+                           + DY * np.sum(X * (X @ Lambda_1[k]), 1)))
     R = R_T.T * G
     # Make a copy of the reference for checking for nans a few lines later.
     R_ = R
@@ -393,9 +393,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         Input matrix.
     y : array of shape (N, Dy)
         Output matrix.
-    Phi : array of shape (N, D_V)
+    Phi : array of shape (N, DV)
         Mixing feature matrix.
-    W : list (length K) of arrays of shape (D_Y, DX)
+    W : list (length K) of arrays of shape (DY, DX)
         Submodel weight matrices.
     Lambda_1 : list (length K) of arrays of shape (DX, DX)
         Submodel covariance matrices.
@@ -403,7 +403,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         Submodel noise precision parameter.
     b_tau : array of shape (K,)
         Submodel noise precision parameter.
-    V : array of shape (D_V, K)
+    V : array of shape (DV, K)
         Mixing weight matrix.
     a_beta : array of shape (K,)
         Mixing weight prior parameter (row vector).
@@ -416,10 +416,10 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
 
     Returns
     -------
-    V, Lambda_V_1 : tuple of arrays of shapes (D_V, K) and (K * D_V, K * D_V)
+    V, Lambda_V_1 : tuple of arrays of shapes (DV, K) and (K * DV, K * DV)
         Updated mixing weight matrix and mixing weight covariance matrix.
     """
-    D_V, K = V.shape
+    DV, K = V.shape
 
     E_beta_beta = a_beta / b_beta
     # TODO Performance: This can probably be cached (is calculated above)
@@ -454,9 +454,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         # non-singular. Also, in his own code, Drugowitsch always uses pseudo
         # inverse here.
         delta_v = -np.linalg.pinv(H) @ e
-        # “D_V × K matrix with jk'th element given by ((k - 1) K + j)'th element
+        # “DV × K matrix with jk'th element given by ((k - 1) K + j)'th element
         # of v.” (Probably means “delta_v”.)
-        delta_V = delta_v.reshape((K, D_V)).T
+        delta_V = delta_v.reshape((K, DV)).T
         V = V + delta_V
         G = mixing(M, Phi, V)
         R = responsibilities(X=X,
@@ -516,7 +516,7 @@ def hessian(Phi: np.ndarray, G: np.ndarray, a_beta: np.ndarray,
 
     Parameters
     ----------
-    Phi : array of shape (N, D_V)
+    Phi : array of shape (N, DV)
         Mixing feature matrix.
     G : array of shape (N, K)
         Mixing (“gating”) matrix.
@@ -527,29 +527,29 @@ def hessian(Phi: np.ndarray, G: np.ndarray, a_beta: np.ndarray,
 
     Returns
     -------
-    array of shape (K * D_V, K * D_V)
+    array of shape (K * DV, K * DV)
         Hessian matrix.
     """
-    N, D_V = Phi.shape
+    N, DV = Phi.shape
     K, = a_beta.shape
     assert G.shape == (N, K)
     assert a_beta.shape == b_beta.shape
 
-    H = np.zeros((K * D_V, K * D_V))
+    H = np.zeros((K * DV, K * DV))
     for k in range(K):
         for j in range(k):
-            lk = k * D_V
-            uk = (k + 1) * D_V
-            lj = j * D_V
-            uj = (j + 1) * D_V
+            lk = k * DV
+            uk = (k + 1) * DV
+            lj = j * DV
+            uj = (j + 1) * DV
             H_kj = -Phi.T @ (Phi * (G[:, [k]] * G[:, [j]]))
             H[lk:uk:1, lj:uj:1] = H_kj
             H[lj:uj:1, lk:uk:1] = H_kj
-        l = k * D_V
-        u = (k + 1) * D_V
+        l = k * DV
+        u = (k + 1) * DV
         H[l:u:1, l:u:1] = Phi.T @ (
             Phi * (G[:, [k]] *
-                   (1 - G[:, [k]]))) + a_beta[k] / b_beta[k] * np.identity(D_V)
+                   (1 - G[:, [k]]))) + a_beta[k] / b_beta[k] * np.identity(DV)
     return H
 
 
@@ -557,13 +557,13 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
     """
     [PDF p. 244]
 
-    :param V: mixing weight matrix (D_V × K)
-    :param Lambda_V_1: mixing covariance matrix (K D_V × K D_V)
+    :param V: mixing weight matrix (DV × K)
+    :param Lambda_V_1: mixing covariance matrix (K DV × K DV)
 
     :returns: mixing weight vector prior parameters a_beta, b_beta
     """
-    D_V, K = V.shape
-    assert Lambda_V_1.shape == (K * D_V, K * D_V)
+    DV, K = V.shape
+    assert Lambda_V_1.shape == (K * DV, K * DV)
 
     a_beta = np.zeros(K)
     b_beta = np.zeros(K)
@@ -572,16 +572,16 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
     # b[:,1] = b_b + 0.5 * (sum(V * V, 0) + self.cov_Tr)
     for k in range(K):
         v_k = V[:, [k]]
-        l = k * D_V
-        u = (k + 1) * D_V
+        l = k * DV
+        u = (k + 1) * DV
         # Not that efficient, I think (but very close to [PDF p. 244]).
         # Lambda_V_1_kk = Lambda_V_1[l:u:1, l:u:1]
-        # a_beta[k] = A_BETA + D_V / 2
+        # a_beta[k] = A_BETA + DV / 2
         # b_beta[k] = B_BETA + 0.5 * (np.trace(Lambda_V_1_kk) + v_k.T @ v_k)
         # More efficient.
         # TODO Performance: a_beta is constant, extract from loop (and probably
         # from loop in using function as well)
-        a_beta[k] = HParams().A_BETA + D_V / 2
+        a_beta[k] = HParams().A_BETA + DV / 2
         try:
             b_beta[k] = HParams().B_BETA + 0.5 * (
                 np.sum(Lambda_V_1_diag[l:u:1]) + v_k.T @ v_k)
@@ -603,23 +603,23 @@ def var_bound(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
 
     :param M: matching matrix (N × K)
     :param X: input matrix (N × DX)
-    :param Y: output matrix (N × D_Y)
-    :param Phi: mixing feature matrix (N × D_V)
-    :param W: submodel weight matrices (list of D_Y × DX)
+    :param Y: output matrix (N × DY)
+    :param Phi: mixing feature matrix (N × DV)
+    :param W: submodel weight matrices (list of DY × DX)
     :param Lambda_1: submodel covariance matrices (list of DX × DX)
     :param a_tau: submodel noise precision parameters
     :param b_tau: submodel noise precision parameters
     :param a_alpha: weight vector prior parameters
     :param b_alpha: weight vector prior parameters
-    :param V: mixing weight matrix (D_V × K)
-    :param Lambda_V_1: mixing covariance matrix (K D_V × K D_V)
+    :param V: mixing weight matrix (DV × K)
+    :param Lambda_V_1: mixing covariance matrix (K DV × K DV)
     :param a_beta: mixing weight prior parameter (row vector of length K)
     :param b_beta: mixing weight prior parameter (row vector of length K)
 
     :returns: variational bound L(q)
     """
-    D_V, K = V.shape
-    assert Lambda_V_1.shape == (K * D_V, K * D_V)
+    DV, K = V.shape
+    assert Lambda_V_1.shape == (K * DV, K * DV)
     assert a_beta.shape == b_beta.shape
     assert a_beta.shape == (K, )
 
@@ -653,8 +653,8 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
     [PDF p. 245]
 
     :param X: input matrix (N × DX)
-    :param Y: output matrix (N × D_Y)
-    :param W_k: submodel weight matrix (D_Y × DX)
+    :param Y: output matrix (N × DY)
+    :param W_k: submodel weight matrix (DY × DX)
     :param Lambda_k_1: submodel covariance matrix (DX × DX)
     :param a_tau_k: submodel noise precision parameter
     :param b_tau_k: submodel noise precision parameter
@@ -665,19 +665,19 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
 
     :returns: rule component L_k(q) of variational bound
     """
-    D_Y, DX = W_k.shape
+    DY, DX = W_k.shape
     E_tau_tau_k = a_tau_k / b_tau_k
-    L_k_1_q = D_Y / 2 * (ss.digamma(a_tau_k) - np.log(b_tau_k)
+    L_k_1_q = DY / 2 * (ss.digamma(a_tau_k) - np.log(b_tau_k)
                          - np.log(2 * np.pi)) * np.sum(r_k)
     # We reshape r_k to a NumPy row vector since NumPy seems to understand what
     # we want to do when we multiply two row vectors (i.e. a^T a).
     L_k_2_q = (-0.5 * r_k).reshape((-1)) @ (E_tau_tau_k * np.sum(
-        (Y - X @ W_k.T)**2, 1) + D_Y * np.sum(X * (X @ Lambda_k_1), 1))
+        (Y - X @ W_k.T)**2, 1) + DY * np.sum(X * (X @ Lambda_k_1), 1))
     L_k_3_q = -ss.gammaln(HParams().A_ALPHA) + HParams().A_ALPHA * np.log(
         HParams().B_ALPHA) + ss.gammaln(a_alpha_k) - a_alpha_k * np.log(
-            b_alpha_k) + DX * D_Y / 2 + D_Y / 2 * np.log(
+            b_alpha_k) + DX * DY / 2 + DY / 2 * np.log(
                 np.linalg.det(Lambda_k_1))
-    L_k_4_q = D_Y * (-ss.gammaln(HParams().A_TAU)
+    L_k_4_q = DY * (-ss.gammaln(HParams().A_TAU)
                      + HParams().A_TAU * np.log(HParams().B_TAU) +
                      (HParams().A_TAU - a_tau_k) * ss.digamma(a_tau_k)
                      - HParams().A_TAU * np.log(b_tau_k) - HParams().B_TAU
@@ -697,9 +697,9 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
         Mixing (“gating”) matrix.
     R : array of shape (N, K)
         Responsibility matrix.
-    V : array of shape (D_V, K)
+    V : array of shape (DV, K)
         Mixing weight matrix.
-    Lambda_V_1 : array of shape (K * D_V, K * D_V)
+    Lambda_V_1 : array of shape (K * DV, K * DV)
         Mixing weight covariance matrix.
     a_beta : array of shape (K,)
         Mixing weight prior parameter (row vector).
@@ -710,11 +710,11 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     L_M_q : float
         Mixing component L_M(q) of variational bound.
     """
-    D_V, K = V.shape
+    DV, K = V.shape
 
     assert G.shape == R.shape
     assert G.shape[1] == K
-    assert Lambda_V_1.shape == (K * D_V, K * D_V)
+    assert Lambda_V_1.shape == (K * DV, K * DV)
     assert a_beta.shape == (K, )
     assert b_beta.shape == (K, )
 
@@ -750,7 +750,7 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     # L_M3q may be -inf after the following line but that is probably OK since
     # the ``train_mixing`` loop then aborts (also see comment in
     # ``train_mixing``).
-    L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * D_V / 2
+    L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * DV / 2
     if np.any(~np.isfinite([L_M1q, L_M2q, L_M3q])):
         print(f"Non-finite var_mix_bound: "
               f"L_M1q = {L_M1q}, "

@@ -25,7 +25,7 @@ class Model:
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi
-            mixing feature extractor (N × Dx → N × D_V); if ``None`` uses the
+            mixing feature extractor (N × Dx → N × DV); if ``None`` uses the
             default LCS mixing feature matrix based on ``phi(x) = 1``
         """
         self.matchs = matchs

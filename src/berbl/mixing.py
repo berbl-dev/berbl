@@ -78,13 +78,13 @@ class Mixing:
 
         _, self.DX_ = X.shape
         _, self.Dy_ = y.shape
-        N, self.D_V_ = Phi.shape
+        N, self.DV_ = Phi.shape
 
         self.V_ = self.random_state.normal(loc=0,
                                            scale=self.A_BETA / self.B_BETA,
-                                           size=(self.D_V_, self.K))
+                                           size=(self.DV_, self.K))
         # a_beta is actually constant so we can set it here and be done with it.
-        self.a_beta_ = np.repeat(self.A_BETA + self.D_V_ / 2, self.K)
+        self.a_beta_ = np.repeat(self.A_BETA + self.DV_ / 2, self.K)
         self.b_beta_ = np.repeat(self.B_BETA, self.K)
 
         # Initialize parameters for the Bouchard approximation.
@@ -190,11 +190,11 @@ class Mixing:
             Input matrix.
         y : array of shape (N, Dy)
             Output matrix.
-        Phi : array of shape (N, D_V)
+        Phi : array of shape (N, DV)
             Mixing feature matrix.
         R : array of shape (N, K)
             Responsibility matrix.
-        V : array of shape (D_V, K)
+        V : array of shape (DV, K)
             Mixing weight matrix.
         a_beta : array of shape (K,)
             Mixing weight prior parameter (row vector).
@@ -207,15 +207,15 @@ class Mixing:
 
         Returns
         -------
-        V, Lambda_V_1 : tuple of array of shapes (D_V, K) and list (length K) of arrays of shape (D_V, D_V)
+        V, Lambda_V_1 : tuple of array of shapes (DV, K) and list (length K) of arrays of shape (DV, DV)
             Updated mixing weight matrix and mixing weight covariance matrices.
         """
         N, _ = X.shape
-        D_V, _ = V.shape
+        DV, _ = V.shape
 
         E_beta_beta = a_beta / b_beta
 
-        Lambda_V_1 = [np.zeros((D_V, D_V))] * self.K
+        Lambda_V_1 = [np.zeros((DV, DV))] * self.K
 
         Rlxi = R * lxi
         for k in range(self.K):
@@ -240,9 +240,9 @@ class Mixing:
         ----------
         M : array of shape (N, K)
             Matching matrix.
-        Phi : array of shape (N, D_V)
+        Phi : array of shape (N, DV)
             Mixing feature matrix.
-        V : array of shape (D_V, K)
+        V : array of shape (DV, K)
             Mixing weight matrix.
         alpha : array of shape (N, 1)
             Current value of ``alpha`` variational parameters of Bouchard's
@@ -291,9 +291,9 @@ class Mixing:
         ----------
         M : array of shape (N, K)
             Matching matrix.
-        Phi : array of shape (N, D_V)
+        Phi : array of shape (N, DV)
             Mixing feature matrix.
-        V : array of shape (D_V, K)
+        V : array of shape (DV, K)
             Mixing weight matrix.
 
         Returns
@@ -302,7 +302,7 @@ class Mixing:
             Mixing (“gating”) matrix.
         """
         # If Phi is standard, this simply broadcasts V to a matrix [V, V, V, …]
-        # of shape (N, D_V).
+        # of shape (N, DV).
         G = Phi @ V
 
         # This quasi never happens (at least for the run I checked it did not).
@@ -366,9 +366,9 @@ class Mixing:
 
         Parameters
         ----------
-        V : array of shape (D_V, K)
+        V : array of shape (DV, K)
             Mixing weight matrix.
-        Lambda_V_1 : list (length K) of arrays of shape (D_V, D_V)
+        Lambda_V_1 : list (length K) of arrays of shape (DV, DV)
             List of mixing weight covariance matrices.
 
         Returns
@@ -376,15 +376,15 @@ class Mixing:
         b_beta : array of shape (K,)
             mixing weight vector prior parameter
         """
-        D_V, _ = V.shape
+        DV, _ = V.shape
         b_beta = np.zeros(self.K)
         Lambda_V_1_diag = np.array(list(map(np.diag, Lambda_V_1)))
         # TODO Performance: LCSBookCode vectorized this:
         # b[:,1] = b_b + 0.5 * (sum(V * V, 0) + self.cov_Tr)
         for k in range(self.K):
             v_k = V[:, [k]]
-            l = k * D_V
-            u = (k + 1) * D_V
+            l = k * DV
+            u = (k + 1) * DV
             # Not that efficient, I think (but very close to [PDF p. 244]).
             # Lambda_V_1_kk = Lambda_V_1[l:u:1, l:u:1]
             # b_beta[k] = B_BETA + 0.5 * (np.trace(Lambda_V_1_kk) + v_k.T @ v_k)
@@ -406,9 +406,9 @@ class Mixing:
             Mixing (“gating”) matrix.
         R : array of shape (N, K)
             Responsibility matrix.
-        V : array of shape (D_V, K)
+        V : array of shape (DV, K)
             Mixing weight matrix.
-        Lambda_V_1 : list (length K) of arrays of shape (D_V, D_V)
+        Lambda_V_1 : list (length K) of arrays of shape (DV, DV)
             List of mixing weight covariance matrices.
         a_beta : array of shape (K,)
             Mixing weight prior parameter (row vector).
@@ -420,13 +420,13 @@ class Mixing:
         L_M_q : float
             Mixing component L_M(q) of variational bound.
         """
-        D_V, _ = V.shape
+        DV, _ = V.shape
         L_M1q = self.K * (-ss.gammaln(self.A_BETA)
                           + self.A_BETA * np.log(self.B_BETA))
         # TODO Performance: LCSBookCode vectorized this
         # TODO Performance: ss.gammaln(a_beta[k]) is constant throughout the
         # loop in the calling function
-        L_M3q = self.K * D_V
+        L_M3q = self.K * DV
         for k in range(self.K):
             L_M1q += ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
             # TODO Vectorize or at least get rid of for loop
