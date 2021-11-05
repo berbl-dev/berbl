@@ -4,8 +4,9 @@ import scipy.special as ss  # type: ignore
 
 class Rule():
     """
-    A local linear regression model (in LCS speak, a “linear regression
-    classifier”) based on the provided match function.
+    A rule based on a provided match function. The submodel of the rule is a
+    local linear regression model. In LCS speak, this rule is a “linear
+    regression classifier”.
     """
     def __init__(self,
                  match,
@@ -59,6 +60,8 @@ class Rule():
         """
         Fits this rule's (sub)model to the part of the provided data that the
         rule matches.
+
+        See TrainClassifier [PDF p. 238].
         """
 
         self.m_ = self.match.match(X)
@@ -103,7 +106,7 @@ class Rule():
                 # Substitute r by m in order to train submodels independently
                 # (see [PDF p. 219]). Note, however, that after having trained
                 # the mixing model we finally evaluate the submodels using
-                # ``r=R[:,[k]]`` though.
+                # ``r=R[:,[k]]`` as intended.
                 r=self.m_)
             delta_L_q = self.L_q_ - L_q_prev
 
@@ -111,7 +114,8 @@ class Rule():
 
     def predict(self, X):
         """
-        This model's mean at the given positions; may serve as a prediction.
+        The rule's submodel's mean at the given positions; may serve as a
+        prediction.
 
         Parameters
         ----------
@@ -125,8 +129,8 @@ class Rule():
 
     def predict_var(self, X):
         """
-        This model's variance at the given positions; may serve as some kind of
-        confidence estimate for the prediction.
+        The rule's submodel's variance at the given positions; may serve as some
+        kind of confidence estimate for the prediction.
 
         The model currently assumes the same variance in all dimensions; thus
         the same value is repeated for each dimension.

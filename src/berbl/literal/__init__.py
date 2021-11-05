@@ -61,15 +61,24 @@ def model_probability(matchs: List,
     L(q) - ln K!`` instead of ``L(q) + ln K!`` because the latter is not
     consistent with (7.3).
 
-    We also compute the matching matrix within this function instead of
+    We also compute the matching matrix *within* this function instead of
     providing it to it.
 
-    :param M: matching matrix (N × K)
-    :param X: input matrix (N × DX)
-    :param Y: output matrix (N × DY)
-    :param Phi: mixing feature matrix (N × DV)
+    Parameters
+    ----------
+    M : array of shape (N, K)
+        Matching matrix.
+    X : array of shape (N, DX)
+        Input matrix.
+    Y : array of shape (N, DY)
+        Output matrix.
+    Phi : array of shape (N, DV)
+        Mixing feature matrix.
 
-    :returns: two dicts: model metrics and model parameters
+    Returns
+    -------
+    metrics, params : pair of dict
+        Model metrics and model parameters.
     """
 
     # Underflows may occur in many places, e.g. if X contains values very close to
@@ -146,13 +155,22 @@ def model_probability(matchs: List,
 
 def train_classifier(m_k, X, Y):
     """
-    :param m_k: matching vector (N)
-    :param X: input matrix (N × DX)
-    :param Y: output matrix (N × DY)
-    :param Phi: mixing feature matrix (N × DV)
+    [PDF p. 238]
 
-    :returns: weight matrix (DY × DX), covariance matrix (DX × DX), two
-        noise precision parameters, two weight vector parameters
+    Parameters
+    ----------
+    m_k : array of shape (N,)
+        Matching vector of rule k.
+    X : array of shape (N, DX)
+        Input matrix.
+    Y : array of shape (N, DY)
+        Output matrix.
+
+    Returns
+    -------
+    W_k, Lambda_k_1, a_tau_k, b_tau_k, a_alpha_k, b_alpha_k : arrays of shapes (DY, DX) and (DX, DX) and float
+        Weight matrix (DY × DX), covariance matrix (DX × DX), noise precision
+        parameters, weight vector parameters.
     """
     N, DX = X.shape
     N, DY = Y.shape
@@ -171,7 +189,6 @@ def train_classifier(m_k, X, Y):
     i = 0
     while delta_L_k_q > HParams().DELTA_S_L_K_Q and i < HParams().MAX_ITER_CLS:
         i += 1
-        # print(f"train_classifier: {delta_L_k_q} > {DELTA_S_L_K_Q}")
         E_alpha_alpha_k = a_alpha_k / b_alpha_k
         Lambda_k = np.diag([E_alpha_alpha_k] * DX) + X_k.T @ X_k
         # While, in theory, Lambda_k is always invertible here and we thus
