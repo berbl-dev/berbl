@@ -40,7 +40,7 @@ class MixingLaplace(Mixing):
     def fit(self, X, y):
         Phi = check_phi(self.phi, X)
 
-        M = np.hstack([rule.m_ for rule in self.RULES])
+        M = np.hstack([rule.m_ for rule in self.rules])
 
         _, self.DX_ = X.shape
         _, self.Dy_ = y.shape

@@ -55,8 +55,7 @@ class Mixing:
             those two classes with the same name, they always receive the same
             value.
         """
-        # The set of rules is constant here.
-        self.RULES = rules
+        self.rules = rules
         self.phi = phi
         self.A_BETA = A_BETA
         self.B_BETA = B_BETA
@@ -65,7 +64,7 @@ class Mixing:
         self.EXP_MIN = EXP_MIN
         self.LN_MAX = LN_MAX
         self.random_state = random_state
-        self.K = len(self.RULES)
+        self.K = len(self.rules)
 
     def fit(self, X, y):
         """
@@ -74,7 +73,7 @@ class Mixing:
         """
         Phi = check_phi(self.phi, X)
 
-        M = np.hstack([cl.m_ for cl in self.RULES])
+        M = np.hstack([cl.m_ for cl in self.rules])
 
         _, self.DX_ = X.shape
         _, self.Dy_ = y.shape
@@ -173,7 +172,7 @@ class Mixing:
         # calculate M twice, once when matching for each rule and once in
         # mixing (see same comment in Mixture). Add as an optional parameter to
         # Mixing.predict/fit etc.
-        M = matching_matrix([cl.match for cl in self.RULES], X)
+        M = matching_matrix([cl.match for cl in self.rules], X)
 
         return self._mixing(M, Phi, self.V_)
 
@@ -341,14 +340,14 @@ class Mixing:
             Responsibility matrix.
         """
         # NOTE: The code duplication solution used is faster for larger
-        # len(self.RULES) than the technically cleaner
+        # len(self.rules) than the technically cleaner
         # W, Lambda_1, a_tau, b_tau = zip(
-        #     *[(cl.W_, cl.Lambda_1_, cl.a_tau_, cl.b_tau_) for cl in self.RULES]
+        #     *[(cl.W_, cl.Lambda_1_, cl.a_tau_, cl.b_tau_) for cl in self.rules]
         # )
-        W = [cl.W_ for cl in self.RULES]
-        Lambda_1 = [cl.Lambda_1_ for cl in self.RULES]
-        a_tau = [cl.a_tau_ for cl in self.RULES]
-        b_tau = [cl.b_tau_ for cl in self.RULES]
+        W = [cl.W_ for cl in self.rules]
+        Lambda_1 = [cl.Lambda_1_ for cl in self.rules]
+        a_tau = [cl.a_tau_ for cl in self.rules]
+        b_tau = [cl.b_tau_ for cl in self.rules]
         return responsibilities(X=X,
                                 Y=y,
                                 G=G,

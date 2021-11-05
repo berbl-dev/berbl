@@ -32,7 +32,7 @@ class Mixture:
             Mixing feature extractor (N × DX → N × DV); if ``None`` uses the
             default LCS mixing feature matrix based on ``phi(x) = 1``.
         fit_mixing : str
-            Either of "bouchard" or "laplace"
+            Either of "bouchard" or "laplace".
         **kwargs
             This is passed through unchanged to both ``Mixing`` and ``Rule``.
         """
