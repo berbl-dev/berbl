@@ -1,8 +1,10 @@
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
+from berbl.literal import mixing
 from berbl.literal.hyperparams import HParams
 from berbl.literal.model import Model
 from berbl.match.allmatch import AllMatch
+from berbl.utils import add_bias, check_phi, matching_matrix
 from hypothesis import given, seed, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
 from sklearn.linear_model import LinearRegression
@@ -208,13 +210,45 @@ def test_model_fit_deterministic(matchs, X, y, seed):
     for key in m.params_:
         assert np.array_equal(m.params_[key], m2.params_[key])
 
-    # TODO Once in a while (very seldomly, may be fixed already) this throws
-    # either of these two
-    #
-    #   File "berbl/src/berbl/literal/__init__.py", line 668, in var_mix_bound
-    #     L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
-    # FloatingPointError: invalid value encountered in log
-    #
-    #   File "berbl/src/berbl/literal/__init__.py", line 449, in train_mix_weights
-    #     R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
-    # FloatingPointError: overflow encountered in true_divide
+@given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
+       Xs(bias_column=False), ys(), Xs(bias_column=False), random_states())
+@settings(deadline=None)
+def test_predict_batch_equals_point(matchs, X, y, X_test, random_state):
+    """
+    Whether the used batch form of predict equals the point-wise formula from
+    the book.
+    """
+    model = Model(matchs, random_state=random_state).fit(X, y)
+
+    y_pred, y_pred_var = model.predict_mean_var(X_test)
+
+    _, Dy = y.shape
+    N = len(X_test)
+    K = model.K_
+
+    X_test = add_bias(X_test)
+    M = matching_matrix(matchs, X_test)
+    Phi = check_phi(model.phi, X_test)
+    G = mixing(M=M, Phi=Phi, V=model.V_)
+
+    y_pred_ = np.zeros((N, Dy))
+    for n in range(N):
+        gW = np.zeros(model.W_[0].shape)
+        for k in range(K):
+            gW += G[n][k] * model.W_[k]
+        y_pred_[n] = gW @ X_test[n]
+    assert np.all(np.isclose(y_pred, y_pred_))
+
+    y_pred_var_ = np.zeros((N, Dy))
+    for n in range(N):
+        x = X_test[n]
+        for j in range(Dy):
+            for k in range(K):
+                y_pred_var_[n][j] += G[n][k] * (2 * model.b_tau_[k] /
+                                                (model.a_tau_[k] - 1) *
+                                                (1 + x.T @ model.Lambda_1_[k] @ x) +
+                                                (model.W_[k][j] @ x)**2)
+            y_pred_var_[n][j] -= y_pred_[n][j]**2
+
+    assert np.all(np.isclose(y_pred_var,
+                             y_pred_var_)), (y_pred_var - y_pred_var_)
