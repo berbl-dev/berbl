@@ -6,6 +6,14 @@ from ..utils import add_bias, check_phi, matching_matrix
 from . import mixing, model_probability
 
 
+def fix_y_shape(y):
+    # Some people (looking at you, sklearn.pipeline) deform y to shape
+    # (-1,).
+    if len(y.shape) == 1:
+        y = y[:,np.newaxis]
+    return y
+
+
 class Model:
     def __init__(self,
                  matchs: List,
@@ -34,6 +42,8 @@ class Model:
         self.random_state = random_state
 
     def fit(self, X: np.ndarray, y: np.ndarray):
+
+        y = fix_y_shape(y)
 
         if self.add_bias:
             X = add_bias(X)
