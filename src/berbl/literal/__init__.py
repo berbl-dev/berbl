@@ -268,11 +268,9 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     N, DY = Y.shape
     N, DV = Phi.shape
 
-    # V = random_state.normal(loc=0,
-    #                         scale=HParams().A_BETA / HParams().B_BETA,
-    #                         size=(DV, K))
-    # TODO Does using all ones (like LCSBookCode does) solve numerical problems?
-    V = np.ones((DV, K))
+    V = random_state.normal(loc=0,
+                            scale=HParams().A_BETA / HParams().B_BETA,
+                            size=(DV, K))
     a_beta = np.repeat(HParams().A_BETA, K)
     b_beta = np.repeat(HParams().B_BETA, K)
     L_M_q = -np.inf
@@ -589,17 +587,10 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
     """
     [PDF p. 244]
 
-    Parameters
-    ----------
-    V : array of shape (DV, K)
-        Mixing weight matrix.
-    Lambda_V_1 : array of shape (K * DV, K * DV)
-        Mixing weight covariance matrix.
+    :param V: mixing weight matrix (DV × K)
+    :param Lambda_V_1: mixing covariance matrix (K DV × K DV)
 
-    Returns
-    -------
-    a_beta, b_beta : arrays of shape (K,)
-            Mixing weight vector prior parameters.
+    :returns: mixing weight vector prior parameters a_beta, b_beta
     """
     DV, K = V.shape
     assert Lambda_V_1.shape == (K * DV, K * DV)

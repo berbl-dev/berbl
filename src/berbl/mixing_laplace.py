@@ -46,12 +46,9 @@ class MixingLaplace(Mixing):
         _, self.Dy_ = y.shape
         N, self.DV_ = Phi.shape
 
-        # self.V_ = self.random_state.normal(loc=0,
-        #                                    scale=self.A_BETA / self.B_BETA,
-        #                                    size=(self.DV_, self.K))
-        # TODO Does using all ones (like LCSBookCode does) solve numerical
-        # problems?
-        self.V_ = np.ones((self.DV_, self.K))
+        self.V_ = self.random_state.normal(loc=0,
+                                           scale=self.A_BETA / self.B_BETA,
+                                           size=(self.DV_, self.K))
         # a_beta is actually constant so we can set it here and be done with it.
         self.a_beta_ = np.repeat(self.A_BETA + self.DV_ / 2, self.K)
         self.b_beta_ = np.repeat(self.B_BETA, self.K)
