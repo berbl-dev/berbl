@@ -32,6 +32,8 @@ The only deviations from the book are:
 
   This seems reasonable, especially since Jan Drugowitsch's code does the same
   (a behaviour that is *not documented in the book*).
+* We have deal with numerical issues in a few places (e.g. in
+  ``train_mix_priors``).
 
 Within the code, comments referring to “LCSBookCode” refer to `Jan Drugowitsch's
 code <https://github.com/jdrugo/LCSBookCode>`_.
@@ -295,7 +297,7 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                                           V=V,
                                           a_beta=a_beta,
                                           b_beta=b_beta)
-        # TODO LCSBookCode only updates b_beta here as a_beta is constant.
+        # NOTE LCSBookCode only updates b_beta here as a_beta is constant.
         a_beta, b_beta = train_mix_priors(V, Lambda_V_1)
         G = mixing(M, Phi, V)
         R = responsibilities(X=X,
@@ -595,28 +597,25 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
     DV, K = V.shape
     assert Lambda_V_1.shape == (K * DV, K * DV)
 
-    a_beta = np.zeros(K)
-    b_beta = np.zeros(K)
+    a_beta = np.repeat(HParams().A_BETA, (K,))
+    b_beta = np.repeat(HParams().B_BETA, (K,))
     Lambda_V_1_diag = np.diag(Lambda_V_1)
-    # TODO Performance: LCSBookCode vectorized this:
-    # b[:,1] = b_b + 0.5 * (sum(V * V, 0) + self.cov_Tr)
     for k in range(K):
         v_k = V[:, [k]]
         l = k * DV
         u = (k + 1) * DV
+        # TODO Uncomment this, don't optimize in literal
         # Not that efficient, I think (but very close to [PDF p. 244]).
         # Lambda_V_1_kk = Lambda_V_1[l:u:1, l:u:1]
         # a_beta[k] = A_BETA + DV / 2
         # b_beta[k] = B_BETA + 0.5 * (np.trace(Lambda_V_1_kk) + v_k.T @ v_k)
         # More efficient.
-        # TODO Performance: a_beta is constant, extract from loop (and probably
-        # from loop in using function as well)
-        a_beta[k] = HParams().A_BETA + DV / 2
+        a_beta[k] += DV / 2
         try:
-            b_beta[k] = HParams().B_BETA + 0.5 * (
-                np.sum(Lambda_V_1_diag[l:u:1]) + v_k.T @ v_k)
+            b_beta[k] += 0.5 * (np.sum(Lambda_V_1_diag[l:u:1]) + v_k.T @ v_k)
         except FloatingPointError as e:
-            print(f"FloatingPointError in train_mix_priors: "
+            print(f"FloatingPointError in train_mix_priors "
+                  f"(solved by keeping prior b_beta[k] = {b_beta[k]}): "
                   f"v_k = {v_k}, K = {K}, V = {V}, Lambda_V_1 = {Lambda_V_1}")
             mlflow.set_tag("FloatingPointError_b_beta_k", "occurred")
 

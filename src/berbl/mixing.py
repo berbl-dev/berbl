@@ -376,7 +376,7 @@ class Mixing:
             mixing weight vector prior parameter
         """
         DV, _ = V.shape
-        b_beta = np.zeros(self.K)
+        b_beta = np.repeat(self.B_BETA, (self.K, ))
         Lambda_V_1_diag = np.array(list(map(np.diag, Lambda_V_1)))
         # TODO Performance: LCSBookCode vectorized this:
         # b[:,1] = b_b + 0.5 * (sum(V * V, 0) + self.cov_Tr)
@@ -388,8 +388,15 @@ class Mixing:
             # Lambda_V_1_kk = Lambda_V_1[l:u:1, l:u:1]
             # b_beta[k] = B_BETA + 0.5 * (np.trace(Lambda_V_1_kk) + v_k.T @ v_k)
             # More efficient.
-            b_beta[k] = self.B_BETA + 0.5 * (np.sum(Lambda_V_1_diag[l:u:1])
-                                             + v_k.T @ v_k)
+            try:
+                b_beta[k] += 0.5 * (np.sum(Lambda_V_1_diag[l:u:1])
+                                    + v_k.T @ v_k)
+            except FloatingPointError as e:
+                print(
+                    f"FloatingPointError in _train_b_beta "
+                    f"(solved by keeping prior b_beta[k] = {b_beta[k]}): "
+                    f"v_k = {v_k}, K = {self.K}, V = {V}, Lambda_V_1 = {Lambda_V_1}"
+                )
 
         return b_beta
 
