@@ -373,7 +373,7 @@ class Mixing:
         Returns
         -------
         b_beta : array of shape (K,)
-            mixing weight vector prior parameter
+            Mixing weight vector prior parameter.
         """
         DV, _ = V.shape
         b_beta = np.zeros(self.K)
