@@ -139,7 +139,9 @@ def random_data(draw, N=100):
 # We may need to use more samples here to make sure that the algorithms' scores
 # are really close.
 @given(random_data(N=1000), random_states())
-@settings(deadline=None)
+# Increase number of tests in order to catch numerical issues that happen
+# seldomly.
+@settings(deadline=None, max_examples=500)
 def test_fit_non_linear(data, random_state):
     """
     A single rule should behave better or very similar to a
@@ -148,15 +150,11 @@ def test_fit_non_linear(data, random_state):
     X, y = data
 
     match = AllMatch()
-    # We use two `AllMatch`s because otherwise the Laplace approximation may
-    # lead to overflows in `train_mix_priors`.
-    # TODO Is this fixable in `train_mix_priors`
-    match2 = AllMatch()
 
     # The default MAX_ITER_CLS seems to be too small for good approximations.
     HParams().MAX_ITER_CLS = 100
 
-    m = Model([match, match2], random_state=random_state).fit(X, y)
+    m = Model([match], random_state=random_state).fit(X, y)
 
     # Reset to the default.
     HParams().MAX_ITER_CLS = 20
@@ -186,7 +184,7 @@ def test_fit_non_linear(data, random_state):
         f"linear regression oracle score ({score_oracle}): "
         f"absolute(a - b) <= (atol + rtol * absolute(b)) is "
         f"{np.abs(score - score_oracle)} <= "
-        f"({atol} + {rtol * np.abs(score_oracle)}) which is"
+        f"({atol} + {rtol * np.abs(score_oracle)}) which is "
         f"{np.abs(score - score_oracle)} <= "
         f"({atol + rtol * np.abs(score_oracle)})"
         )

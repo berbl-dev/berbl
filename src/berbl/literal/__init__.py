@@ -621,10 +621,10 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
         try:
             b_beta[k] += 0.5 * (np.sum(Lambda_V_1_diag[l:u:1]) + v_k.T @ v_k)
         except FloatingPointError as e:
-            print(f"FloatingPointError in train_mix_priors "
-                  f"(solved by keeping prior b_beta[k] = {b_beta[k]}): "
+            print(f"Known FloatingPointError in train_mix_priors "
+                  f"(should not have occurred, please report this!): "
                   f"v_k = {v_k}, K = {K}, V = {V}, Lambda_V_1 = {Lambda_V_1}")
-            mlflow.set_tag("FloatingPointError_b_beta_k", "occurred")
+            mlflow.set_tag("FloatingPointError_train_mix_priors", "occurred")
             raise e
 
     return a_beta, b_beta
