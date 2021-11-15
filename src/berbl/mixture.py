@@ -148,14 +148,14 @@ class Mixture:
         # Collect the independent predictions and variances of each submodel. We
         # use the implementations of those that do neither perform input
         # checking nor bias adding to save some time.
-        ys = self._predicts(X)
+        ys = self._predicts(X) # shape (K, N, Dy)
         y_vars = self._predict_vars(X)
 
         G_ = self.mixing_.mixing(X).T  # K × N
 
         # For each submodel's prediction, we weigh every dimension of the output
         # vector by the same amount, thus we simply repeat the G values over Dy.
-        G = G_.reshape(ys.shape).repeat(Dy, axis=2)  # K × N × Dy
+        G = G_[:,:,np.newaxis].repeat(Dy, axis=2)  # K × N × Dy
 
         y = np.sum(G * ys, axis=0)
 

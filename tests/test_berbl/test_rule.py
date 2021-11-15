@@ -3,12 +3,11 @@ import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from berbl.match.allmatch import AllMatch
 from berbl.rule import Rule
-from berbl.utils import add_bias
 from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
-from test_berbl import Xs, ys, linears, random_data
+from test_berbl import Xs, linears, random_data, ys
 
 # TODO Expand to n-dim radial matching. Currently this is only for
 # one-dimensional data (possibly with a bias column)
