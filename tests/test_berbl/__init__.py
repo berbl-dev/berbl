@@ -67,3 +67,52 @@ def Xs_and_match1ds(draw, matchgen, N=10, DX=1):
     X = draw(Xs(N=N, DX=DX, bias_column=bias_column))
     rmatch1d = draw(matchgen(has_bias=bias_column))
     return X, rmatch1d
+
+
+@st.composite
+def linears(draw, N=10, slope_range=(0, 1), intercept_range=(0, 1)):
+    """
+    Creates a “perfectly” sampled sample for a random affine linear function on
+    [-1, 1].
+    """
+    DX = 1
+    # We create perfect values for X here so we don't run into sampling issues
+    # (i.e. evenly spaced).
+    X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
+
+    slope = draw(
+        st.floats(min_value=slope_range[0],
+                  max_value=slope_range[1],
+                  allow_nan=False,
+                  allow_infinity=False))
+    intercept = draw(
+        st.floats(min_value=intercept_range[0],
+                  max_value=intercept_range[1],
+                  allow_nan=False,
+                  allow_infinity=False))
+
+    y = X * slope + intercept
+    X = add_bias(X)
+
+    return (X, y, slope, intercept)
+
+
+@st.composite
+def random_data(draw, N=100):
+    """
+    Creates a “perfectly” sampled sample for a random (non-smooth) function on
+    [-1, 1] in 1 to 10 input or output dimensions.
+    """
+    DX = draw(st.integers(min_value=1, max_value=10))
+    D_Y = draw(st.integers(min_value=1, max_value=10))
+
+    # We create perfect values for X here so we don't run into sampling issues
+    # (i.e. evenly spaced).
+    X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
+
+    y = draw(
+        arrays(np.float64, (N, D_Y),
+               elements=st.floats(min_value=0, max_value=100)))
+    X = add_bias(X)
+
+    return (X, y)

@@ -64,7 +64,6 @@ let
     };
   };
 in pkgs.mkShell rec {
-  name = "pure";
   packages = with pkgs;
     [
       (python3.withPackages (ps:

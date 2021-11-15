@@ -8,7 +8,7 @@ from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
-from test_berbl import Xs, ys
+from test_berbl import Xs, ys, linears, random_data
 
 # TODO Expand to n-dim radial matching. Currently this is only for
 # one-dimensional data (possibly with a bias column)
@@ -31,34 +31,6 @@ def test_fit_inc_L_q(X, y):
         L_qs[i] = Rule(match, MAX_ITER=max_iters[i]).fit(X, y).L_q_
 
     assert np.all(np.diff(L_qs) >= 0)
-
-
-@st.composite
-def linears(draw, N=10, slope_range=(0, 1), intercept_range=(0, 1)):
-    """
-    Creates a “perfectly” sampled sample for a random affine linear function on
-    [-1, 1].
-    """
-    DX = 1
-    # We create perfect values for X here so we don't run into sampling issues
-    # (i.e. evenly spaced).
-    X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
-
-    slope = draw(
-        st.floats(min_value=slope_range[0],
-                  max_value=slope_range[1],
-                  allow_nan=False,
-                  allow_infinity=False))
-    intercept = draw(
-        st.floats(min_value=intercept_range[0],
-                  max_value=intercept_range[1],
-                  allow_nan=False,
-                  allow_infinity=False))
-
-    y = X * slope + intercept
-    X = add_bias(X)
-
-    return (X, y, slope, intercept)
 
 
 @given(linears(N=10, slope_range=(0, 1), intercept_range=(0, 1)))
@@ -90,27 +62,6 @@ def test_fit_linear_functions(data):
         f"Mean absolute error is {score} (> {tol})."
         f"Even though L(q) = {cl.L_q_}, rule's weight matrix is still"
         f"{cl.W_} when it should be [{intercept}, {slope}]")
-
-
-@st.composite
-def random_data(draw, N=100):
-    """
-    Creates a “perfectly” sampled sample for a random (non-smooth) function on
-    [-1, 1] in 1 to 10 input or output dimensions.
-    """
-    DX = draw(st.integers(min_value=1, max_value=10))
-    D_Y = draw(st.integers(min_value=1, max_value=10))
-
-    # We create perfect values for X here so we don't run into sampling issues
-    # (i.e. evenly spaced).
-    X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
-
-    y = draw(
-        arrays(np.float64, (N, D_Y),
-               elements=st.floats(min_value=0, max_value=100)))
-    X = add_bias(X)
-
-    return (X, y)
 
 
 # We use more samples here to make sure that the algorithms' score are
