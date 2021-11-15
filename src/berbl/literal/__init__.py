@@ -33,7 +33,7 @@ The only deviations from the book are:
   This seems reasonable, especially since Jan Drugowitsch's code does the same
   (a behaviour that is *not documented in the book*).
 * We have deal with numerical issues in a few places (e.g. in
-  ``train_mix_priors``).
+  ``train_mix_priors``, ``responsibilities``).
 
 Within the code, comments referring to “LCSBookCode” refer to `Jan Drugowitsch's
 code <https://github.com/jdrugo/LCSBookCode>`_.
@@ -202,8 +202,9 @@ def train_classifier(m_k, X, Y):
         Lambda_k_1 = np.linalg.pinv(Lambda_k)
         W_k = Y_k.T @ X_k @ Lambda_k_1
         a_tau_k = HParams().A_TAU + 0.5 * np.sum(m_k)
-        b_tau_k = HParams().B_TAU + 1 / (2 * DY) * (
-            np.sum(Y_k * Y_k) - np.sum(W_k * (W_k @ Lambda_k)))
+        b_tau_k = HParams().B_TAU + 1 / (2 * DY) * (np.sum(Y_k * Y_k)
+                                                    - np.sum(W_k *
+                                                             (W_k @ Lambda_k)))
         E_tau_tau_k = a_tau_k / b_tau_k
         # DY factor in front of trace due to sum over DY elements (7.100).
         b_alpha_k = HParams().B_ALPHA + 0.5 * (E_tau_tau_k * np.sum(W_k * W_k)
@@ -385,6 +386,12 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
     """
     N, K = G.shape
     N, DY = Y.shape
+
+    # This fixes instabilities that occur if there is only one rule.
+    # TODO Document this better (say something about the kind of data that
+    # causes issues).
+    if K == 1:
+        return np.ones((N, K))
 
     # We first create the transpose of R because indexing is easier. We then
     # transpose before multiplying elementwise with G.
@@ -597,8 +604,8 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
     DV, K = V.shape
     assert Lambda_V_1.shape == (K * DV, K * DV)
 
-    a_beta = np.repeat(HParams().A_BETA, (K,))
-    b_beta = np.repeat(HParams().B_BETA, (K,))
+    a_beta = np.repeat(HParams().A_BETA, (K, ))
+    b_beta = np.repeat(HParams().B_BETA, (K, ))
     Lambda_V_1_diag = np.diag(Lambda_V_1)
     for k in range(K):
         v_k = V[:, [k]]
@@ -618,6 +625,7 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
                   f"(solved by keeping prior b_beta[k] = {b_beta[k]}): "
                   f"v_k = {v_k}, K = {K}, V = {V}, Lambda_V_1 = {Lambda_V_1}")
             mlflow.set_tag("FloatingPointError_b_beta_k", "occurred")
+            raise e
 
     return a_beta, b_beta
 
@@ -697,7 +705,7 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
     DY, DX = W_k.shape
     E_tau_tau_k = a_tau_k / b_tau_k
     L_k_1_q = DY / 2 * (ss.digamma(a_tau_k) - np.log(b_tau_k)
-                         - np.log(2 * np.pi)) * np.sum(r_k)
+                        - np.log(2 * np.pi)) * np.sum(r_k)
     # We reshape r_k to a NumPy row vector since NumPy seems to understand what
     # we want to do when we multiply two row vectors (i.e. a^T a).
     L_k_2_q = (-0.5 * r_k).reshape((-1)) @ (E_tau_tau_k * np.sum(
@@ -707,10 +715,10 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
             b_alpha_k) + DX * DY / 2 + DY / 2 * np.log(
                 np.linalg.det(Lambda_k_1))
     L_k_4_q = DY * (-ss.gammaln(HParams().A_TAU)
-                     + HParams().A_TAU * np.log(HParams().B_TAU) +
-                     (HParams().A_TAU - a_tau_k) * ss.digamma(a_tau_k)
-                     - HParams().A_TAU * np.log(b_tau_k) - HParams().B_TAU
-                     * E_tau_tau_k + ss.gammaln(a_tau_k) + a_tau_k)
+                    + HParams().A_TAU * np.log(HParams().B_TAU) +
+                    (HParams().A_TAU - a_tau_k) * ss.digamma(a_tau_k)
+                    - HParams().A_TAU * np.log(b_tau_k) - HParams().B_TAU
+                    * E_tau_tau_k + ss.gammaln(a_tau_k) + a_tau_k)
     return L_k_1_q + L_k_2_q + L_k_3_q + L_k_4_q
 
 
