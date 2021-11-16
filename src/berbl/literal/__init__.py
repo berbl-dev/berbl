@@ -48,6 +48,14 @@ import mlflow  # type: ignore
 from ..utils import matching_matrix
 from .hyperparams import HParams
 
+def known_issue(expl, variables, report=False):
+    print(f"Warning: {expl}.")
+    if report:
+        print("This should not have occurred, please report it!")
+    else:
+        print("This is a known issue and can probably be ignored.")
+    print(f"Relevant variables: {variables}.")
+
 
 def model_probability(matchs: List,
                       X: np.ndarray,
@@ -225,7 +233,10 @@ def train_classifier(m_k, X, Y):
         # suffers from numerical instabilities.” [PDF p. 237]
         # TODO Consider extracting this to a test
         assert delta_L_k_q >= 0 or np.isclose(delta_L_k_q, 0), (
-            f"iteration: {i}; Δ L_k(q) = {delta_L_k_q}; L_k(q) = {L_k_q}")
+            "Error: L_k(q) not increasing monotonically! "
+            "Often caused by data not being standardized "
+            "(both X and y should be standardized). "
+            f"Iteration: {i}; Δ L_k(q) = {delta_L_k_q}; L_k(q) = {L_k_q}.")
     return W_k, Lambda_k_1, a_tau_k, b_tau_k, a_alpha_k, b_alpha_k
 
 
@@ -268,6 +279,7 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     N, DY = Y.shape
     N, DV = Phi.shape
 
+    # NOTE LCSBookCode initializes this with np.ones(…).
     V = random_state.normal(loc=0,
                             scale=HParams().A_BETA / HParams().B_BETA,
                             size=(DV, K))
@@ -275,6 +287,8 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     b_beta = np.repeat(HParams().B_BETA, K)
     L_M_q = -np.inf
     delta_L_M_q = HParams().DELTA_S_L_M_Q + 1
+    # NOTE Deviation from the original text (but not from LCSBookCode) since we
+    # add a maximum number of iterations (see module doc string).
     i = 0
     while delta_L_M_q > HParams().DELTA_S_L_M_Q and i < HParams(
     ).MAX_ITER_MIXING:
@@ -323,8 +337,10 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
             # (-inf)``).
             #
             # However, ``delta_L_M_q`` being ``nan`` makes the loop abort
-            # anyway, so we should be fine. We'll log to mlflow that this
-            # happened, anyway.
+            # anyway, so we should be fine. We'll log to stdout and mlflow that
+            # this happened, anyway.
+            known_issue("FloatingPointError in train_mixing",
+                        f"L_M_q: {L_M_q}, L_M_q_prev: {L_M_q_prev}")
             mlflow.set_tag("FloatingPointError delta_L_M_q", "occurred")
 
     return V, Lambda_V_1, a_beta, b_beta
@@ -347,8 +363,6 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     # shape (N, DV).
     G = Phi @ V
 
-    # This quasi never happens (at least for the run I checked it did not). That
-    # run also oscillated so this is probably not the source.
     G = np.clip(G, HParams().EXP_MIN, HParams().LN_MAX - np.log(K))
 
     G = np.exp(G) * M
@@ -384,14 +398,13 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
     N, K = G.shape
     N, DY = Y.shape
 
-    # This fixes instabilities that occur if there is only one rule.
-    # TODO Document this better (say something about the kind of data that
-    # causes issues).
+    # This fixes instabilities that occur if there is only a single rule.
     if K == 1:
         return np.ones((N, K))
 
-    # We first create the transpose of R because indexing is easier. We then
-    # transpose before multiplying elementwise with G.
+    # We first create the transpose of R because indexing is easier (assigning
+    # to rows instead of columns is rather straightforward). We then transpose
+    # before multiplying elementwise with G.
     R_T = np.zeros((K, N))
     for k in range(K):
         R_T[k] = np.exp(DY / 2 * (ss.digamma(a_tau[k]) - np.log(b_tau[k]))
@@ -472,9 +485,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     # two steps where KLRG was not np.inf.
     KLRG = np.inf
     delta_KLRG = HParams().DELTA_S_KLRG + 1
-    i = 0
     # NOTE Deviation from the original text since we add a maximum number of
     # iterations (see module doc string).
+    i = 0
     while delta_KLRG > HParams().DELTA_S_KLRG and i < HParams(
     ).MAX_ITER_MIXING:
         i += 1
@@ -482,7 +495,6 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         E = Phi.T @ (G - R) + V * E_beta_beta
         e = E.T.ravel()
         H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
-        # Preference of `-` and `@` is OK here, we checked.
         # While, in theory, H is always invertible here and we thus should be able
         # to use inv (as it is described in the algorithm we implement), we
         # (seldomly) get a singular H, probably due to numerical issues. Thus we
@@ -518,16 +530,14 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
             # divergence (other than is stated in the book).
             KLRG = np.sum(
                 R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
-            # NOTE Sometimes this raises “FloatingPointError: overflow
-            # encountered in true_divide” (i.e. most probably g / r where 0 < r
-            # < 1e-308, i.e. g / r < -1e308 or g / r > 1e308).  However, the
-            # nan_to_num fixes that anyways (results in inf).
-            # TODO It may not be correct to map inf to 0 here.
-        # This fixes(?) some numerical problems.
+            # TODO Is it really correct to map inf to 0 here?
+        # This fixes(?) some numerical problems. Note that KLRG is actually the
+        # negative Kullback-Leibler divergence (hence the > 0 comparison instead
+        # of < 0).
         if KLRG > 0 and np.isclose(KLRG, 0):
             KLRG = 0
         assert KLRG <= 0, (f"Kullback-Leibler divergence less than zero: "
-                           f"KLRG = {-KLRG},\nG = {G},\nR = {R}")
+                           f"KLRG = {-KLRG}")
 
         delta_KLRG = np.abs(KLRG_prev - KLRG)
 
@@ -608,19 +618,14 @@ def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
         v_k = V[:, [k]]
         l = k * DV
         u = (k + 1) * DV
-        # TODO Uncomment this, don't optimize in literal
-        # Not that efficient, I think (but very close to [PDF p. 244]).
-        # Lambda_V_1_kk = Lambda_V_1[l:u:1, l:u:1]
-        # a_beta[k] = A_BETA + DV / 2
-        # b_beta[k] = B_BETA + 0.5 * (np.trace(Lambda_V_1_kk) + v_k.T @ v_k)
-        # More efficient.
         a_beta[k] += DV / 2
         try:
             b_beta[k] += 0.5 * (np.sum(Lambda_V_1_diag[l:u:1]) + v_k.T @ v_k)
         except FloatingPointError as e:
-            print(f"Known FloatingPointError in train_mix_priors "
-                  f"(should not have occurred, please report this!): "
-                  f"v_k = {v_k}, K = {K}, V = {V}, Lambda_V_1 = {Lambda_V_1}")
+            known_issue(
+                "FloatingPointError in train_mix_priors",
+                f"v_k = {v_k}, K = {K}, V = {V}, Lambda_V_1 = {Lambda_V_1}",
+                report=True)
             mlflow.set_tag("FloatingPointError_train_mix_priors", "occurred")
             raise e
 
@@ -776,7 +781,8 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     with np.errstate(divide="ignore", invalid="ignore"):
         L_M2q = np.sum(
             R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
-    # This fixes(?) some numerical problems.
+    # This fixes(?) some numerical problems. Note that L_M2q is the *negative*
+    # Kullback-Leibler divergence (hence the > 0 comparison instead of < 0).
     if L_M2q > 0 and np.isclose(L_M2q, 0):
         L_M2q = 0
     assert L_M2q <= 0, f"Kullback-Leibler divergence less than zero: {-L_M2q}"
