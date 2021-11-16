@@ -764,7 +764,15 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     # the calling function
     for k in range(K):
         # NOTE this is just the negated form of the update two lines prior?
-        L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
+        try:
+            L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
+        except FloatingPointError as e:
+            print(f"Lambda_V_1: {Lambda_V_1}")
+            print(f"V: {V}")
+            print(f"K: {K}")
+            print(f"k: {k}")
+            print(f"b_beta[k]: {b_beta[k]}")
+            raise e
 
     # L_M2q is the negative Kullback-Leibler divergence [PDF p. 246].
     #
