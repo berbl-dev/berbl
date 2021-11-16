@@ -17,37 +17,6 @@ from test_berbl import (Xs, linears, random_data, random_states, rmatch1ds,
 # ``Model.fit`` adds it automatically.
 
 
-@given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
-       Xs(bias_column=False), ys(), random_states())
-@settings(deadline=None, max_examples=20)
-# hypothesis.errors.FailedHealthCheck: Examples routinely exceeded the max
-# allowable size. (20 examples overran while generating 9 valid ones).
-# Generating examples this large will usually lead to bad results. You could try
-# setting max_size parameters on your collections and turning max_leaves down on
-# recursive() calls.
-@seed(338435219230913684853574049358930463006)
-def test_fit(matchs, X, y, random_state):
-    """
-    Only tests whether fit runs through without errors.
-    """
-    m = Model(matchs, random_state=random_state)
-    m.fit(X, y)
-
-
-@given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
-       Xs(bias_column=False), ys(), Xs(bias_column=False), random_states())
-@settings(deadline=None, max_examples=20)
-# Disable shrink
-# phases=(Phase.explicit, Phase.reuse, Phase.generate, Phase.target))
-def test_fit_predict(matchs, X, y, X_test, random_state):
-    """
-    Only tests whether fit and then predict run through without errors.
-    """
-    m = Model(matchs, random_state=random_state)
-    m.fit(X, y)
-    m.predict(X_test)
-
-
 @given(linears(N=10, slope_range=(0, 1), intercept_range=(0, 1)), random_states())
 @settings(max_examples=50)
 def test_fit_linear_functions(data, random_state):
