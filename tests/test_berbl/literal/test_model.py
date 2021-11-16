@@ -6,11 +6,11 @@ from berbl.literal.model import Model
 from berbl.match.allmatch import AllMatch
 from berbl.utils import add_bias, check_phi, matching_matrix
 from hypothesis import given, seed, settings  # type: ignore
-from hypothesis.extra.numpy import arrays  # type: ignore
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
 from sklearn.utils import check_random_state  # type: ignore
-from test_berbl import Xs, random_states, rmatch1ds, seeds, ys
+from test_berbl import (Xs, linears, random_data, random_states, rmatch1ds,
+                        seeds, ys)
 
 # NOTE Matching functions always assume a bias column (``has_bias=True``)
 # whereas the ``Xs`` do not contain one (``bias_column=False``) because
@@ -46,33 +46,6 @@ def test_fit_predict(matchs, X, y, X_test, random_state):
     m = Model(matchs, random_state=random_state)
     m.fit(X, y)
     m.predict(X_test)
-
-
-@st.composite
-def linears(draw, N=10, slope_range=(0, 1), intercept_range=(0, 1)):
-    """
-    Creates a “perfectly” sampled sample for a random affine linear function on
-    [-1, 1].
-    """
-    DX = 1
-    # We create perfect values for X here so we don't run into sampling issues
-    # (i.e. evenly spaced).
-    X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
-
-    slope = draw(
-        st.floats(min_value=slope_range[0],
-                  max_value=slope_range[1],
-                  allow_nan=False,
-                  allow_infinity=False))
-    intercept = draw(
-        st.floats(min_value=intercept_range[0],
-                  max_value=intercept_range[1],
-                  allow_nan=False,
-                  allow_infinity=False))
-
-    y = X * slope + intercept
-
-    return (X, y, slope, intercept)
 
 
 @given(linears(N=10, slope_range=(0, 1), intercept_range=(0, 1)), random_states())
@@ -113,32 +86,9 @@ def test_fit_linear_functions(data, random_state):
         f"Also, predictions are:\n {np.hstack([y, y_pred])}")
 
 
-@st.composite
-def random_data(draw, N=100):
-    """
-    Creates a “perfectly” sampled sample for a random (non-smooth) function on
-    [-1, 1] in 1 to 10 input or output dimensions.
-    """
-    DX = draw(st.integers(min_value=1, max_value=10))
-    D_Y = draw(st.integers(min_value=1, max_value=10))
-
-    # We create perfect values for X here so we don't run into sampling issues
-    # (i.e. evenly spaced).
-    X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
-
-    # Although values for y lie in [-1, 1] we do not standardize them for the
-    # sake of this test. (We could, however, by dividing by (1 - (-1))^2 / 12, I
-    # think.)
-    y = draw(
-        arrays(np.float64, (N, D_Y),
-               elements=st.floats(min_value=-1, max_value=1)))
-
-    return (X, y)
-
-
 # We may need to use more samples here to make sure that the algorithms' scores
 # are really close.
-@given(random_data(N=1000), random_states())
+@given(random_data(N=1000, bias_column=False), random_states())
 # Increase number of tests in order to catch numerical issues that happen
 # seldomly.
 @settings(deadline=None, max_examples=500)

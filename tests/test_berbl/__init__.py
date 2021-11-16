@@ -7,6 +7,9 @@ from berbl.utils import add_bias
 from sklearn.utils import check_random_state  # type: ignore
 
 
+# TODO Ensure that test data is standardized
+
+
 @st.composite
 def seeds(draw):
     # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
@@ -98,21 +101,22 @@ def linears(draw, N=10, slope_range=(0, 1), intercept_range=(0, 1)):
 
 
 @st.composite
-def random_data(draw, N=100):
+def random_data(draw, N=100, bias_column=True):
     """
     Creates a “perfectly” sampled sample for a random (non-smooth) function on
     [-1, 1] in 1 to 10 input or output dimensions.
     """
     DX = draw(st.integers(min_value=1, max_value=10))
-    D_Y = draw(st.integers(min_value=1, max_value=10))
+    Dy = draw(st.integers(min_value=1, max_value=10))
 
     # We create perfect values for X here so we don't run into sampling issues
     # (i.e. evenly spaced).
     X = np.arange(-1, 1, 2 / (N))[:, np.newaxis]
 
     y = draw(
-        arrays(np.float64, (N, D_Y),
-               elements=st.floats(min_value=0, max_value=100)))
-    X = add_bias(X)
+        arrays(np.float64, (N, Dy),
+               elements=st.floats(min_value=-1, max_value=1)))
+    if bias_column:
+        X = add_bias(X)
 
     return (X, y)
