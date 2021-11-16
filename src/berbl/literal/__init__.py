@@ -130,8 +130,7 @@ def model_probability(matchs: List,
                                       a_beta=a_beta,
                                       b_beta=b_beta)
 
-        ln_p_M = -np.log(float(
-            np.math.factorial(K)))  # (7.3), i.e. p_M \propto 1/K
+        ln_p_M = -np.log(float(np.math.factorial(K)))
         p_M_D = L_q + ln_p_M
 
         return {
@@ -182,9 +181,6 @@ def train_classifier(m_k, X, Y):
     a_tau_k, b_tau_k = HParams().A_TAU, HParams().B_TAU
     L_k_q = -np.inf
     delta_L_k_q = HParams().DELTA_S_L_K_Q + 1
-    # This is constant; Drugowitsch nevertheless puts it into the while loop
-    # (probably for readability).
-    a_alpha_k = HParams().A_ALPHA + DX * DY / 2
     # Drugowitsch reaches convergence usually after 3-4 iterations [PDF p. 237].
     # NOTE Deviation from the original text (but not from LCSBookCode) since we
     # add a maximum number of iterations (see module doc string).
@@ -206,6 +202,7 @@ def train_classifier(m_k, X, Y):
                                                     - np.sum(W_k *
                                                              (W_k @ Lambda_k)))
         E_tau_tau_k = a_tau_k / b_tau_k
+        a_alpha_k = HParams().A_ALPHA + DX * DY / 2
         # DY factor in front of trace due to sum over DY elements (7.100).
         b_alpha_k = HParams().B_ALPHA + 0.5 * (E_tau_tau_k * np.sum(W_k * W_k)
                                                + DY * np.trace(Lambda_k_1))
@@ -232,8 +229,8 @@ def train_classifier(m_k, X, Y):
     return W_k, Lambda_k_1, a_tau_k, b_tau_k, a_alpha_k, b_alpha_k
 
 
-# TODO Drugowitsch also gives this a_alpha and b_alpha although they are not
-# used. Maybe investigate more in-depth whether that is a mistake?
+# NOTE Drugowitsch also gives a_alpha and b_alpha as parameters here although
+# they are not used.
 def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                  W: List[np.ndarray], Lambda_1: List[np.ndarray],
                  a_tau: np.ndarray, b_tau: np.ndarray, exp_min: float,
