@@ -501,7 +501,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     # TODO Check whether we can get rid of MAX_ITER_MIXING if we check for KLRG
     # being close to zero.
     while delta_KLRG > HParams().DELTA_S_KLRG and i < HParams(
-    ).MAX_ITER_MIXING and not np.isclose(KLRG, 0, atol=1e-20, rtol=1e-20):
+    ).MAX_ITER_MIXING and not np.isclose(KLRG, 0):
         i += 1
         # Actually, this should probably be named nabla_E.
         E = Phi.T @ (G - R) + V * E_beta_beta
