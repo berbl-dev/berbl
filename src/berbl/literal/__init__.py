@@ -32,6 +32,11 @@ The only deviations from the book are:
 
   This seems reasonable, especially since Jan Drugowitsch's code does the same
   (a behaviour that is *not documented in the book*).
+* Since the oscillations in ``train_mix_weights`` are (at least sometimes)
+  caused by the Kullback-Leibler divergence between ``G`` and ``R`` being
+  optimal followed by another unnecessary execution of the loop thereafter we
+  also abort if that is the case (i.e. if the Kullback-Leibler divergence is
+  zero).
 * We have deal with numerical issues in a few places (e.g. in
   ``train_mix_priors``, ``responsibilities``).
 
@@ -486,10 +491,17 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     KLRG = np.inf
     delta_KLRG = HParams().DELTA_S_KLRG + 1
     # NOTE Deviation from the original text since we add a maximum number of
-    # iterations (see module doc string).
+    # iterations (see module doc string). In addition, we abort as soon as KLRG
+    # is 0 (and do not wait until it was 0 twice, as would be the case if we
+    # used the delta-based test only) since numerical issues arise in the loop
+    # which then leads to endless oscillations between bad values, one of which
+    # is then used in the remainder of the algorithm causing further bad things
+    # to happen.
     i = 0
+    # TODO Check whether we can get rid of MAX_ITER_MIXING if we check for KLRG
+    # being close to zero.
     while delta_KLRG > HParams().DELTA_S_KLRG and i < HParams(
-    ).MAX_ITER_MIXING:
+    ).MAX_ITER_MIXING and not np.isclose(KLRG, 0, atol=1e-20, rtol=1e-20):
         i += 1
         # Actually, this should probably be named nabla_E.
         E = Phi.T @ (G - R) + V * E_beta_beta
