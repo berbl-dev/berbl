@@ -53,6 +53,7 @@ import mlflow  # type: ignore
 from ..utils import matching_matrix
 from .hyperparams import HParams
 
+
 def known_issue(expl, variables, report=False):
     print(f"Warning: {expl}.")
     if report:
@@ -777,13 +778,16 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     for k in range(K):
         # NOTE this is just the negated form of the update two lines prior?
         try:
-            L_M1q = L_M1q + ss.gammaln(a_beta[k]) - a_beta[k] * np.log(b_beta[k])
+            L_M1q = L_M1q + ss.gammaln(
+                a_beta[k]) - a_beta[k] * np.log(b_beta[k])
         except FloatingPointError as e:
-            print(f"Lambda_V_1: {Lambda_V_1}")
-            print(f"V: {V}")
-            print(f"K: {K}")
-            print(f"k: {k}")
-            print(f"b_beta[k]: {b_beta[k]}")
+            known_issue("FloatingPointError in var_mix_bound",
+                        (f"Lambda_V_1: {Lambda_V_1}"
+                         f"V: {V}"
+                         f"K: {K}"
+                         f"k: {k}"
+                         f"b_beta[k]: {b_beta[k]}"),
+                        report=True)
             raise e
 
     # L_M2q is the negative Kullback-Leibler divergence [PDF p. 246].
@@ -812,8 +816,8 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     # ``train_mixing``).
     L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * DV / 2
     if np.any(~np.isfinite([L_M1q, L_M2q, L_M3q])):
-        print(f"Non-finite var_mix_bound: "
-              f"L_M1q = {L_M1q}, "
-              f"L_M2q = {L_M2q}, "
-              f"L_M3q = {L_M3q}")
+        known_issue("Infinite var_mix_bound", (f"Lambda_V_1 = {Lambda_V_1}, "
+                                               f"L_M1q = {L_M1q}, "
+                                               f"L_M2q = {L_M2q}, "
+                                               f"L_M3q = {L_M3q}"))
     return L_M1q + L_M2q + L_M3q
