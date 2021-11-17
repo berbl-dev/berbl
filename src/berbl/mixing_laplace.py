@@ -3,7 +3,7 @@ import scipy.special as ss  # type: ignore
 
 from .literal import hessian
 from .mixing import Mixing
-from .utils import check_phi
+from .utils import check_phi, known_issue
 
 
 # It's not *that* nice to inherit from Mixing because they should be siblings
@@ -142,7 +142,8 @@ class MixingLaplace(Mixing):
         KLRG = np.inf
         delta_KLRG = self.DELTA_S_KLRG + 1
         i = 0
-        while delta_KLRG > self.DELTA_S_KLRG and i < self.MAX_ITER:
+        while delta_KLRG > self.DELTA_S_KLRG and i < self.MAX_ITER and not np.isclose(
+                KLRG, 0):
             i += 1
             # Actually, this should probably be named nabla_E.
             E = Phi.T @ (G - R) + V * E_beta_beta
@@ -267,8 +268,9 @@ class MixingLaplace(Mixing):
         # TODO Performance: slogdet can be cached, is computed more than once
         L_M3q = 0.5 * np.linalg.slogdet(Lambda_V_1)[1] + K * DV / 2
         if np.any(~np.isfinite([L_M1q, L_M2q, L_M3q])):
-            print(f"Non-finite var_mix_bound: "
-                  f"L_M1q = {L_M1q}, "
-                  f"L_M2q = {L_M2q}, "
-                  f"L_M3q = {L_M3q}")
+            known_issue("Infinite var_mix_bound",
+                        (f"Lambda_V_1 = {Lambda_V_1}, "
+                         f"L_M1q = {L_M1q}, "
+                         f"L_M2q = {L_M2q}, "
+                         f"L_M3q = {L_M3q}"))
         return L_M1q + L_M2q + L_M3q

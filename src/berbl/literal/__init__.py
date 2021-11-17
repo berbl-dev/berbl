@@ -50,17 +50,8 @@ import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
 import mlflow  # type: ignore
 
-from ..utils import matching_matrix
+from ..utils import known_issue, matching_matrix
 from .hyperparams import HParams
-
-
-def known_issue(expl, variables, report=False):
-    print(f"Warning: {expl}.")
-    if report:
-        print("This should not have occurred, please report it!")
-    else:
-        print("This is a known issue and can probably be ignored.")
-    print(f"Relevant variables: {variables}.")
 
 
 def model_probability(matchs: List,

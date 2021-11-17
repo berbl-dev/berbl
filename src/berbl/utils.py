@@ -247,3 +247,15 @@ def initRepeat_binom(container, func, n, p, random_state, kmin=1, kmax=100):
     """
     size = np.clip(random_state.binomial(n, p), kmin, kmax)
     return tools.initRepeat(container, func, size)
+
+
+def known_issue(expl, variables, report=False):
+    """
+    Document a known issue.
+    """
+    print(f"Warning: {expl}.")
+    if report:
+        print("This should not have occurred, please report it!")
+    else:
+        print("This is a known issue and can probably be ignored.")
+    print(f"Relevant variables: {variables}.")
