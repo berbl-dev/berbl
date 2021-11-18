@@ -45,7 +45,8 @@ class BERBL(BaseEstimator, RegressorMixin):
         searchcls = search_methods[self.search]
         self.search_ = searchcls(self.toolbox,
                                  n_iter=self.n_iter,
-                                 random_state=randseed(toolbox.random_state))
+                                 random_state=randseed(
+                                     self.toolbox.random_state))
 
         self.search_ = self.search_.fit(X, y)
 
