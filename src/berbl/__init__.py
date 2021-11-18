@@ -15,7 +15,7 @@ class BERBL(BaseEstimator, RegressorMixin):
     Classifier Systems – A Probabilistic Approach’ by Jan Drugowitsch.
     """
     def __init__(self,
-                 toolbox=DefaultToolbox(),
+                 toolbox=DefaultToolbox(random_state=None),
                  search="drugowitsch",
                  n_iter=100):
         """

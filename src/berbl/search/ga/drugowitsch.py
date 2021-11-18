@@ -24,11 +24,11 @@ class GADrugowitsch:
     """
     def __init__(self,
                  toolbox,
+                 random_state,
                  pop_size=20,
                  cxpb=0.4,
                  mupb=0.4,
                  n_iter=250,
-                 random_state=None,
                  add_bias=True):
         """
         Model training hyperparameters can be changed by assigning values to the
@@ -39,6 +39,8 @@ class GADrugowitsch:
 
         Parameters
         ----------
+        random_state : int, NumPy (legacy) ``RandomState`` object
+            Due to scikit-learn compatibility, we use NumPy's legacy API.
         pop_size : int
             Population size.
         cxpb : float in [0, 1]
@@ -47,8 +49,6 @@ class GADrugowitsch:
             Mutation probability.
         n_iter : positive int
             Number of iterations to run.
-        random_state : NumPy (legacy) ``RandomState``
-            Due to scikit-learn compatibility, we use NumPy's legacy API.
         """
         self.toolbox = toolbox
         self.pop_size = pop_size
@@ -59,12 +59,6 @@ class GADrugowitsch:
         self.add_bias = add_bias
 
     def fit(self, X: np.ndarray, y: np.ndarray):
-
-        # TODO Remove random_state=None default everywhere (throw errors instead
-        # of warnings)
-        if self.random_state == None:
-            print("Warning: Using random_state=None in GADrugowitsch. "
-                  "Runs will not be deterministic.")
 
         random_state = check_random_state(self.random_state)
         # DEAP uses the global ``random.random`` RNG.

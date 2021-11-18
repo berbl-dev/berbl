@@ -17,6 +17,7 @@ class DefaultToolbox(Toolbox):
     problem and representation.
     """
     def __init__(self,
+                 random_state,
                  matchcls=SoftInterval1D,
                  n=100,
                  p=0.5,
@@ -24,8 +25,7 @@ class DefaultToolbox(Toolbox):
                  add_bias=True,
                  phi=None,
                  tournsize=5,
-                 fit_mixing="bouchard",
-                 random_state=None):
+                 fit_mixing="bouchard"):
         """
         n : positive int
             n parameter (number of independent experiments) of the binomial

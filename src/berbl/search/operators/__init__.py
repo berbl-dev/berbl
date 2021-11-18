@@ -19,14 +19,16 @@ class Toolbox(base.Toolbox):
     Specifies and registers ``evaluate`` depending on the provided parameters.
     """
     def __init__(self,
+                 random_state,
                  literal=False,
                  add_bias=True,
                  phi=None,
-                 fit_mixing="bouchard",
-                 random_state=None):
+                 fit_mixing="bouchard"):
         """
         Parameters
         ----------
+        random_state : int, NumPy (legacy) ``RandomState`` object
+            Due to scikit-learn compatibility, we use NumPy's legacy API.
         literal : bool
             Whether to use the literal backend (unoptimized but close to the
             main reference, uses the Laplace approximation–based mixing
@@ -43,13 +45,8 @@ class Toolbox(base.Toolbox):
             be fitted. One of ``"bouchard"`` (experimental but may be faster and
             better-behaving) and ``"laplace"`` (the original method, very slow
             and possibly suboptimal in terms of the variational bound).
-        random_state : int, RandomState instance
         """
         super().__init__()
-
-        if random_state == None:
-            print("Warning: Using random_state=None in Toolbox. "
-                  "Runs will not be deterministic.")
 
         self.literal = literal
         self.random_state = check_random_state(random_state)
