@@ -1,6 +1,7 @@
 from sklearn.base import BaseEstimator, RegressorMixin  # type: ignore
-from sklearn.utils.validation import check_is_fitted, check_X_y  # type: ignore
+from sklearn.utils.validation import check_is_fitted  # type: ignore
 
+from .utils import randseed
 from .search.ga.drugowitsch import GADrugowitsch
 from .search.operators.drugowitsch import DefaultToolbox
 
@@ -42,7 +43,9 @@ class BERBL(BaseEstimator, RegressorMixin):
         X, y = self._validate_data(X, y, multi_output=True)
 
         searchcls = search_methods[self.search]
-        self.search_ = searchcls(self.toolbox, n_iter=self.n_iter)
+        self.search_ = searchcls(self.toolbox,
+                                 n_iter=self.n_iter,
+                                 random_state=randseed(toolbox.random_state))
 
         self.search_ = self.search_.fit(X, y)
 

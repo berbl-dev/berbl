@@ -59,6 +59,11 @@ class GADrugowitsch:
         self.add_bias = add_bias
 
     def fit(self, X: np.ndarray, y: np.ndarray):
+
+        if self.random_state == None:
+            print("Warning: Using random_state=None in GADrugowitsch. "
+                  "Runs will not be deterministic.")
+
         random_state = check_random_state(self.random_state)
         # DEAP uses the global ``random.random`` RNG.
         seed = randseed(random_state)

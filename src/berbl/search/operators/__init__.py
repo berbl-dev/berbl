@@ -47,6 +47,10 @@ class Toolbox(base.Toolbox):
         """
         super().__init__()
 
+        if random_state == None:
+            print("Warning: Using random_state=None in Toolbox. "
+                  "Runs will not be deterministic.")
+
         self.literal = literal
         self.random_state = check_random_state(random_state)
 
