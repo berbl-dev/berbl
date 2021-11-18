@@ -3,8 +3,8 @@ let
   pkgs = import (bootstrap.fetchFromGitHub {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "f18bd6f9192e0f4b78419efe4caaf0fd37a0a346";
-    sha256 = "0d0m25xxl9s6ljk27x9308zqawdbmhd7m9cwkcajsbn684imcw85";
+    rev = "35acd3ed181ee1622da68ec26e0b516d7e585837";
+    sha256 = "1fswzd55nx3drdr48qv3by49xkdw8rypp2wdvcciyda3plxydhpk";
   }) {
     # TODO Extract this override to an mlflow.nix and reuse that in the
     # experiments project
