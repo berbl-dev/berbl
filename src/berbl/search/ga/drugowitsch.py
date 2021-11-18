@@ -60,6 +60,8 @@ class GADrugowitsch:
 
     def fit(self, X: np.ndarray, y: np.ndarray):
 
+        # TODO Remove random_state=None default everywhere (throw errors instead
+        # of warnings)
         if self.random_state == None:
             print("Warning: Using random_state=None in GADrugowitsch. "
                   "Runs will not be deterministic.")
