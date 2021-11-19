@@ -1,7 +1,7 @@
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 
-from .literal import hessian
+from .literal import hessian, _kl
 from .mixing import Mixing
 from .utils import check_phi, known_issue
 
