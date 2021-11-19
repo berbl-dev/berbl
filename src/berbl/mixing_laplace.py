@@ -121,10 +121,6 @@ class MixingLaplace(Mixing):
             Mixing weight prior parameter (row vector).
         b_beta : array of shape (K,)
             Mixing weight prior parameter (row vector).
-        lxi : array of shape (N, K)
-            Parameter of Bouchard's bound.
-        alpha : array of shape (N, 1)
-            Parameter of Bouchard's bound.
 
         Returns
         -------
@@ -139,7 +135,7 @@ class MixingLaplace(Mixing):
 
         E_beta_beta = a_beta / b_beta
 
-        KLRG = np.inf
+        KLRG = _kl(R, G)
         delta_KLRG = self.DELTA_S_KLRG + 1
         i = 0
         while delta_KLRG > self.DELTA_S_KLRG and i < self.MAX_ITER and not np.isclose(
@@ -167,30 +163,7 @@ class MixingLaplace(Mixing):
             R = self._responsibilities(X=X, y=y, G=G)
 
             KLRG_prev = KLRG
-            # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we
-            # might divide by 0 here. The intended behaviour is to silently get
-            # a NaN that can then be replaced by 0 again (this is how
-            # Drugowitsch does it [PDF p.  213]). Drugowitsch expects dividing
-            # ``x`` by 0 to result in NaN, however, in Python this is only true
-            # for ``x == 0``; for any other ``x`` this instead results in
-            # ``inf`` (with sign depending on the sign of x). The two cases also
-            # throw different errors (‘invalid value encountered’ for ``x == 0``
-            # and ‘divide by zero’ otherwise).
-            #
-            # NOTE I don't think the neginf is strictly required but let's be
-            # safe.
-            with np.errstate(divide="ignore", invalid="ignore"):
-                # Note that KLRG is actually the negative Kullback-Leibler
-                # divergence (other than is stated in the book).
-                KLRG = np.sum(
-                    R
-                    * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
-            # This fixes(?) some numerical problems.
-            if KLRG > 0 and np.isclose(KLRG, 0):
-                KLRG = 0
-            assert KLRG <= 0, (f"Kullback-Leibler divergence less than zero:"
-                               f" {KLRG}\n{G}\n{R}")
-
+            KLRG = _kl(R, G)
             delta_KLRG = np.abs(KLRG_prev - KLRG)
 
         H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)

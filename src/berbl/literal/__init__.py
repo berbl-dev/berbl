@@ -477,10 +477,13 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                          Lambda_1=Lambda_1,
                          a_tau=a_tau,
                          b_tau=b_tau)
-    # TODO Performance: Why always make TWO steps instead of checking the true
-    # KLRG here? The delta has to be close to 0 and that is only the case for
-    # two steps where KLRG was not np.inf.
-    KLRG = np.inf
+    # NOTE Deviation from the original text since we do not always perform at
+    # least TWO runs of the loop (Drugowitsch sets KLRG = np.inf). We instead
+    # use its real value which solves a certain numerical issue that occurrs
+    # very seldomly: if the actual KLRG is almost 0 and the loop is forced to
+    # execute (which is the case for KLRG = np.inf) then V becomes unstable and
+    # very large.
+    KLRG = _kl(R, G)
     delta_KLRG = HParams().DELTA_S_KLRG + 1
     # NOTE Deviation from the original text since we add a maximum number of
     # iterations (see module doc string). In addition, we abort as soon as KLRG
@@ -519,29 +522,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                              a_tau=a_tau,
                              b_tau=b_tau)
         KLRG_prev = KLRG
-        # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we
-        # might divide by 0 here. The intended behaviour is to silently get a
-        # NaN that can then be replaced by 0 again (this is how Drugowitsch does
-        # it [PDF p.  213]). Drugowitsch expects dividing ``x`` by 0 to result
-        # in NaN, however, in Python this is only true for ``x == 0``; for any
-        # other ``x`` this instead results in ``inf`` (with sign depending on
-        # the sign of x). The two cases also throw different errors (‘invalid
-        # value encountered’ for ``x == 0`` and ‘divide by zero’ otherwise).
-        #
-        # NOTE I don't think the neginf is strictly required but let's be safe.
-        with np.errstate(divide="ignore", invalid="ignore"):
-            # Note that KLRG is actually the negative Kullback-Leibler
-            # divergence (other than is stated in the book).
-            KLRG = np.sum(
-                R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
-            # TODO Is it really correct to map inf to 0 here?
-        # This fixes(?) some numerical problems. Note that KLRG is actually the
-        # negative Kullback-Leibler divergence (hence the > 0 comparison instead
-        # of < 0).
-        if KLRG > 0 and np.isclose(KLRG, 0):
-            KLRG = 0
-        assert KLRG <= 0, (f"Kullback-Leibler divergence less than zero: "
-                           f"KLRG = {-KLRG}")
+        KLRG = _kl(R, G)
 
         delta_KLRG = np.abs(KLRG_prev - KLRG)
 
@@ -557,6 +538,40 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     # LCSBookCode computes and stores np.slogdet(Lambda_V_1) and cov_Tr (the
     # latter of which is used in his update_gating).
     return V, Lambda_V_1
+
+
+def _kl(R, G):
+    """
+    Computes the negative Kullback-Leibler divergence between the given arrays.
+
+    Drugowitsch does not introduce this subroutine. We do so to reduce code
+    duplication in ``train_mix_weights`` (where we deviated from the original
+    text by one additional calculation of ``_kl(R, G)``).
+    """
+    # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we
+    # might divide by 0 here due to 0's in ``R``. The intended behaviour is to
+    # silently get a NaN that can then be replaced by 0 again (this is how
+    # Drugowitsch does it [PDF p.  213]). Drugowitsch expects dividing ``x`` by
+    # 0 to result in NaN, however, in Python this is only true for ``x == 0``;
+    # for any other ``x`` this instead results in ``inf`` (with sign depending
+    # on the sign of x). The two cases also throw different errors (‘invalid
+    # value encountered’ for ``x == 0`` and ‘divide by zero’ otherwise).
+    #
+    # NOTE I don't think the neginf is strictly required but let's be safe.
+    with np.errstate(divide="ignore", invalid="ignore"):
+        # Note that KLRG is actually the negative Kullback-Leibler
+        # divergence (other than is stated in the book).
+        KLRG = np.sum(
+            R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
+        # TODO Is it really correct to map inf to 0 here?
+    # This fixes(?) some numerical problems. Note that KLRG is actually the
+    # negative Kullback-Leibler divergence (hence the > 0 comparison instead
+    # of < 0).
+    if KLRG > 0 and np.isclose(KLRG, 0):
+        KLRG = 0
+    assert KLRG <= 0, (f"Kullback-Leibler divergence less than zero: "
+                        f"KLRG = {-KLRG}")
+    return KLRG
 
 
 def hessian(Phi: np.ndarray, G: np.ndarray, a_beta: np.ndarray,
