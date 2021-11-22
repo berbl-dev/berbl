@@ -234,6 +234,8 @@ def train_classifier(m_k, X, Y):
             "Often caused by data not being standardized "
             "(both X and y should be standardized). "
             f"Iteration: {i}; Δ L_k(q) = {delta_L_k_q}; L_k(q) = {L_k_q}.")
+    if i >= HParams().MAX_ITER_CLS:
+        mlflow.set_tag("MAX_ITER_CLS", "reached")
     return W_k, Lambda_k_1, a_tau_k, b_tau_k, a_alpha_k, b_alpha_k
 
 
@@ -340,6 +342,8 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                         f"L_M_q: {L_M_q}, L_M_q_prev: {L_M_q_prev}")
             mlflow.set_tag("FloatingPointError delta_L_M_q", "occurred")
 
+    if i >= HParams().MAX_ITER_MIXING:
+        mlflow.set_tag("MAX_ITER_MIXING", "reached")
     return V, Lambda_V_1, a_beta, b_beta
 
 
