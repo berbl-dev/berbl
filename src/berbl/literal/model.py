@@ -235,3 +235,6 @@ class Model:
             y_var[k] = var.reshape((len(X), self.Dy_)).repeat(self.Dy_, axis=1)
 
         return y_var
+
+    def predict_distribution(self, x):
+        raise NotImplementedError("Not yet implemented, has to be ported to literal")

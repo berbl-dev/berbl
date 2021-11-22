@@ -85,8 +85,6 @@ class BERBL(BaseEstimator, RegressorMixin):
             of shape ``(Dy, )``) returns the value of the predictive
             distribution at that point.
         """
-        # See SLEP010.
-        X = self._validate_data(X, reset=False)
+        # TODO Properly validate input here
         check_is_fitted(self)
-        # TODO Implement predict_distribution
-        raise NotImplementedError()
+        return self.search_.predict_distribution(x)

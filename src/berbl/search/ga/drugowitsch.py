@@ -141,6 +141,9 @@ class GADrugowitsch:
     def predicts(self, X):
         return self.elitist_[0].phenotype.predicts(X)
 
+    def predict_distribution(self, x):
+        return self.elitist_[0].phenotype.predict_distribution(x)
+
     def frozen(self):
         """
         Returns a picklable of this object.

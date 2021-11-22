@@ -1,6 +1,7 @@
 from typing import *
 
 import numpy as np  # type: ignore
+import scipy.special as ssp  # type: ignore
 
 from .utils import add_bias, check_phi
 from .rule import Rule
@@ -69,8 +70,8 @@ class Mixture:
         # Train submodels.
         #
         # “When fit is called, any previous call to fit should be ignored.”
-        self.rules_ = list(
-            map(lambda m: Rule(m, **self.__kwargs), self.matchs))
+        self.rules_ = list(map(lambda m: Rule(m, **self.__kwargs),
+                               self.matchs))
         for k in range(self.K_):
             self.rules_[k].fit(X, y)
 
@@ -97,8 +98,10 @@ class Mixture:
         # during submodel training for ensuring indenpendence).
         self.L_C_q_ = np.repeat(-np.inf, len(self.rules_))
         for k in range(self.K_):
-            self.L_C_q_[k] = self.rules_[k].var_bound(
-                X, y, r=self.mixing_.R_[:, [k]])
+            self.L_C_q_[k] = self.rules_[k].var_bound(X,
+                                                      y,
+                                                      r=self.mixing_.R_[:,
+                                                                        [k]])
         self.L_M_q_ = self.mixing_.L_M_q_
         self.L_q_ = np.sum(self.L_C_q_) + self.L_M_q_
         # TODO Replace this with volume-dependent formula (e.g. the one from the
@@ -148,14 +151,14 @@ class Mixture:
         # Collect the independent predictions and variances of each submodel. We
         # use the implementations of those that do neither perform input
         # checking nor bias adding to save some time.
-        ys = self._predicts(X) # shape (K, N, Dy)
+        ys = self._predicts(X)  # shape (K, N, Dy)
         y_vars = self._predict_vars(X)
 
         G_ = self.mixing_.mixing(X).T  # K × N
 
         # For each submodel's prediction, we weigh every dimension of the output
         # vector by the same amount, thus we simply repeat the G values over Dy.
-        G = G_[:,:,np.newaxis].repeat(Dy, axis=2)  # K × N × Dy
+        G = G_[:, :, np.newaxis].repeat(Dy, axis=2)  # K × N × Dy
 
         y = np.sum(G * ys, axis=0)
 
@@ -225,3 +228,63 @@ class Mixture:
             y_vars[k] = self.rules_[k].predict_var(X)
 
         return y_vars
+
+    def predict_distribution(self, X):
+        """
+        Returns
+        -------
+        callable
+            A function expecting a ``y`` and returning the values of the
+            predictive distributions at positions ``X``.
+        """
+
+        if self.add_bias:
+            X = add_bias(X)
+
+        G = self.mixing_.mixing(X).T  # (K, N)
+        W = self._predicts(X)  # (K, N, Dy)
+        var = self._predict_vars(X)  # (K, N, Dy)
+
+        def pdf(y):
+            # TODO Vectorize if possible
+            res = 0
+            for k in range(self.K_):
+                prd = 1
+                for j in range(self.Dy_):
+                    prd *= t(mu=W[k][:, j],
+                             prec=2 / var[k][:, j],
+                             df=2 * self.rules_[k].a_tau_)(y)
+                res += G[k] * prd
+            return res
+
+        return pdf
+
+
+def t(mu, prec, df):
+    """
+    Alternative form of the Student's t distribution used by Drugowtisch (see
+    e.g. (Bishop, 2006)).
+
+    Parameters
+    ----------
+    mu : float or array
+        Mean of the distribution.
+    prec : float or array
+        “Precision” of the distribution (although “not in general equal to the
+        inverse of the variance”, see (Bishop, 2006)).
+    df : float or array
+        Degrees of freedom.
+
+    Returns
+    -------
+    callable
+        A probability density function.
+    """
+    def pdf(X):
+        # Repeat X so that we can perform vectorized calculation.
+        X = X[:,np.newaxis].repeat(len(mu),axis=1)
+        return ssp.gamma((df + 1) / 2) / ssp.gamma(df / 2) * np.sqrt(
+            prec / (np.pi * df)) * (1 + (prec *
+                                         (X - mu)**2) / df)**(-(df + 1) / 2)
+
+    return pdf
