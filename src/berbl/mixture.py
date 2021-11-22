@@ -1,9 +1,8 @@
 from typing import *
 
 import numpy as np  # type: ignore
-import scipy.special as ssp  # type: ignore
 
-from .utils import add_bias, check_phi
+from .utils import add_bias, check_phi, t
 from .rule import Rule
 from .mixing import Mixing
 from .mixing_laplace import MixingLaplace
@@ -258,33 +257,3 @@ class Mixture:
             return res
 
         return pdf
-
-
-def t(mu, prec, df):
-    """
-    Alternative form of the Student's t distribution used by Drugowtisch (see
-    e.g. (Bishop, 2006)).
-
-    Parameters
-    ----------
-    mu : float or array
-        Mean of the distribution.
-    prec : float or array
-        “Precision” of the distribution (although “not in general equal to the
-        inverse of the variance”, see (Bishop, 2006)).
-    df : float or array
-        Degrees of freedom.
-
-    Returns
-    -------
-    callable
-        A probability density function.
-    """
-    def pdf(X):
-        # Repeat X so that we can perform vectorized calculation.
-        X = X[:,np.newaxis].repeat(len(mu),axis=1)
-        return ssp.gamma((df + 1) / 2) / ssp.gamma(df / 2) * np.sqrt(
-            prec / (np.pi * df)) * (1 + (prec *
-                                         (X - mu)**2) / df)**(-(df + 1) / 2)
-
-    return pdf

@@ -259,3 +259,33 @@ def known_issue(expl, variables, report=False):
     else:
         print("This is a known issue and can probably be ignored.")
     print(f"Relevant variables: {variables}.")
+
+
+def t(mu, prec, df):
+    """
+    Alternative form of the Student's t distribution used by Drugowtisch (see
+    e.g. (Bishop, 2006)).
+
+    Parameters
+    ----------
+    mu : float or array
+        Mean of the distribution.
+    prec : float or array
+        “Precision” of the distribution (although “not in general equal to the
+        inverse of the variance”, see (Bishop, 2006)).
+    df : float or array
+        Degrees of freedom.
+
+    Returns
+    -------
+    callable
+        A probability density function.
+    """
+    def pdf(X):
+        # Repeat X so that we can perform vectorized calculation.
+        X = X[:,np.newaxis].repeat(len(mu),axis=1)
+        return sp.gamma((df + 1) / 2) / sp.gamma(df / 2) * np.sqrt(
+            prec / (np.pi * df)) * (1 + (prec *
+                                         (X - mu)**2) / df)**(-(df + 1) / 2)
+
+    return pdf
