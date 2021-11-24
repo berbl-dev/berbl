@@ -1,11 +1,10 @@
 import numpy as np  # type: ignore
-from deap import creator, tools  # type: ignore
 from berbl import BERBL
 from berbl.search.operators.drugowitsch import DefaultToolbox
+from sklearn.compose import TransformedTargetRegressor  # type: ignore
 from sklearn.metrics import mean_absolute_error  # type: ignore
 from sklearn.pipeline import make_pipeline  # type: ignore
 from sklearn.preprocessing import StandardScaler  # type: ignore
-from sklearn.compose import TransformedTargetRegressor  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
 X = np.arange(300).reshape((-1, 1))
