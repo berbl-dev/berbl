@@ -6,9 +6,9 @@ setup(
     name="berbl",
     version="0.1",
     description="Bayesian Evolutionary Rule-based Learner",
-    author="David Pätzel",
-    author_email="david.paetzel@posteo.de",
-    url="https://github.com/dpaetzel/berbl",
+    author="berbl",
+    author_email="berbl@berbl.berbl",
+    url="https://github.com/tmp-berbl/berbl",
     packages=[
         "berbl", "berbl.literal", "berbl.search", "berbl.search.ga",
         "berbl.search.operators", "berbl.match"

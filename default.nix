@@ -15,10 +15,8 @@ buildPythonPackage rec {
   doCheck = false;
 
   meta = with lib; {
-    homepage = "https://github.com/dpaetzel/berbl";
     description =
-      "Implementation of a Bayesian Evolutionary Rule-based Learner";
+      "Implementation of a Bayesian Learning Classifier System";
     license = licenses.gpl3;
-    maintainers = with maintainers; [ dpaetzel ];
   };
 }

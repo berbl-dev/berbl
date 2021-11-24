@@ -56,6 +56,7 @@ class MixingLaplace(Mixing):
         self.G_ = self._mixing(M, Phi, self.V_)
         self.R_ = self._responsibilities(X=X, y=y, G=self.G_)
 
+        # TODO Why not compute L_M_q_ = _var_bound(…) here right at the start?
         self.L_M_q_ = -np.inf
         delta_L_M_q = self.DELTA_S_L_M_Q + 1
         i = 0
