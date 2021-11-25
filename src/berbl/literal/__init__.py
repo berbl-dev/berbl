@@ -36,8 +36,8 @@ The only deviations from the book are:
   caused by the Kullback-Leibler divergence between ``G`` and ``R`` being
   optimal followed by another unnecessary execution of the loop thereafter we
   also abort if that is the case (i.e. if the Kullback-Leibler divergence is
-  zero).
-* We have deal with numerical issues in a few places (e.g. in
+  zero) and always compute the divergence before starting the loop first time.
+* We deal with minor numerical issues in a few places (e.g. in
   ``train_mix_priors``, ``responsibilities``).
 
 Within the code, comments referring to “LCSBookCode” refer to `Jan Drugowitsch's
@@ -228,7 +228,6 @@ def train_classifier(m_k, X, Y):
         # “Each parameter update either increases L_k_q or leaves it unchanged
         # (…). If this is not the case, then the implementation is faulty and/or
         # suffers from numerical instabilities.” [PDF p. 237]
-        # TODO Consider extracting this to a test
         assert delta_L_k_q >= 0 or np.isclose(delta_L_k_q, 0), (
             "Error: L_k(q) not increasing monotonically! "
             "Often caused by data not being standardized "
@@ -472,7 +471,6 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     DV, K = V.shape
 
     E_beta_beta = a_beta / b_beta
-    # TODO Performance: This can probably be cached (is calculated above)
     G = mixing(M, Phi, V)
     R = responsibilities(X=X,
                          Y=Y,
@@ -497,8 +495,6 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     # is then used in the remainder of the algorithm causing further bad things
     # to happen.
     i = 0
-    # TODO Check whether we can get rid of MAX_ITER_MIXING if we check for KLRG
-    # being close to zero.
     while delta_KLRG > HParams().DELTA_S_KLRG and i < HParams(
     ).MAX_ITER_MIXING and not np.isclose(KLRG, 0):
         i += 1
@@ -552,8 +548,8 @@ def _kl(R, G):
     duplication in ``train_mix_weights`` (where we deviated from the original
     text by one additional calculation of ``_kl(R, G)``).
     """
-    # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we
-    # might divide by 0 here due to 0's in ``R``. The intended behaviour is to
+    # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we might
+    # divide by 0 here due to 0's in ``R``. The intended behaviour is to
     # silently get a NaN that can then be replaced by 0 again (this is how
     # Drugowitsch does it [PDF p.  213]). Drugowitsch expects dividing ``x`` by
     # 0 to result in NaN, however, in Python this is only true for ``x == 0``;
@@ -563,11 +559,10 @@ def _kl(R, G):
     #
     # NOTE I don't think the neginf is strictly required but let's be safe.
     with np.errstate(divide="ignore", invalid="ignore"):
-        # Note that KLRG is actually the negative Kullback-Leibler
-        # divergence (other than is stated in the book).
+        # Note that KLRG is actually the negative Kullback-Leibler divergence
+        # (other than is stated in the book).
         KLRG = np.sum(
             R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
-        # TODO Is it really correct to map inf to 0 here?
     # This fixes(?) some numerical problems. Note that KLRG is actually the
     # negative Kullback-Leibler divergence (hence the > 0 comparison instead
     # of < 0).
@@ -782,9 +777,6 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
 
     L_M1q = K * (-ss.gammaln(HParams().A_BETA)
                  + HParams().A_BETA * np.log(HParams().B_BETA))
-    # TODO Performance: LCSBookCode vectorized this
-    # TODO Performance: ss.gammaln(a_beta[k]) is constant throughout the loop in
-    # the calling function
     for k in range(K):
         # NOTE this is just the negated form of the update two lines prior?
         try:
@@ -820,7 +812,6 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     if L_M2q > 0 and np.isclose(L_M2q, 0):
         L_M2q = 0
     assert L_M2q <= 0, f"Kullback-Leibler divergence less than zero: {-L_M2q}"
-    # TODO Performance: slogdet can be cached, is computed more than once
     # L_M3q may be -inf after the following line but that is probably OK since
     # the ``train_mixing`` loop then aborts (also see comment in
     # ``train_mixing``).
