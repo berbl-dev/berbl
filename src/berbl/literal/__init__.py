@@ -521,6 +521,9 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                              Lambda_1=Lambda_1,
                              a_tau=a_tau,
                              b_tau=b_tau)
+
+        # Note that KLRG is actually the *negative* Kullback-Leibler divergence
+        # (other than is stated in the book).
         KLRG_prev = KLRG
         KLRG = _kl(R, G)
 
@@ -548,6 +551,12 @@ def _kl(R, G):
     duplication in ``train_mix_weights`` (where we deviated from the original
     text by one additional calculation of ``_kl(R, G)``).
     """
+    # NumPy uses subnormal numbers “to fill the gap between 0 and
+    # [np.finfo(None).tiny]”. This means that R may contain elements that do not
+    # silently lead to inf but raise a “FloatingPointError: overflow encountered
+    # in true_divide” instead. We simply set anything smaller than tiny to 0.
+    R[np.where(R < np.finfo(None).tiny)] = 0
+
     # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we might
     # divide by 0 here due to 0's in ``R``. The intended behaviour is to
     # silently get a NaN that can then be replaced by 0 again (this is how
@@ -557,10 +566,8 @@ def _kl(R, G):
     # on the sign of x). The two cases also throw different errors (‘invalid
     # value encountered’ for ``x == 0`` and ‘divide by zero’ otherwise).
     #
-    # NOTE I don't think the neginf is strictly required but let's be safe.
+    # I don't think the neginf is strictly required but let's be safe.
     with np.errstate(divide="ignore", invalid="ignore"):
-        # Note that KLRG is actually the negative Kullback-Leibler divergence
-        # (other than is stated in the book).
         KLRG = np.sum(
             R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
     # This fixes(?) some numerical problems. Note that KLRG is actually the
@@ -569,7 +576,7 @@ def _kl(R, G):
     if KLRG > 0 and np.isclose(KLRG, 0):
         KLRG = 0
     assert KLRG <= 0, (f"Kullback-Leibler divergence less than zero: "
-                        f"KLRG = {-KLRG}")
+                       f"KLRG = {-KLRG}")
     return KLRG
 
 
@@ -729,7 +736,8 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
     # We reshape r_k to a NumPy row vector since NumPy seems to understand what
     # we want to do when we multiply two row vectors (i.e. a^T a).
     L_k_2_q = (-0.5 * r_k).reshape((-1)) @ (E_tau_tau_k * np.sum(
-        (Y - X @ W_k.T)**2, 1) + DY * np.sum(X * (X @ Lambda_k_1), 1))
+        (Y - X @ W_k.T)**2, axis=1) + DY * np.sum(X *
+                                                  (X @ Lambda_k_1), axis=1))
     L_k_3_q = -ss.gammaln(HParams().A_ALPHA) + HParams().A_ALPHA * np.log(
         HParams().B_ALPHA) + ss.gammaln(a_alpha_k) - a_alpha_k * np.log(
             b_alpha_k) + DX * DY / 2 + DY / 2 * np.log(
