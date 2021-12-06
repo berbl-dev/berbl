@@ -793,25 +793,8 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
             raise e
 
     # L_M2q is the negative Kullback-Leibler divergence [PDF p. 246].
-    #
-    # ``responsibilities`` performs a ``nan_to_num(…, nan=0, …)``, so we might
-    # divide by 0 here. The intended behaviour is to silently get a NaN that can
-    # then be replaced by 0 again (this is how Drugowitsch does it [PDF p.
-    # 213]). Drugowitsch expects dividing ``x`` by 0 to result in NaN, however,
-    # in Python this is only true for ``x == 0``; for any other ``x`` this
-    # instead results in ``inf`` (with sign depending on the sign of x). The two
-    # cases also throw different errors (‘invalid value encountered’ for ``x ==
-    # 0`` and ‘divide by zero’ otherwise).
-    #
-    # NOTE I don't think the neginf is strictly required but let's be safe.
-    with np.errstate(divide="ignore", invalid="ignore"):
-        L_M2q = np.sum(
-            R * np.nan_to_num(np.log(G / R), nan=0, posinf=0, neginf=0))
-    # This fixes(?) some numerical problems. Note that L_M2q is the *negative*
-    # Kullback-Leibler divergence (hence the > 0 comparison instead of < 0).
-    if L_M2q > 0 and np.isclose(L_M2q, 0):
-        L_M2q = 0
-    assert L_M2q <= 0, f"Kullback-Leibler divergence less than zero: {-L_M2q}"
+    L_M2q = _kl(R, G)
+
     # L_M3q may be -inf after the following line but that is probably OK since
     # the ``train_mixing`` loop then aborts (also see comment in
     # ``train_mixing``).
