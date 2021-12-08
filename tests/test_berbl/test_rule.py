@@ -1,4 +1,4 @@
-# import pytest  # type: ignore
+import berbl.literal as literal
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from berbl.match.allmatch import AllMatch
@@ -7,7 +7,8 @@ from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
-from test_berbl import Xs, linears, random_data, ys
+from test_berbl import (Xs, assert_isclose, linears, noshrinking, random_data,
+                        ys)
 
 # TODO Expand to n-dim radial matching. Currently this is only for
 # one-dimensional data (possibly with a bias column)
@@ -133,6 +134,26 @@ def test_square_with_matrix(X, Lambda_1_):
 
     assert np.all(np.isclose(y1, y2, rtol=1e-7)), (y1 - y2)
     assert np.all(np.isclose(y1, y3, rtol=1e-7)), (y1 - y3)
+
+
+@given(random_data(N=100))
+@settings(deadline=None, phases=noshrinking)
+def test_fit_like_literal(data):
+    X, y = data
+    match = AllMatch()
+
+    rule = Rule(match).fit(X, y)
+
+    m_k = match.match(X)
+    W_k, Lambda_1_k, a_tau_k, b_tau_k, a_alpha_k, b_alpha_k = literal.train_classifier(
+        m_k, X, y)
+
+    assert_isclose(rule.W_, W_k, label="W_")
+    assert_isclose(rule.Lambda_1_, Lambda_1_k, label="Lambda_1_")
+    assert_isclose(rule.a_tau_, a_tau_k, label="a_tau_")
+    assert_isclose(rule.b_tau_, b_tau_k, label="b_tau_")
+    assert_isclose(rule.a_alpha_, a_alpha_k, label="a_alpha_")
+    assert_isclose(rule.b_alpha_, b_alpha_k, label="b_alpha_")
 
 
 # TODO Add tests for all the other hyperparameters of Rule.

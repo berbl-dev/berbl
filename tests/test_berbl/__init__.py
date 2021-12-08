@@ -1,11 +1,11 @@
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
-from hypothesis.extra.numpy import arrays  # type: ignore
 from berbl.match.radial1d_drugowitsch import RadialMatch1D
 from berbl.match.softinterval1d_drugowitsch import SoftInterval1D
 from berbl.utils import add_bias
+from hypothesis import Phase  # type: ignore
+from hypothesis.extra.numpy import arrays  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
-
 
 # TODO Ensure that test data is standardized
 
@@ -120,3 +120,18 @@ def random_data(draw, N=100, bias_column=True):
         X = add_bias(X)
 
     return (X, y)
+
+
+def assert_isclose(a, b, label="", rtol=1e-5, atol=1e-8):
+    s = (f"{label} {a} not close enough to {b} "
+         f"(after subtracting atol={atol}, "
+         f"distance is still {np.abs(a-b) - atol} "
+         f"which corresponds to {(np.abs(a-b) - atol) / np.abs(b)} "
+         f" >= {rtol}=rtol)")
+    assert np.all(np.isclose(a, b, rtol=rtol, atol=atol)), s
+
+
+"""
+The default phases but without shrinking.
+"""
+noshrinking = ((Phase.explicit, Phase.reuse, Phase.generate, Phase.target))
