@@ -188,6 +188,59 @@ class MixingLaplace(Mixing):
         # result in a significant speedup.
         return V, Lambda_V_1
 
+    def _train_b_beta(self, V: np.ndarray, Lambda_V_1: np.ndarray):
+        """
+        [PDF p. 244]
+
+        TrainMixPriors but only the part concerned with ``b_beta`` since
+        ``a_beta`` is constant.
+
+        Note that we override this because ``Lambda_V_1`` has a different form
+        here than in ``mixing.Mixing`` (where it is a list of ``K`` matrices
+        with shapes ``(DV, DV)``).
+
+        Parameters
+        ----------
+        V : array of shape (DV, K)
+            Mixing weight matrix.
+        Lambda_V_1 : array of shape (K * DV, K * DV)
+            Mixing weight covariance matrix.
+
+        Returns
+        -------
+        b_beta : array of shape (K,)
+            mixing weight vector prior parameter
+        """
+        DV, K = V.shape
+        b_beta = np.repeat(self.B_BETA, (self.K, ))
+        Lambda_V_1_diag = np.diag(Lambda_V_1)
+        # TODO Performance: LCSBookCode vectorized this:
+        # b[:,1] = b_b + 0.5 * (sum(V * V, 0) + self.cov_Tr)
+        for k in range(self.K):
+            v_k = V[:, [k]]
+            l = k * DV
+            u = (k + 1) * DV
+            # print(f"sum {k} Lambda_V_1_diag", np.sum(Lambda_V_1_diag[l:u:1]))
+            # Not that efficient, I think (but very close to [PDF p. 244]).
+            # Lambda_V_1_kk = Lambda_V_1[l:u:1, l:u:1]
+            # b_beta[k] = B_BETA + 0.5 * (np.trace(Lambda_V_1_kk) + v_k.T @ v_k)
+            # More efficient.
+            try:
+                b_beta[k] += 0.5 * (np.sum(Lambda_V_1_diag[l:u:1])
+                                    + v_k.T @ v_k)
+            except FloatingPointError as e:
+                known_issue("FloatingPointError in train_mix_priors",
+                            (f"v_k = {v_k}, "
+                             f"K = {self.K}, "
+                             f"V = {V}, "
+                             f"Lambda_V_1 = {Lambda_V_1}"),
+                            report=True)
+                mlflow.set_tag("FloatingPointError_train_mix_priors",
+                               "occurred")
+                raise e
+
+        return b_beta
+
     def _var_bound(self, G: np.ndarray, R: np.ndarray, V: np.ndarray,
                    Lambda_V_1: np.ndarray, a_beta: np.ndarray,
                    b_beta: np.ndarray):
