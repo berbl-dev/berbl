@@ -100,7 +100,9 @@ def test_fit_non_linear(data, random_state):
     X, y = data
 
     match = AllMatch()
-    mixture = Mixture([match], random_state=random_state).fit(X, y)
+    mixture = Mixture([match],
+                      random_state=random_state,
+                      fit_mixing="laplace", MAX_ITER_RULE=200).fit(X, y)
 
     y_pred = mixture.predict(X)
     score = mean_absolute_error(y_pred, y)
@@ -112,12 +114,12 @@ def test_fit_non_linear(data, random_state):
     # We clip scores because of possible floating point instabilities arising in
     # this test if they are too close to zero (i.e. proper comparison becomes
     # inconveniently hard to do).
-    score = np.clip(score, a_min=1e-3, a_max=np.inf)
-    score_oracle = np.clip(score_oracle, a_min=1e-3, a_max=np.inf)
+    score = np.clip(score, a_min=1e-4, a_max=np.inf)
+    score_oracle = np.clip(score_oracle, a_min=1e-4, a_max=np.inf)
 
     assert (score < score_oracle
-            or np.isclose(score / score_oracle, 1, atol=1e-1)), (
-                f"Submodel score ({score}) not close to"
+            or np.isclose(score, score_oracle, atol=1e-3)), (
+                f"Submodel score ({score}) not close to "
                 f"linear regression oracle score ({score_oracle})")
 
 
@@ -137,7 +139,10 @@ def test_varbounds_like_literal(data, matchs, random_state):
                           random_state=copy(random_state),
                           add_bias=False).fit(X, y)
 
-    assert_isclose(np.sum(mixture.L_C_q_), model.L_C_q_, label="L_C_q", rtol=0.01)
+    assert_isclose(np.sum(mixture.L_C_q_),
+                   model.L_C_q_,
+                   label="L_C_q",
+                   rtol=0.01)
     assert_isclose(mixture.L_M_q_, model.L_M_q_, label="L_M_q_", rtol=0.01)
     assert_isclose(mixture.L_q_, model.L_q_, label="L_q_", rtol=0.01)
     assert_isclose(mixture.p_M_D_, model.p_M_D_, label="p_M_D_", rtol=0.01)

@@ -71,7 +71,7 @@ def test_fit_non_linear(data, random_state):
     match = AllMatch()
 
     # The default MAX_ITER_CLS seems to be too small for good approximations.
-    HParams().MAX_ITER_CLS = 100
+    HParams().MAX_ITER_CLS = 200
 
     m = Model([match], random_state=random_state).fit(X, y)
 
@@ -94,11 +94,10 @@ def test_fit_non_linear(data, random_state):
 
     # We allow deviations by up to ``(atol + rtol * score_oracle)`` from
     # ``score_oracle``.
-    atol = 1e-4
-    rtol = 1e-1
+    atol = 1e-3
     assert (
         score < score_oracle
-        or np.isclose(score, score_oracle, atol=atol, rtol=rtol)
+        or np.isclose(score, score_oracle, atol=atol)
     ), (f"Rule score ({score}) not close to "
         f"linear regression oracle score ({score_oracle}): "
         f"absolute(a - b) <= (atol + rtol * absolute(b)) is "

@@ -76,7 +76,7 @@ def test_fit_non_linear(data):
 
     match = AllMatch()
 
-    cl = Rule(match, MAX_ITER=100).fit(X, y)
+    cl = Rule(match, MAX_ITER_RULE=200).fit(X, y)
 
     y_pred = cl.predict(X)
     score = mean_absolute_error(y_pred, y)
@@ -88,12 +88,12 @@ def test_fit_non_linear(data):
     # We clip scores because of possible floating point instabilities arising in
     # this test if they are too close to zero (i.e. proper comparison becomes
     # inconveniently hard to do).
-    score = np.clip(score, a_min=1e-3, a_max=np.inf)
-    score_oracle = np.clip(score_oracle, a_min=1e-3, a_max=np.inf)
+    score = np.clip(score, a_min=1e-4, a_max=np.inf)
+    score_oracle = np.clip(score_oracle, a_min=1e-4, a_max=np.inf)
 
     assert (score < score_oracle
-            or np.isclose(score / score_oracle, 1, atol=1e-1)), (
-                f"Submodel score ({score}) not close to"
+            or np.isclose(score, score_oracle, atol=1e-3)), (
+                f"Submodel score ({score}) not close to "
                 f"linear regression oracle score ({score_oracle})")
 
 
