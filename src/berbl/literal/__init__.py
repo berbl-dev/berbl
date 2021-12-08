@@ -120,7 +120,8 @@ def model_probability(matchs: List,
                                                      exp_min=exp_min,
                                                      ln_max=ln_max,
                                                      random_state=random_state)
-        L_q, L_k_q, L_M_q = var_bound(M=M,
+        # We rename L_k_q to L_C_q.
+        L_q, L_C_q, L_M_q = var_bound(M=M,
                                       X=X,
                                       Y=Y,
                                       Phi=Phi,
@@ -142,7 +143,7 @@ def model_probability(matchs: List,
             "p_M_D": p_M_D,
             "L_q": L_q,
             "ln_p_M": ln_p_M,
-            "L_k_q": L_k_q,
+            "L_C_q": L_C_q,
             "L_M_q": L_M_q
         }, {
             "matchs": matchs,

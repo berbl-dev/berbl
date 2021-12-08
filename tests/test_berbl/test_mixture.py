@@ -1,13 +1,17 @@
+from copy import copy
+
+import berbl.literal.model as literal
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from berbl.match.allmatch import AllMatch
 from berbl.mixture import Mixture
 from berbl.utils import add_bias
-from hypothesis import given  # type: ignore
+from hypothesis import given  # type: ignore; type: ignore
 from hypothesis import settings  # type: ignore
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
-from test_berbl import Xs, linears, random_data, random_states, rmatch1ds, ys
+from test_berbl import (Xs, assert_isclose, linears, noshrinking, random_data,
+                        random_states, rmatch1ds, ys)
 
 
 @given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
@@ -54,7 +58,8 @@ def test_predict_batch_equals_point(matchs, X, y, X_test, random_state):
                              y_pred_var_)), (y_pred_var - y_pred_var_)
 
 
-@given(linears(N=100, slope_range=(0, 1), intercept_range=(0, 1)), random_states())
+@given(linears(N=100, slope_range=(0, 1), intercept_range=(0, 1)),
+       random_states())
 @settings(max_examples=50)
 def test_fit_linear_functions(data, random_state):
     """
@@ -114,3 +119,25 @@ def test_fit_non_linear(data, random_state):
             or np.isclose(score / score_oracle, 1, atol=1e-1)), (
                 f"Submodel score ({score}) not close to"
                 f"linear regression oracle score ({score_oracle})")
+
+
+@given(random_data(N=100),
+       st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
+       random_states())
+@settings(deadline=None, phases=noshrinking)
+def test_varbounds_like_literal(data, matchs, random_state):
+
+    X, y = data
+
+    mixture = Mixture(matchs,
+                      random_state=copy(random_state),
+                      add_bias=False,
+                      fit_mixing="laplace").fit(X, y)
+    model = literal.Model(matchs,
+                          random_state=copy(random_state),
+                          add_bias=False).fit(X, y)
+
+    assert_isclose(np.sum(mixture.L_C_q_), model.L_C_q_, label="L_C_q", rtol=0.01)
+    assert_isclose(mixture.L_M_q_, model.L_M_q_, label="L_M_q_", rtol=0.01)
+    assert_isclose(mixture.L_q_, model.L_q_, label="L_q_", rtol=0.01)
+    assert_isclose(mixture.p_M_D_, model.p_M_D_, label="p_M_D_", rtol=0.01)

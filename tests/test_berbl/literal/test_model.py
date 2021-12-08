@@ -50,7 +50,7 @@ def test_fit_linear_functions(data, random_state):
     tol = 1e-2
     assert score < tol, (
         f"Mean absolute error is {score} (> {tol})."
-        f"Even though L(q) = {m.L_k_q_}, submodel's weight matrix is still: "
+        f"Even though L(q) = {m.L_C_q_}, submodel's weight matrix is still: "
         f"{m.W_[0]} when it should be [{intercept}, {slope}].\n"
         f"Also, predictions are:\n {np.hstack([y, y_pred])}")
 

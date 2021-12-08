@@ -63,7 +63,7 @@ class Model:
 
         self.L_q_ = self.metrics_["L_q"]
         self.ln_p_M_ = self.metrics_["ln_p_M"]
-        self.L_k_q_ = self.metrics_["L_k_q"]
+        self.L_C_q_ = self.metrics_["L_C_q"]
         self.L_M_q_ = self.metrics_["L_M_q"]
         self.p_M_D_ = self.metrics_["p_M_D"]
 
