@@ -83,8 +83,7 @@ class Mixing:
         self.V_ = self.random_state.normal(loc=0,
                                            scale=self.A_BETA / self.B_BETA,
                                            size=(self.DV_, self.K))
-        # a_beta is actually constant so we can set it here and be done with it.
-        self.a_beta_ = np.repeat(self.A_BETA + self.DV_ / 2, self.K)
+        self.a_beta_ = np.repeat(self.A_BETA, self.K)
         self.b_beta_ = np.repeat(self.B_BETA, self.K)
 
         # Initialize parameters for the Bouchard approximation.
@@ -127,6 +126,9 @@ class Mixing:
                                                         alpha=self.alpha_,
                                                         lxi=self.lxi_)
 
+            # TODO Pull this out of the loop (it's constant) without
+            # jeopardizing the first iteration where a_beta_ = A_BETA
+            self.a_beta_ = np.repeat(self.A_BETA + self.DV_ / 2, self.K)
             self.b_beta_ = self._train_b_beta(V=self.V_,
                                               Lambda_V_1=self.Lambda_V_1_)
 
@@ -301,6 +303,9 @@ class Mixing:
         G : array of shape (N, K)
             Mixing (“gating”) matrix.
         """
+        # TODO Use literal.mixing here (remember to provide self.EXP_MIN and
+        # self.LN_MAX, though!)
+
         # If Phi is standard, this simply broadcasts V to a matrix [V, V, V, …]
         # of shape (N, DV).
         G = Phi @ V

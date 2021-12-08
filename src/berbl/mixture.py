@@ -94,7 +94,7 @@ class Mixture:
 
         # We need to recalculate the rules' variational bounds here because we
         # now have access to the final value of R (which we substituted by M
-        # during submodel training for ensuring indenpendence).
+        # during submodel training for ensuring independence).
         self.L_C_q_ = np.repeat(-np.inf, len(self.rules_))
         for k in range(self.K_):
             self.L_C_q_[k] = self.rules_[k].var_bound(X,
