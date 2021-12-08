@@ -60,7 +60,7 @@ class MixingLaplace(Mixing):
         self.L_M_q_ = -np.inf
         delta_L_M_q = self.DELTA_S_L_M_Q + 1
         i = 0
-        while delta_L_M_q > self.DELTA_S_L_M_Q and i < self.MAX_ITER:
+        while delta_L_M_q > self.DELTA_S_L_M_Q and i < self.MAX_ITER_MIXING:
             i += 1
 
             self.V_, self.Lambda_V_1_ = self._train_mix_weights(
@@ -139,7 +139,7 @@ class MixingLaplace(Mixing):
         KLRG = _kl(R, G)
         delta_KLRG = self.DELTA_S_KLRG + 1
         i = 0
-        while delta_KLRG > self.DELTA_S_KLRG and i < self.MAX_ITER and not np.isclose(
+        while delta_KLRG > self.DELTA_S_KLRG and i < self.MAX_ITER_MIXING and not np.isclose(
                 KLRG, 0):
             i += 1
             # Actually, this should probably be named nabla_E.

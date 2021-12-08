@@ -15,7 +15,7 @@ class Rule():
                  A_TAU=10**-2,
                  B_TAU=10**-4,
                  DELTA_S_L_K_Q=10**-4,
-                 MAX_ITER=20,
+                 MAX_ITER_RULE=20,
                  **kwargs):
         """
         Parameters
@@ -37,7 +37,7 @@ class Rule():
             Shape parameter of noise variance prior.
         DELTA_S_L_K_Q : float
             Stopping criterion for variational update loop.
-        MAX_ITER : int
+        MAX_ITER_RULE : int
             Only perform up to this many iterations of variational
             updates (abort then, even if stopping criterion is not yet met).
         **kwargs : kwargs
@@ -54,7 +54,7 @@ class Rule():
         self.A_TAU = A_TAU
         self.B_TAU = B_TAU
         self.DELTA_S_L_K_Q = DELTA_S_L_K_Q
-        self.MAX_ITER = MAX_ITER
+        self.MAX_ITER_RULE = MAX_ITER_RULE
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         """
@@ -81,7 +81,7 @@ class Rule():
         self.a_tau_ = self.A_TAU + 0.5 * np.sum(self.m_)
 
         iter = 0
-        while delta_L_q > self.DELTA_S_L_K_Q and iter < self.MAX_ITER:
+        while delta_L_q > self.DELTA_S_L_K_Q and iter < self.MAX_ITER_RULE:
             iter += 1
             E_alpha_alpha = self.a_alpha_ / self.b_alpha_
             self.Lambda_ = np.diag([E_alpha_alpha] * self.DX_) + X_.T @ X_

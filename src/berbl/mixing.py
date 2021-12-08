@@ -16,7 +16,7 @@ class Mixing:
                  A_BETA=10**-2,
                  B_BETA=10**-4,
                  DELTA_S_L_M_Q=10**-2,
-                 MAX_ITER=40,
+                 MAX_ITER_MIXING=40,
                  EXP_MIN=np.log(np.finfo(None).tiny),
                  LN_MAX=np.log(np.finfo(None).max),
                  **kwargs):
@@ -36,7 +36,7 @@ class Mixing:
             Shape parameter of mixing weight vector variance prior.
         DELTA_S_L_M_Q : float
             Stopping criterion for variational update loop.
-        MAX_ITER : int
+        MAX_ITER_MIXING : int
             Only perform up to this many iterations of variational updates
             (abort then, even if stopping criterion is not yet met).
         EXP_MIN : float
@@ -60,7 +60,7 @@ class Mixing:
         self.A_BETA = A_BETA
         self.B_BETA = B_BETA
         self.DELTA_S_L_M_Q = DELTA_S_L_M_Q
-        self.MAX_ITER = MAX_ITER
+        self.MAX_ITER_MIXING = MAX_ITER_MIXING
         self.EXP_MIN = EXP_MIN
         self.LN_MAX = LN_MAX
         self.random_state = random_state
@@ -105,7 +105,7 @@ class Mixing:
         self.L_M_q_ = -np.inf
         delta_L_M_q = self.DELTA_S_L_M_Q + 1
         i = 0
-        while delta_L_M_q > self.DELTA_S_L_M_Q and i < self.MAX_ITER:
+        while delta_L_M_q > self.DELTA_S_L_M_Q and i < self.MAX_ITER_MIXING:
             i += 1
 
             self.V_, self.Lambda_V_1_ = self._train_mix_weights(
