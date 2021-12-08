@@ -1,8 +1,9 @@
+import mlflow  # type: ignore
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 
 from .literal import responsibilities
-from .utils import check_phi, matching_matrix
+from .utils import check_phi, known_issue, matching_matrix
 
 
 class Mixing:
@@ -392,11 +393,15 @@ class Mixing:
                 b_beta[k] += 0.5 * (np.sum(Lambda_V_1_diag[l:u:1])
                                     + v_k.T @ v_k)
             except FloatingPointError as e:
-                print(
-                    f"FloatingPointError in _train_b_beta "
-                    f"(solved by keeping prior b_beta[k] = {b_beta[k]}): "
-                    f"v_k = {v_k}, K = {self.K}, V = {V}, Lambda_V_1 = {Lambda_V_1}"
-                )
+                known_issue("FloatingPointError in train_mix_priors",
+                            (f"v_k = {v_k}, "
+                             f"K = {self.K}, "
+                             f"V = {V}, "
+                             f"Lambda_V_1 = {Lambda_V_1}"),
+                            report=True)
+                mlflow.set_tag("FloatingPointError_train_mix_priors",
+                               "occurred")
+                raise e
 
         return b_beta
 
