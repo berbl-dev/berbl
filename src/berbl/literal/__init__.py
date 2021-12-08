@@ -352,11 +352,19 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
 
     Is zero wherever a rule does not match.
 
-    :param M: matching matrix (N × K)
-    :param Phi: mixing feature matrix (N × DV)
-    :param V: mixing weight matrix (DV × K)
+    Parameters
+    ----------
+    M : array of shape (N, K)
+        Matching matrix.
+    Phi : array of shape (N, DV)
+        Mixing feature matrix.
+    V : array of shape (DV, K)
+        Mixing weight matrix.
 
-    :returns: mixing matrix (N × K)
+    Returns
+    -------
+    G : array of shape (N, K)
+        Mixing (“gating”) matrix.
     """
     DV, K = V.shape
     # If Phi is standard, this simply broadcasts V to a matrix [V, V, V, …] of
@@ -786,7 +794,6 @@ def var_mix_bound(G: np.ndarray, R: np.ndarray, V: np.ndarray,
     L_M1q = K * (-ss.gammaln(HParams().A_BETA)
                  + HParams().A_BETA * np.log(HParams().B_BETA))
     for k in range(K):
-        # NOTE this is just the negated form of the update two lines prior?
         try:
             L_M1q = L_M1q + ss.gammaln(
                 a_beta[k]) - a_beta[k] * np.log(b_beta[k])
