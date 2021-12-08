@@ -11,23 +11,6 @@ from test_berbl import Xs, rmatch1ds, random_states, ys
 # TODO train and check for similarity with mixing_laplace
 
 
-@given(rmatch1ds(), Xs(), ys(), random_states())
-@settings(max_examples=50)
-def test_same_match_equal_weights(match, X, y, random_state):
-    """
-    Mixing two instances of the same rule should result in 50/50 mixing weights.
-    """
-    cl = Rule(match).fit(X, y)
-    mix = Mixing(rules=[cl, cl], phi=None, random_state=random_state).fit(X, y)
-    G = mix.mixing(X)
-
-    msg = (f"Mixing of the same rules isn't uniform"
-           f"{mix.R_}"
-           f"{mix.V_}")
-    # We ever so slightly weaken atol (default value is 1e-8).
-    assert np.all(np.isclose(G, [0.5, 0.5], atol=1e-6)), msg
-
-
 @given(Xs(), ys(), random_states())
 @settings(max_examples=50)
 def test_no_match_no_weight(X, y, random_state):

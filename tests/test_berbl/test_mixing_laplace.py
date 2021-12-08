@@ -13,23 +13,6 @@ from test_berbl import (Xs, assert_isclose, noshrinking, random_data,
                         random_states, rmatch1ds, ys)
 
 
-@given(rmatch1ds(), Xs(), ys(), random_states())
-@settings(max_examples=50)
-def test_same_match_equal_weights(match, X, y, random_state):
-    """
-    Mixing two instances of the same rule should result in 50/50 mixing weights.
-    """
-    cl = Rule(match).fit(X, y)
-    mix = MixingLaplace(rules=[cl, cl], phi=None,
-                        random_state=random_state).fit(X, y)
-    G = mix.mixing(X)
-
-    assert np.all(np.isclose(
-        G, [0.5, 0.5])), (f"Mixing of the same rules isn't uniform"
-                          f"{mix.R_}"
-                          f"{mix.V_}")
-
-
 @given(Xs(), ys(), random_states())
 @settings(max_examples=50)
 def test_no_match_no_weight(X, y, random_state):
@@ -44,9 +27,9 @@ def test_no_match_no_weight(X, y, random_state):
                         random_state=random_state).fit(X, y)
     G = mix.mixing(X)
 
-    msg = (f"Mixing a not matching and a matching rule isn't correct"
-           f"{G}"
-           f"{mix.R_}"
+    msg = (f"Mixing a not matching and a matching rule isn't correct\n"
+           f"{G}\n"
+           f"{mix.R_}\n"
            f"{mix.V_}")
     assert np.all(np.isclose(G, [1, 0])), msg
 
