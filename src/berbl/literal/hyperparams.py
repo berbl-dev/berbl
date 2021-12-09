@@ -23,6 +23,7 @@ class HParams():
         "LN_MAX": np.log(np.finfo(None).max),
         # This is not documented in the book but in the code at
         # https://github.com/jdrugo/LCSBookCode
+        # TODO Rename to MAX_ITER_RULE
         "MAX_ITER_CLS": 20,
         # This is not documented in the book but in the code at
         # https://github.com/jdrugo/LCSBookCode

@@ -91,10 +91,8 @@ def test_fit_non_linear(data):
     score = np.clip(score, a_min=1e-4, a_max=np.inf)
     score_oracle = np.clip(score_oracle, a_min=1e-4, a_max=np.inf)
 
-    assert (score < score_oracle
-            or np.isclose(score, score_oracle, atol=1e-3)), (
-                f"Submodel score ({score}) not close to "
-                f"linear regression oracle score ({score_oracle})")
+    if score > score_oracle:
+        assert_isclose(score, score_oracle, atol=1e-3)
 
 
 @given(random_data())

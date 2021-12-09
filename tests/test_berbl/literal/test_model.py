@@ -5,12 +5,12 @@ from berbl.literal.hyperparams import HParams
 from berbl.literal.model import Model
 from berbl.match.allmatch import AllMatch
 from berbl.utils import add_bias, check_phi, matching_matrix
-from hypothesis import given, seed, settings  # type: ignore
+from hypothesis import given, settings  # type: ignore
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
 from sklearn.utils import check_random_state  # type: ignore
-from test_berbl import (Xs, linears, random_data, random_states, rmatch1ds,
-                        seeds, ys)
+from test_berbl import (Xs, assert_isclose, linears, random_data,
+                        random_states, rmatch1ds, seeds, ys)
 
 # NOTE Matching functions always assume a bias column (``has_bias=True``)
 # whereas the ``Xs`` do not contain one (``bias_column=False``) because
@@ -95,17 +95,8 @@ def test_fit_non_linear(data, random_state):
     # We allow deviations by up to ``(atol + rtol * score_oracle)`` from
     # ``score_oracle``.
     atol = 1e-3
-    assert (
-        score < score_oracle
-        or np.isclose(score, score_oracle, atol=atol)
-    ), (f"Rule score ({score}) not close to "
-        f"linear regression oracle score ({score_oracle}): "
-        f"absolute(a - b) <= (atol + rtol * absolute(b)) is "
-        f"{np.abs(score - score_oracle)} <= "
-        f"({atol} + {rtol * np.abs(score_oracle)}) which is "
-        f"{np.abs(score - score_oracle)} <= "
-        f"({atol + rtol * np.abs(score_oracle)})"
-        )
+    if score > score_oracle:
+        assert_isclose(score, score_oracle, atol=atol)
 
 
 @given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),

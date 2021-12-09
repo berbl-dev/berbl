@@ -71,20 +71,20 @@ class Rule():
         X_ = X * np.sqrt(self.m_)
         y_ = y * np.sqrt(self.m_)
 
-        self.a_alpha_, self.b_alpha_ = self.A_ALPHA, self.B_ALPHA
-        self.a_tau_, self.b_tau_ = self.A_TAU, self.B_TAU
+        E_alpha_alpha = self.A_ALPHA / self.B_ALPHA
+        self.a_alpha_ = self.A_ALPHA + self.DX_ * self.Dy_ / 2
+
+        # self.a_tau_ is constant.
+        self.a_tau_ = self.A_TAU + 0.5 * np.sum(self.m_)
+        self.b_tau_ = self.B_TAU
+
         # TODO Why not precompute L_q_ using self.var_bound?
         self.L_q_ = -np.inf
         delta_L_q = self.DELTA_S_L_K_Q + 1
 
-        # TODO Perform one computation of the loop beforehand with initial
-        # a_alpha, a_tau etc. and after that use the values that are constant in
-        # the loop
-
         iter = 0
         while delta_L_q > self.DELTA_S_L_K_Q and iter < self.MAX_ITER_RULE:
             iter += 1
-            E_alpha_alpha = self.a_alpha_ / self.b_alpha_
             self.Lambda_ = np.diag([E_alpha_alpha] * self.DX_) + X_.T @ X_
             # While, in theory, Lambda is always invertible here and we thus
             # should be able to use inv (as it is described in the algorithm we
@@ -94,18 +94,13 @@ class Rule():
             # in his own code, Drugowitsch always uses pseudo inverse here.
             self.Lambda_1_ = np.linalg.pinv(self.Lambda_)
             self.W_ = y_.T @ X_ @ self.Lambda_1_
-            # TODO Pull this out of the loop (it's constant) without
-            # jeopardizing the first iteration where a_tau_ = A_TAU
-            self.a_tau_ = self.A_TAU + 0.5 * np.sum(self.m_)
             self.b_tau_ = self.B_TAU + 1 / (2 * self.Dy_) * (
                 np.sum(y_ * y_) - np.sum(self.W_ * (self.W_ @ self.Lambda_)))
             E_tau_tau = self.a_tau_ / self.b_tau_
-            # TODO Pull this out of the loop (it's constant) without
-            # jeopardizing the first iteration where a_alpha_ = A_ALPHA
-            self.a_alpha_ = self.A_ALPHA + self.DX_ * self.Dy_ / 2
             # Dy factor in front of trace due to sum over Dy elements (7.100).
             self.b_alpha_ = self.B_ALPHA + 0.5 * (E_tau_tau * np.sum(
                 self.W_ * self.W_) + self.Dy_ * np.trace(self.Lambda_1_))
+            E_alpha_alpha = self.a_alpha_ / self.b_alpha_
             L_q_prev = self.L_q_
             self.L_q_ = self.var_bound(
                 X=X,
