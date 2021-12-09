@@ -5,10 +5,9 @@ from berbl.match.nomatch import NoMatch
 from berbl.mixing import Mixing
 from berbl.rule import Rule
 from hypothesis import given, settings  # type: ignore
-from test_berbl import Xs, rmatch1ds, random_states, ys
+from test_berbl import Xs, random_states, rmatch1ds, ys
 
 # TODO Test using n-d inputs (e.g. radial instead of radial1d)
-# TODO train and check for similarity with mixing_laplace
 
 
 @given(Xs(), ys(), random_states())
@@ -21,7 +20,8 @@ def test_no_match_no_weight(X, y, random_state):
     cl1 = Rule(AllMatch()).fit(X, y)
     cl2 = Rule(NoMatch()).fit(X, y)
 
-    mix = Mixing(rules=[cl1, cl2], phi=None, random_state=random_state).fit(X, y)
+    mix = Mixing(rules=[cl1, cl2], phi=None,
+                 random_state=random_state).fit(X, y)
     G = mix.mixing(X)
 
     msg = (f"Mixing a not matching and a matching rule isn't correct"

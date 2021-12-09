@@ -83,7 +83,8 @@ class Mixing:
         self.V_ = self.random_state.normal(loc=0,
                                            scale=self.A_BETA / self.B_BETA,
                                            size=(self.DV_, self.K))
-        self.a_beta_ = np.repeat(self.A_BETA, self.K)
+        # self.a_beta_ is constant (but for the first run of the loop).
+        self.a_beta_ = np.repeat(self.A_BETA + self.DV_ / 2, self.K)
         self.b_beta_ = np.repeat(self.B_BETA, self.K)
 
         # Initialize parameters for the Bouchard approximation.
@@ -115,7 +116,8 @@ class Mixing:
                 Phi=Phi,
                 R=self.R_,
                 V=self.V_,
-                a_beta=self.a_beta_,
+                # The first run of the loop should use the hyperparameter.
+                a_beta=(self.a_beta_ if i > 1 else np.repeat(self.A_BETA, self.K)),
                 b_beta=self.b_beta_,
                 lxi=self.lxi_,
                 alpha=self.alpha_)
@@ -126,9 +128,6 @@ class Mixing:
                                                         alpha=self.alpha_,
                                                         lxi=self.lxi_)
 
-            # TODO Pull this out of the loop (it's constant) without
-            # jeopardizing the first iteration where a_beta_ = A_BETA
-            self.a_beta_ = np.repeat(self.A_BETA + self.DV_ / 2, self.K)
             self.b_beta_ = self._train_b_beta(V=self.V_,
                                               Lambda_V_1=self.Lambda_V_1_)
 

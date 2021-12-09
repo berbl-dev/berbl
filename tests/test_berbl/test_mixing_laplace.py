@@ -34,7 +34,7 @@ def test_no_match_no_weight(X, y, random_state):
     assert np.all(np.isclose(G, [1, 0])), msg
 
 
-@given(st.lists(rmatch1ds(has_bias=True), min_size=9, max_size=10),
+@given(st.lists(rmatch1ds(has_bias=True), min_size=1, max_size=10),
        random_data(N=100), random_states())
 @settings(max_examples=50, deadline=None, phases=noshrinking)
 def test_fit_like_literal(matchs, data, random_state):
