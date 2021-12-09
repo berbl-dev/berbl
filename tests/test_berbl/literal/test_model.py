@@ -57,7 +57,7 @@ def test_fit_linear_functions(data, random_state):
 
 # We may need to use more samples here to make sure that the algorithms' scores
 # are really close.
-@given(random_data(N=1000, bias_column=False), random_states())
+@given(random_data(N=2000, bias_column=False), random_states())
 # Increase number of tests in order to catch numerical issues that happen
 # seldomly.
 @settings(deadline=None, max_examples=500)
