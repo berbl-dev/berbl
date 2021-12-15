@@ -1,0 +1,41 @@
+{
+  description = "The berbl library";
+
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-21.11";
+  inputs.overlays.url = "github:dpaetzel/overlays";
+
+  outputs = { self, nixpkgs, overlays }: {
+
+    defaultPackage.x86_64-linux = with import nixpkgs {
+      system = "x86_64-linux";
+      overlays = with overlays.overlays; [ mlflow pandas ];
+    };
+      python3.pkgs.buildPythonPackage rec {
+        pname = "berbl";
+        version = "0.1.0";
+
+        src = self;
+
+        propagatedBuildInputs = with python3.pkgs; [
+          deap
+          mlflow
+          numpy
+          numpydoc
+          pandas
+          scipy
+          scikitlearn
+          sphinx
+        ];
+
+        testInputs = with python3.pkgs; [ hypothesis pytest ];
+
+        doCheck = false;
+
+        meta = with lib; {
+          description =
+            "Implementation of a Bayesian Learning Classifier System";
+          license = licenses.gpl3;
+        };
+      };
+  };
+}

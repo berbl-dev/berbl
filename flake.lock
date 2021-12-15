@@ -1,0 +1,43 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1639161226,
+        "narHash": "sha256-75Y08ynJDTq6HHGIF+8IADBJSVip0UyWQH7jqSFnRR8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "573095944e7c1d58d30fc679c81af63668b54056",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-21.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "overlays": {
+      "locked": {
+        "lastModified": 1639481218,
+        "narHash": "sha256-67wlhb/jyZM6rKw9ogFRu02l/7E9yWB+Ifiz0tpDDE8=",
+        "owner": "dpaetzel",
+        "repo": "overlays",
+        "rev": "335e67f0abfbc8a493b2bd6fe23e3f74da96dac2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "dpaetzel",
+        "repo": "overlays",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "overlays": "overlays"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

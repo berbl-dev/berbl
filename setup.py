@@ -16,7 +16,7 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "deap ==1.3.1",
-        "mlflow ==1.20.2",
+        "mlflow ==1.22.0",
         "numpy ==1.21.2",
         "scipy ==1.7.1",
         "scikit-learn ==0.24.1",
