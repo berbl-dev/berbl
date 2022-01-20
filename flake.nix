@@ -47,7 +47,7 @@
       packages = [
         defaultPackage.x86_64-linux
         python3.pkgs.tox
-      ];
+      ] ++ defaultPackage.x86_64-linux.testInputs;
     };
   };
 }

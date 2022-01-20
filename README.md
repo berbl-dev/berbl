@@ -23,3 +23,25 @@ instead use *rule*. A *rule* consists of a *matching function* and a (local)
 *submodel*. In addition, there is a *mixing weight* associated with each rule
 that comes in to play when rules overlap (i.e. when an input is matched by the
 matching functions of more than one rule).
+
+
+## Running the tests
+
+
+```bash
+nix develop
+```
+drops you into a development shell with all the dependencies.
+
+
+You can then run all tests the recommended way using
+```bash
+tox
+```
+
+
+In order to run a selection of tests use (see the `pytest` documentation for
+details).
+```bash
+pytest tests -k FILTEREXP
+```
