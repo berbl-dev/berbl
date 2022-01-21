@@ -18,11 +18,11 @@
     },
     "overlays": {
       "locked": {
-        "lastModified": 1642696974,
-        "narHash": "sha256-FsCi7tTaLUAjU731Dax7snjyrXm8WcYepl4SduTd8Xs=",
+        "lastModified": 1642778105,
+        "narHash": "sha256-NxBVNiO1VpCFV3rjctz9nEXCLbkXjI/Ucjsf2VTqD7A=",
         "owner": "dpaetzel",
         "repo": "overlays",
-        "rev": "55735b0f0303437771933e7e70147fca2666dfb1",
+        "rev": "b6adb13c98648aa24d039df95e913c77bd568562",
         "type": "github"
       },
       "original": {
