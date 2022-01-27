@@ -25,7 +25,8 @@ class DefaultToolbox(Toolbox):
                  add_bias=True,
                  phi=None,
                  tournsize=5,
-                 fit_mixing="bouchard"):
+                 fit_mixing="bouchard",
+                 **kwargs):
         """
         n : positive int
             n parameter (number of independent experiments) of the binomial
@@ -34,13 +35,12 @@ class DefaultToolbox(Toolbox):
             p parameter (success rate) of the binomial distribution from which
             initial individual sizes are drawn.
         """
-        # TODO Consider putting kwargs here as well (e.g. if literal=False, then
-        # we can specify a lot of additional parameters such as fit_mixing)
         super().__init__(literal=literal,
                          add_bias=add_bias,
                          phi=phi,
                          fit_mixing=fit_mixing,
-                         random_state=random_state)
+                         random_state=random_state,
+                         **kwargs)
 
         self.register("gene", matchcls.random, random_state=self.random_state)
         self.register("genotype",
