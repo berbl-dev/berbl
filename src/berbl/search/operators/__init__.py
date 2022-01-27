@@ -23,7 +23,8 @@ class Toolbox(base.Toolbox):
                  literal=False,
                  add_bias=True,
                  phi=None,
-                 fit_mixing="bouchard"):
+                 fit_mixing="bouchard",
+                 **kwargs):
         """
         Parameters
         ----------
@@ -45,11 +46,16 @@ class Toolbox(base.Toolbox):
             be fitted. One of ``"bouchard"`` (experimental but may be faster and
             better-behaving) and ``"laplace"`` (the original method, very slow
             and possibly suboptimal in terms of the variational bound).
+        **kwargs : kwargs
+            Passed to the ``Mixture``, ``Mixing`` and ``Rule`` constructors.
+            May be used to override their default parameters. Can be accessed
+            later on via ``kwargs``
         """
         super().__init__()
 
         self.literal = literal
         self.random_state = check_random_state(random_state)
+        self.kwargs = kwargs
 
         if self.literal:
 
@@ -62,14 +68,12 @@ class Toolbox(base.Toolbox):
         else:
 
             def _evaluate(genotype, X, y):
-                # kwargs is used because Mixture takes fit_mixing, and kwargs
-                # for submodels etc.
-                # TODO Get rid of kwargs, make explicit
                 genotype.phenotype = Mixture(matchs=genotype,
                                              random_state=self.random_state,
                                              add_bias=add_bias,
                                              phi=phi,
-                                             fit_mixing=fit_mixing).fit(X, y)
+                                             fit_mixing=fit_mixing,
+                                             **self.kwargs).fit(X, y)
                 return (genotype.phenotype.p_M_D_, )
 
         self.register("evaluate", _evaluate)
