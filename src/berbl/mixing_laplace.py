@@ -18,13 +18,21 @@ class MixingLaplace(Mixing):
     for all submodels at once), whereas ``Mixing`` has ``K`` mixing matrices
     (one for each submodel).
     """
-    def __init__(self, DELTA_S_KLRG=10**-8, **kwargs):
+    def __init__(self, DELTA_S_KLRG=10**-8, V_INIT="random", **kwargs):
         """
         Parameters
         ----------
         DELTA_S_KLRG : float
             Stopping criterion for the iterative Laplace approximation in the
             mixing weight update.
+        V_INIT : str
+            How to initialize the gating parameter ``V``. ``"random"`` (the
+            default) is how it is done in the algorithmic description in
+            Drugowtisch's book (i.e. based on a normal distribution around 0,
+            which corresponds to the shrinkage prior put on ``V``). ``"ones"``
+            means with an all ones matrix (this is how it is done in
+            LCSBookCode, the Python implementation accompanying Drugowitsch's
+            book). ``"zeros"`` means with an all zeros matrix.
         **kwargs : kwargs
             This is here for two reasons: To be able to provide the parent with
             all the parameters it uses (we only add ``DELTA_S_KLRG``) and so
@@ -35,6 +43,7 @@ class MixingLaplace(Mixing):
             with the same name, they always receive the same value.
         """
         self.DELTA_S_KLRG = DELTA_S_KLRG
+        self.V_INIT = V_INIT
         super().__init__(**kwargs)
 
     def fit(self, X, y):
@@ -46,9 +55,20 @@ class MixingLaplace(Mixing):
         _, self.Dy_ = y.shape
         N, self.DV_ = Phi.shape
 
-        self.V_ = self.random_state.normal(loc=0,
-                                           scale=self.A_BETA / self.B_BETA,
-                                           size=(self.DV_, self.K))
+        # TODO Extract to berbl.mixing
+        if self.V_INIT == "random":
+            self.V_ = self.random_state.normal(loc=0,
+                                               scale=self.A_BETA / self.B_BETA,
+                                               size=(self.DV_, self.K))
+        elif self.V_INIT == "ones":
+            self.V_ = np.ones((self.DV_, self.K))
+        elif self.V_INIT == "zeros":
+            self.V_ = np.zeros((self.DV_, self.K))
+        else:
+            raise ValueError(
+                f"V_INIT must be one of ['random', 'ones', 'zeros'] "
+                f"but is {V_INIT}")
+
         # self.a_beta_ is constant (but for the first run of the loop).
         self.a_beta_ = np.repeat(self.A_BETA + self.DV_ / 2, self.K)
         self.b_beta_ = np.repeat(self.B_BETA, self.K)
