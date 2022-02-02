@@ -15,6 +15,9 @@ The only deviations from the book are:
 * ``model_probability`` returns L(q) - ln K! instead of L(q) + ln K! as the
   latter is presumably a typographical error in the book (the corresponding
   formula in Section 7 uses ``-`` as well, which seems to be correct).
+* We initialize the mixing model parameters ``V`` using the correct scale of
+  ``b_beta / a_beta`` (there is a typographical error in the TrainMixing
+  algorithm in Drugowitsch's book).
 * We always use Moore-Penrose pseudo-inverses instead of actual inverses due to
   (very seldomly) matrices being invertible—probably due to numerical
   inaccuracies. This is also done in the code that Jan Drugowitsch published to
