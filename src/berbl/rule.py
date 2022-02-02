@@ -147,11 +147,11 @@ class Rule():
         """
         # The sum corresponds to x @ self.Lambda_1 @ x for each x in X (i.e.
         # np.diag(X @ self.Lambda_1_ @ X.T)).
-        var = 2 * self.b_tau_ / (self.a_tau_ - 1) * (
-            1 + np.sum((X @ self.Lambda_1_) * X, axis=1))
+        var = 2 * self.b_tau_ / (self.a_tau_ - 1) * (1 + np.sum(
+            (X @ self.Lambda_1_) * X, axis=1))
         # The same value is repeated for each dimension since the model
         # currently assumes the same variance in all dimensions.
-        return var[:,np.newaxis].repeat(self.Dy_, axis=1)
+        return var[:, np.newaxis].repeat(self.Dy_, axis=1)
 
     def var_bound(self, X: np.ndarray, y: np.ndarray, r: np.ndarray):
         """
@@ -171,7 +171,7 @@ class Rule():
         """
         E_tau_tau = self.a_tau_ / self.b_tau_
         L_1_q = self.Dy_ / 2 * (ss.digamma(self.a_tau_) - np.log(self.b_tau_)
-                                 - np.log(2 * np.pi)) * np.sum(r)
+                                - np.log(2 * np.pi)) * np.sum(r)
         # We reshape r to a NumPy row vector since NumPy seems to understand
         # what we want to do when we multiply two row vectors (i.e. a^T a).
         L_2_q = (-0.5 * r).reshape(
