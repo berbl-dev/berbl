@@ -2,7 +2,7 @@ import numpy as np  # type: ignore
 
 
 class SoftInterval1D():
-    def __init__(self, l: float, u: float, has_bias=True):
+    def __init__(self, l: float, u: float, has_bias=True, input_bounds=None):
         """
         ``self.match`` is a soft interval–based matching function as defined in
         Drugowitsch's book [PDF p. 260].
@@ -12,25 +12,20 @@ class SoftInterval1D():
         Gaussian to lie inside this interval, and additionally require 95% of
         the area underneath the matching function to be inside this interval.”
 
-        Data is assumed to lie within ``[-1, 1]``.
-
-        :param a: Evolving parameter from which the position of the Gaussian is
-            inferred (``0 <= a <= 100``). [PDF p. 256]
-
-            Exactly one of ``a`` and ``mu`` has to be given (the other one can
-            be inferred); the same goes for ``b`` and ``sigma_2``.
-        :param b: Evolving parameter from which the standard deviation of the
-            Gaussian is inferred (``0 <= b <= 50``). See ``a``.
-        :param mu: Position of the Gaussian. See ``a``.
-        :param sigma_2: Standard deviation. See ``a``.
-        :param has_bias: Whether to expect 2D data where we always match the
-            first dimension (e.g. because it is all ones as a bias to implicitly
-            fit the intercept).
+        Parameters
+        ==========
+        input_bounds : pair of two floats or None
+            If ``None`` (the default), input is assumed to be standardized.
+            Otherwise, input is assumed to lie within the interval described by
+            the two floats. Note that inputs *should* be standardized for
+            everything else to work properly.
         """
         self.has_bias = has_bias
 
-        # Data is assumed to lie within [-1, 1]
-        self._l, self._u = -1, 1
+        if input_bounds is not None:
+            self._l, self._u = input_bounds
+        else:
+            self._l, self._u = -1, 1
 
         # Unordered bound representation, we swap if necessary. [PDF p. 261]
         self.l, self.u = tuple(sorted([l, u]))
@@ -43,12 +38,22 @@ class SoftInterval1D():
         return (0.0662 * (self.u - self.l))**2
 
     @classmethod
-    def random(cls, random_state: np.random.RandomState):
+    def random(cls, random_state: np.random.RandomState, input_bounds=None):
         """
         [PDF p. 260]
+
+        Parameters
+        ==========
+        input_bounds : pair of two floats or None
+            See constructor documentation.
         """
-        bounds = random_state.uniform(-1, 1, size=2)
-        return SoftInterval1D(*bounds)
+        if input_bounds is not None:
+            _l, _u = input_bounds
+        else:
+            _l, _u = -1, 1
+
+        l, u = tuple(random_state.uniform(_l, _u, size=2))
+        return SoftInterval1D(l, u, input_bounds=input_bounds)
 
     def mutate(self, random_state: np.random.RandomState):
         """
