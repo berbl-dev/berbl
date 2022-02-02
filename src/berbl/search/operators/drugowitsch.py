@@ -26,6 +26,7 @@ class DefaultToolbox(Toolbox):
                  phi=None,
                  tournsize=5,
                  fit_mixing="bouchard",
+                 match_args={},
                  **kwargs):
         """
         n : positive int
@@ -42,7 +43,10 @@ class DefaultToolbox(Toolbox):
                          random_state=random_state,
                          **kwargs)
 
-        self.register("gene", matchcls.random, random_state=self.random_state)
+        self.register("gene",
+                      matchcls.random,
+                      random_state=self.random_state,
+                      **match_args)
         self.register("genotype",
                       initRepeat_binom,
                       creator.Genotype,
