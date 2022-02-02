@@ -46,8 +46,11 @@ class MixingLaplace(Mixing):
         _, self.Dy_ = y.shape
         N, self.DV_ = Phi.shape
 
+        # NOTE That the scale of this normal is wrong in TrainMixing in
+        # Drugowitsch's book (but correct in the text accompanying that
+        # algorithm).
         self.V_ = self.random_state.normal(loc=0,
-                                           scale=self.A_BETA / self.B_BETA,
+                                           scale=self.B_BETA / self.A_BETA,
                                            size=(self.DV_, self.K))
         # self.a_beta_ is constant (but for the first run of the loop).
         self.a_beta_ = np.repeat(self.A_BETA + self.DV_ / 2, self.K)

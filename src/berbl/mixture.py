@@ -71,6 +71,7 @@ class Mixture:
         # “When fit is called, any previous call to fit should be ignored.”
         self.rules_ = list(map(lambda m: Rule(m, **self.__kwargs),
                                self.matchs))
+        # TODO Cache trained rules at the GA level.
         for k in range(self.K_):
             self.rules_[k].fit(X, y)
 
