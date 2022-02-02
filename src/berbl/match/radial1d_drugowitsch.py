@@ -10,6 +10,7 @@ class RadialMatch1D():
                  mu: float = None,
                  sigma_2: float = None,
                  has_bias=True,
+                 # TODO Detect input_bounds automatedly
                  input_bounds=None):
         """
         ``self.match`` is a radial basis function–based matching function as
