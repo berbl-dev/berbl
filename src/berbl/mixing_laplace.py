@@ -46,9 +46,8 @@ class MixingLaplace(Mixing):
         _, self.Dy_ = y.shape
         N, self.DV_ = Phi.shape
 
-        # NOTE That the scale of this normal is wrong in TrainMixing in
-        # Drugowitsch's book (but correct in the text accompanying that
-        # algorithm).
+        # NOTE The scale of this normal is wrong in TrainMixing in Drugowitsch's
+        # book (but correct in the text accompanying that algorithm).
         self.V_ = self.random_state.normal(loc=0,
                                            scale=self.B_BETA / self.A_BETA,
                                            size=(self.DV_, self.K))
@@ -78,23 +77,64 @@ class MixingLaplace(Mixing):
         while delta_L_M_q > self.DELTA_S_L_M_Q and i < self.MAX_ITER_MIXING:
             i += 1
 
-            self.V_, self.Lambda_V_1_ = self._train_mix_weights(
-                M=M,
-                X=X,
-                y=y,
-                Phi=Phi,
-                G=self.G_,
-                R=self.R_,
-                V=self.V_,
-                # The first run of the loop should use the hyperparameter.
-                a_beta=(self.a_beta_ if i > 1 else np.repeat(self.A_BETA, self.K)),
-                b_beta=self.b_beta_)
+            # NOTE We inline TrainMixWeights here for better control of
+            # performance optimizations (e.g. precomputing stuff efc.).
 
+            # TODO Improve this a_beta business
+            a_beta = (self.a_beta_ if i > 1 else np.repeat(
+                self.A_BETA, self.K))
+            E_beta_beta = a_beta / self.b_beta_
+
+            KLRG = _kl(self.R_, self.G_)
+            delta_KLRG = self.DELTA_S_KLRG + 1
+            j = 0
+            while (delta_KLRG > self.DELTA_S_KLRG and j < self.MAX_ITER_MIXING
+                   and not np.isclose(KLRG, 0)):
+                j += 1
+                # Actually, this should probably be named nabla_E.
+                E = Phi.T @ (self.G_ - self.R_) + self.V_ * E_beta_beta
+                e = E.T.ravel()
+                H = hessian(Phi=Phi,
+                            G=self.G_,
+                            a_beta=a_beta,
+                            b_beta=self.b_beta_)
+                # Preference of `-` and `@` is OK here, we checked.
+                #
+                # While, in theory, H is always invertible here and we thus
+                # should be able to use inv (as it is described in the algorithm
+                # we implement), we (seldomly) get a singular H, probably due to
+                # numerical issues. Thus we simply use pinv which yields the
+                # same result as inv anyways if H is non-singular. Also, in his
+                # own code, Drugowitsch always uses pseudo inverse here.
+                delta_v = -np.linalg.pinv(H) @ e
+                # “DV × K matrix with jk'th element given by ((k - 1) K + j)'th
+                # element of v.” (Probably means “delta_v”.)
+                self.V_ += delta_v.reshape((self.K, self.DV_)).T
+
+                self.G_ = self._mixing(M=M, Phi=Phi, V=self.V_)
+                self.R_ = self._responsibilities(X=X, y=y, G=self.G_)
+
+                KLRG_prev = KLRG
+                KLRG = _kl(self.R_, self.G_)
+                delta_KLRG = np.abs(KLRG_prev - KLRG)
+
+            H = hessian(Phi=Phi, G=self.G_, a_beta=a_beta, b_beta=self.b_beta_)
+            # While, in theory, H is always invertible here and we thus should
+            # be able to use inv (as it is described in the algorithm we
+            # implement), we (seldomly) get a singular H, probably due to
+            # numerical issues. Thus we simply use pinv which yields the same
+            # result as inv anyways if H is non-singular. Also, in his own code,
+            # Drugowitsch always uses pseudo inverse here.
+            # NOTE that instead of storing Lambda_V_1, Drugowitsch's LCSBookCode
+            # computes and stores np.slogdet(Lambda_V_1) and cov_Tr (the latter
+            # of which is used in his update_gating).
+            self.Lambda_V_1_ = np.linalg.pinv(H)
+
+            # Interestingly, LCSBookCode performs this *before* TrainMixWeights.
+            # That doesn't change a thing, though, and also makes slightly
+            # awkward initialization of self.Lambda_V_1 necessary.
             self.b_beta_ = self._train_b_beta(V=self.V_,
                                               Lambda_V_1=self.Lambda_V_1_)
-
-            self.G_ = self._mixing(M, Phi, self.V_)
-            self.R_ = self._responsibilities(X=X, y=y, G=self.G_)
 
             L_M_q_prev = self.L_M_q_
             self.L_M_q_ = self._var_bound(G=self.G_,
@@ -147,56 +187,6 @@ class MixingLaplace(Mixing):
         # NOTE We don't use the version from literal here because we
         # cache/precompute several values that are computed each time
         # literal.train_mix_weights is called.
-        N, _ = X.shape
-        DV, _ = V.shape
-
-        E_beta_beta = a_beta / b_beta
-
-        KLRG = _kl(R, G)
-        delta_KLRG = self.DELTA_S_KLRG + 1
-        i = 0
-        while delta_KLRG > self.DELTA_S_KLRG and i < self.MAX_ITER_MIXING and not np.isclose(
-                KLRG, 0):
-            i += 1
-            # Actually, this should probably be named nabla_E.
-            E = Phi.T @ (G - R) + V * E_beta_beta
-            e = E.T.ravel()
-            H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
-            # Preference of `-` and `@` is OK here, we checked.
-            #
-            # While, in theory, H is always invertible here and we thus should
-            # be able to use inv (as it is described in the algorithm we
-            # implement), we (seldomly) get a singular H, probably due to
-            # numerical issues. Thus we simply use pinv which yields the same
-            # result as inv anyways if H is non-singular. Also, in his own code,
-            # Drugowitsch always uses pseudo inverse here.
-            delta_v = -np.linalg.pinv(H) @ e
-            # “DV × K matrix with jk'th element given by ((k - 1) K + j)'th
-            # element of v.” (Probably means “delta_v”.)
-            delta_V = delta_v.reshape((self.K, DV)).T
-            V = V + delta_V
-
-            G = self._mixing(M, Phi, V)
-            R = self._responsibilities(X=X, y=y, G=G)
-
-            KLRG_prev = KLRG
-            KLRG = _kl(R, G)
-            delta_KLRG = np.abs(KLRG_prev - KLRG)
-
-        H = hessian(Phi=Phi, G=G, a_beta=a_beta, b_beta=b_beta)
-        # While, in theory, H is always invertible here and we thus should be
-        # able to use inv (as it is described in the algorithm we implement), we
-        # (seldomly) get a singular H, probably due to numerical issues. Thus we
-        # simply use pinv which yields the same result as inv anyways if H is
-        # non-singular. Also, in his own code, Drugowitsch always uses pseudo
-        # inverse here.
-        Lambda_V_1 = np.linalg.pinv(H)
-        # NOTE that instead of returning/storing Lambda_V_1, Drugowitsch's
-        # LCSBookCode computes and stores np.slogdet(Lambda_V_1) and cov_Tr (the
-        # latter of which is used in his update_gating).
-        # NOTE Doing this in-place instead of returning values doesn't seem to
-        # result in a significant speedup.
-        return V, Lambda_V_1
 
     def _train_b_beta(self, V: np.ndarray, Lambda_V_1: np.ndarray):
         """

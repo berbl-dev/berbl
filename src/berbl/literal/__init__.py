@@ -279,8 +279,10 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     N, DV = Phi.shape
 
     # NOTE LCSBookCode initializes this with np.ones(…).
+    # NOTE The scale of this normal is wrong in TrainMixing in Drugowitsch's
+    # book (but correct in the text accompanying that algorithm).
     V = random_state.normal(loc=0,
-                            scale=HParams().A_BETA / HParams().B_BETA,
+                            scale=HParams().B_BETA / HParams().A_BETA,
                             size=(DV, K))
     a_beta = np.repeat(HParams().A_BETA, K)
     b_beta = np.repeat(HParams().B_BETA, K)
