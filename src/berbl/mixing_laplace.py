@@ -60,18 +60,19 @@ class MixingLaplace(Mixing):
         self.R_ = self._responsibilities(X=X, y=y, G=self.G_)
 
         # Required for being able to calculate an initial variational bound.
-        self.Lambda_V_1_ = np.diag(np.repeat(self.B_BETA / self.A_BETA, self.K))
+        # self.Lambda_V_1_ = np.diag(np.repeat(self.B_BETA / self.A_BETA, self.K))
 
         # TODO Perform one computation of the loop beforehand with initial
         # a_alpha, a_tau etc. and after that use the values that are constant in
         # the loop
 
-        self.L_M_q_ = self._var_bound(G=self.G_,
-                                      R=self.R_,
-                                      V=self.V_,
-                                      Lambda_V_1=self.Lambda_V_1_,
-                                      a_beta=np.repeat(self.A_BETA, self.K),
-                                      b_beta=self.b_beta_)
+        # self.L_M_q_ = self._var_bound(G=self.G_,
+        #                               R=self.R_,
+        #                               V=self.V_,
+        #                               Lambda_V_1=self.Lambda_V_1_,
+        #                               a_beta=np.repeat(self.A_BETA, self.K),
+        #                               b_beta=self.b_beta_)
+        self.L_M_q_ = -np.inf
         delta_L_M_q = self.DELTA_S_L_M_Q + 1
         i = 0
         while delta_L_M_q > self.DELTA_S_L_M_Q and i < self.MAX_ITER_MIXING:
