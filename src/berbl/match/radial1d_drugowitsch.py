@@ -9,30 +9,44 @@ class RadialMatch1D():
                  b: float = None,
                  mu: float = None,
                  sigma_2: float = None,
-                 has_bias=True):
+                 has_bias=True,
+                 input_bounds=None):
         """
         ``self.match`` is a radial basis function–based matching function as
         defined in Drugowitsch's book [PDF p. 256].
 
-        Data is assumed to lie within ``[-1, 1]``.
+        Parameters
+        ==========
 
-        :param a: Evolving parameter from which the position of the Gaussian is
+        a :
+            Evolving parameter from which the position of the Gaussian is
             inferred (``0 <= a <= 100``). [PDF p. 256]
 
             Exactly one of ``a`` and ``mu`` has to be given (the other one can
             be inferred); the same goes for ``b`` and ``sigma_2``.
-        :param b: Evolving parameter from which the standard deviation of the
+        b :
+            Evolving parameter from which the standard deviation of the
             Gaussian is inferred (``0 <= b <= 50``). See ``a``.
-        :param mu: Position of the Gaussian. See ``a``.
-        :param sigma_2: Standard deviation. See ``a``.
-        :param has_bias: Whether to expect 2D data where we always match the
-            first dimension (e.g. because it is all ones as a bias to implicitly
-            fit the intercept).
+        mu :
+            Position of the Gaussian. See ``a``.
+        sigma_2 :
+            Standard deviation. See ``a``.
+        has_bias :
+            Whether to expect 2D data where we always match the first dimension
+            (e.g. because it is all ones as a bias to implicitly fit the
+            intercept).
+        input_bounds : pair of two floats or None
+            If ``None`` (the default), input is assumed to be standardized.
+            Otherwise, input is assumed to lie within the interval described by
+            the two floats. Note that inputs *should* be standardized for
+            everything else to work properly.
         """
         self.has_bias = has_bias
 
-        # Data is assumed to lie within [-1, 1]
-        self._l, self._u = -1, 1
+        if input_bounds is not None:
+            self._l, self._u = input_bounds
+        else:
+            self._l, self._u = -1, 1
 
         if a is not None and mu is None:
             self.a = a
@@ -56,26 +70,26 @@ class RadialMatch1D():
                 f"has_bias={self.has_bias})")
 
     def mu(self):
-        # The original text assumes inputs to be normalized.
-        l, u = -1, 1
         return self._l + (self._u - self._l) * self.a / 100
 
     def sigma_2(self):
         return 10**(-self.b / 10)
 
     @classmethod
-    def random(cls, random_state: np.random.RandomState):
+    def random(cls, random_state: np.random.RandomState, input_bounds=None):
         """
         [PDF p. 256]
         """
         random_state = check_random_state(random_state)
         return RadialMatch1D(a=random_state.uniform(0, 100),
-                             b=random_state.uniform(0, 50))
+                             b=random_state.uniform(0, 50),
+                             input_bounds=input_bounds)
 
     def mutate(self, random_state: np.random.RandomState):
         """
         [PDF p. 256]
         """
+        # NOTE LCSBookCode puts int(...) around the normal.
         self.a = np.clip(random_state.normal(loc=self.a, scale=10), 0, 100)
         self.b = np.clip(random_state.normal(loc=self.b, scale=5), 0, 50)
         return self
