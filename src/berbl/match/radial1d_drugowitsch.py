@@ -46,6 +46,8 @@ class RadialMatch1D():
 
         if input_bounds is not None:
             self._l, self._u = input_bounds
+            print("Warning: Changed matching function input bounds "
+                  f"to {input_bounds}")
         else:
             self._l, self._u = -1, 1
 
