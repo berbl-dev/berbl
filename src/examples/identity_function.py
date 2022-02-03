@@ -12,7 +12,7 @@ y = np.arange(300).reshape((-1, 1))
 
 random_state = check_random_state(2)
 
-toolbox = DefaultToolbox(literal=False, random_state=random_state)
+toolbox = DefaultToolbox(literal=False, fit_mixing="laplace", random_state=random_state)
 
 
 # Let's assume we want to use a custom mutate that does nothing (i.e. disable
