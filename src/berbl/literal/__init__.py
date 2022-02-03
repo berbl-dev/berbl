@@ -387,9 +387,12 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     # structures are accepted where [(np.sum(G, 1) > 0).all()]. Nonetheless,
     # this check was added to ensure that even these cases are handled
     # gracefully.”
-    with np.errstate(invalid="ignore"):
+    #
+    # The also sometimes overflows which we fix as well.
+    # TODO Why does the sum overflow sometimes? Is V *that* large?
+    with np.errstate(invalid="ignore", overflow="ignore"):
         G = G / np.sum(G, axis=1)[:, np.newaxis]
-    G = np.nan_to_num(G, nan=1 / K)
+    G = np.nan_to_num(G, nan=1 / K, posinf=1 / K)
     return G
 
 
