@@ -390,7 +390,7 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     #
     # The also sometimes overflows which we fix as well.
     # TODO Why does the sum overflow sometimes? Is V *that* large?
-    with np.errstate(invalid="ignore", overflow="ignore"):
+    with np.errstate(invalid="ignore", over="ignore"):
         G = G / np.sum(G, axis=1)[:, np.newaxis]
     G = np.nan_to_num(G, nan=1 / K, posinf=1 / K)
     return G

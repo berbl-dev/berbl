@@ -49,7 +49,7 @@ class Toolbox(base.Toolbox):
         **kwargs : kwargs
             Passed to the ``Mixture``, ``Mixing`` and ``Rule`` constructors.
             May be used to override their default parameters. Can be accessed
-            later on via ``kwargs``
+            later on via ``kwargs``.
         """
         super().__init__()
 
