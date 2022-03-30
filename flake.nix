@@ -48,6 +48,9 @@
           astunparse
           cached-property
           typing-extensions
+
+          # For parsing NumPy docstrings.
+          docstring-parser
         ];
 
         doCheck = false;
