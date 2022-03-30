@@ -1,40 +1,149 @@
 {
   "nodes": {
+    "kerasTunerSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1636132191,
+        "narHash": "sha256-DOMAz7Yjb3vfKYqjnhJZYhV1hrTgeOzkHc48XHUNrmM=",
+        "owner": "keras-team",
+        "repo": "keras-tuner",
+        "rev": "4146d8e3182df6c4ce928e853a7b3c977ab00034",
+        "type": "github"
+      },
+      "original": {
+        "owner": "keras-team",
+        "ref": "1.1.0",
+        "repo": "keras-tuner",
+        "type": "github"
+      }
+    },
+    "ktLegacySrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1628631947,
+        "narHash": "sha256-BYe9boMpoGdFuhEfhXRytxmLq89hjejofDTugoYi0kY=",
+        "owner": "haifeng-jin",
+        "repo": "kt-legacy",
+        "rev": "15686b5e2d25b7094134d68956b2edce5dffa7a0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "haifeng-jin",
+        "repo": "kt-legacy",
+        "type": "github"
+      }
+    },
+    "mkdocsAutorefsSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1646671420,
+        "narHash": "sha256-kiHb/XSFw6yaUbLJHBvHaQAOVUM6UfyFeomgniDZqgU=",
+        "owner": "mkdocstrings",
+        "repo": "autorefs",
+        "rev": "4a45c3bbc08b6f403f25c513f6553109ae6ae5d2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mkdocstrings",
+        "ref": "0.4.1",
+        "repo": "autorefs",
+        "type": "github"
+      }
+    },
+    "mkdocstringsPythonLegacySrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1645288265,
+        "narHash": "sha256-kzrTCDR+ob1IoPYGrKoML+sdEF+dljMgjttwpCDToAU=",
+        "owner": "mkdocstrings",
+        "repo": "python-legacy",
+        "rev": "3c1fae8a4a0050f5c1a9f2b3091980ea953d6576",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mkdocstrings",
+        "ref": "0.2.2",
+        "repo": "python-legacy",
+        "type": "github"
+      }
+    },
+    "mkdocstringsSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1644175095,
+        "narHash": "sha256-D3ocdbeYOoceFMUMprhN7G89FFTv4V2bw0lgJoDPBco=",
+        "owner": "mkdocstrings",
+        "repo": "mkdocstrings",
+        "rev": "3f0975703e7c9b57264f23040e584d70bd9331c2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mkdocstrings",
+        "ref": "0.18.0",
+        "repo": "mkdocstrings",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1642940213,
-        "narHash": "sha256-LXGwfPrtbhix9IRUT2phtbJsur41lkTsrKcTcS0lzIc=",
+        "lastModified": 1648496982,
+        "narHash": "sha256-qju2YsxZt/WCFvBFyek7oBXZt3DE0qpduvq2c7zlrKA=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "8ca77a63599ed951d6a2d244c1d62092776a3fe1",
+        "rev": "0e3d0d844e89da74081f0e77c1da36a2eb3a8ff7",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "8ca77a63599ed951d6a2d244c1d62092776a3fe1",
+        "rev": "0e3d0d844e89da74081f0e77c1da36a2eb3a8ff7",
         "type": "github"
       }
     },
     "overlays": {
+      "inputs": {
+        "kerasTunerSrc": "kerasTunerSrc",
+        "ktLegacySrc": "ktLegacySrc"
+      },
       "locked": {
-        "lastModified": 1642861482,
-        "narHash": "sha256-yubYKws/g4LReVEy/y7cpJjXs3JGRUttpR8hgjaPGxA=",
+        "lastModified": 1647347991,
+        "narHash": "sha256-UYO60L03uNiEvb3uGc8AeCk2if6xObz/mURbviEbtJ4=",
         "owner": "dpaetzel",
         "repo": "overlays",
-        "rev": "d3e0907efa9d87394869047902fc00a4721972dd",
+        "rev": "0ee7f9e874d1679c4303759968887ca80571b257",
         "type": "github"
       },
       "original": {
         "owner": "dpaetzel",
         "repo": "overlays",
+        "type": "github"
+      }
+    },
+    "pytkdocsSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1646678916,
+        "narHash": "sha256-XFFdqG9mutxFUfOHgR5T/2XP1p6gO4w5hhoT8g6tMbM=",
+        "owner": "mkdocstrings",
+        "repo": "pytkdocs",
+        "rev": "8927e2f0aba1eb25c4ad7f3fab5f1c16d9278a9f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mkdocstrings",
+        "ref": "0.16.1",
+        "repo": "pytkdocs",
         "type": "github"
       }
     },
     "root": {
       "inputs": {
+        "mkdocsAutorefsSrc": "mkdocsAutorefsSrc",
+        "mkdocstringsPythonLegacySrc": "mkdocstringsPythonLegacySrc",
+        "mkdocstringsSrc": "mkdocstringsSrc",
         "nixpkgs": "nixpkgs",
-        "overlays": "overlays"
+        "overlays": "overlays",
+        "pytkdocsSrc": "pytkdocsSrc"
       }
     }
   },
