@@ -179,7 +179,7 @@ class Mixture:
         Returns
         -------
         array of shape (K, N, Dy)
-            Mean output vectors of each rule.
+            Mean output vectors of each submodel.
         """
         if self.add_bias:
             X = add_bias(X)

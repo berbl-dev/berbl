@@ -21,12 +21,15 @@ class BERBL(BaseEstimator, RegressorMixin):
         """
         Parameters
         ----------
-        toolbox : Toolbox object
+        toolbox : object
             A DEAP ``Toolbox`` object that specifies all the operators required
-            by the selected search algorithm (``search`` parameter).
+            by the selected search algorithm (``search`` parameter). By default,
+            ``DefaultToolbox(random_state=None)``.
         search : str
             Which search algorithm to use to perform model selection. Also see
-            ``toolbox`` parameter.
+            ``toolbox`` parameter. For now, only ``'drugowitsch'`` (denoting the
+            simplistic genetic algorithm from [Drugowitsch's book](BERBL.md)) is
+            supported.
         n_iter : int
             Number of iterations to run the search.
         """
@@ -36,8 +39,25 @@ class BERBL(BaseEstimator, RegressorMixin):
 
     def fit(self, X, y):
         """
-        Note: Input is assumed to be standardized.
+        Fit BERBL to the data.
+
+        Note: Input to this function (each of ``X`` and ``y``) is assumed to be
+        standardized.
+
+        Parameters
+        ----------
+        X : array of shape (N, DX)
+            Training data.
+
+        y : array of shape (N, Dy)
+            Target values.
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
         """
+        # TODO Link to sklearn Sphinx-generated inventory
 
         # See SLEP010.
         X, y = self._validate_data(X, y, multi_output=True)
@@ -53,18 +73,70 @@ class BERBL(BaseEstimator, RegressorMixin):
         return self
 
     def predict(self, X):
+        """
+        Predict using BERBL.
+
+        Parameters
+        ----------
+        X : array of shape (n, DX)
+            Inputs to make predictions for.
+
+        Returns
+        -------
+        y : array of shape (n, Dy)
+            Predictions for the inputs (i.e. BERBL's predicitive distributions'
+            means).
+        """
+
         # See SLEP010.
         X = self._validate_data(X, reset=False)
         check_is_fitted(self)
         return self.search_.predict(X)
 
     def predict_mean_var(self, X):
+        """
+        Get the mean and variance of BERBL's predictive density for each of the
+        provided data points.
+
+        “As the mixture of Student’s t distributions might be multimodal, there
+        exists no clear definition for the 95% confidence intervals, but a
+        mixture density-related study that deals with this problem can be found
+        in [118].  Here, we take the variance as a sufficient indicator of the
+        prediction’s confidence.”[^1]
+
+        [^1]: Jan Drugowitsch. 2008. Design and Analysis of Learning Classifier
+        Systems - A Probabilistic Approach.
+
+        Parameters
+        ----------
+        X : array of shape (n, DX)
+            Inputs to make predictions for.
+
+        Returns
+        -------
+        y, y_var : tuple of two arrays of shape (N, Dy)
+            Means and variances.
+        """
+
         # See SLEP010.
         X = self._validate_data(X, reset=False)
         check_is_fitted(self)
         return self.search_.predict_mean_var(X)
 
     def predicts(self, X):
+        """
+        Get each submodel's predictions, one by one, without mixing them.
+
+        Parameters
+        ----------
+        X : array of shape (n, DX)
+            Inputs to make predictions for.
+
+        Returns
+        -------
+        array of shape (K, N, Dy)
+            Mean output vectors of each submodel.
+        """
         # See SLEP010.
         X = self._validate_data(X, reset=False)
         check_is_fitted(self)
@@ -72,11 +144,13 @@ class BERBL(BaseEstimator, RegressorMixin):
 
     def predict_distribution(self, x):
         """
-        The distribution over all outputs for the given input.
+        The predictive distribution for the given input (i.e. the distribution
+        over all outputs for that input).
 
         Parameters
         ----------
         x : array of shape (DX,)
+            The input to compute the predictive distribution for.
 
         Returns
         -------
