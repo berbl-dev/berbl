@@ -50,6 +50,23 @@
         "type": "github"
       }
     },
+    "mkdocsGenFilesSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1642790350,
+        "narHash": "sha256-N8nyM2/j+cfJxTVoKYsvkgwaomanS5JVAgqPfnTnKuA=",
+        "owner": "oprypin",
+        "repo": "mkdocs-gen-files",
+        "rev": "4d5d4ac497ef50c070253c1ae4062b395b03413c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oprypin",
+        "ref": "v0.3.4",
+        "repo": "mkdocs-gen-files",
+        "type": "github"
+      }
+    },
     "mkdocstringsPythonLegacySrc": {
       "flake": false,
       "locked": {
@@ -139,6 +156,7 @@
     "root": {
       "inputs": {
         "mkdocsAutorefsSrc": "mkdocsAutorefsSrc",
+        "mkdocsGenFilesSrc": "mkdocsGenFilesSrc",
         "mkdocstringsPythonLegacySrc": "mkdocstringsPythonLegacySrc",
         "mkdocstringsSrc": "mkdocstringsSrc",
         "nixpkgs": "nixpkgs",

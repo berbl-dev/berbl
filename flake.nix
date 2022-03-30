@@ -20,6 +20,9 @@
   inputs.mkdocsAutorefsSrc.url = "github:mkdocstrings/autorefs/0.4.1";
   inputs.mkdocsAutorefsSrc.flake = false;
 
+  inputs.mkdocsGenFilesSrc.url = "github:oprypin/mkdocs-gen-files/v0.3.4";
+  inputs.mkdocsGenFilesSrc.flake = false;
+
   outputs = inputs@{ self, nixpkgs, overlays, ... }:
 
     with import nixpkgs {
@@ -27,7 +30,25 @@
       overlays = with overlays.overlays; [ mlflow ];
     };
     let
+
       python = python39;
+
+      mkdocs-gen-files = python.pkgs.buildPythonPackage rec {
+        pname = "pytkdocs";
+        version = "0.3.4";
+
+        src = inputs.mkdocsGenFilesSrc;
+
+        format = "pyproject";
+
+        nativeBuildInputs = [ python.pkgs.poetry ];
+
+        propagatedBuildInputs = with python.pkgs; [ mkdocs ];
+
+        doCheck = false;
+
+      };
+
       pytkdocs = python.pkgs.buildPythonPackage rec {
         pname = "pytkdocs";
         version = "0.16.1";
@@ -149,7 +170,6 @@
           pandas
           scipy
           scikitlearn
-          sphinx
         ];
 
         testInputs = with python.pkgs; [ hypothesis pytest ];
@@ -164,10 +184,13 @@
       };
 
       devShell.x86_64-linux = mkShell {
-        inherit mkdocstrings;
-        packages =
-          [ defaultPackage.x86_64-linux python.pkgs.tox mkdocs mkdocstrings ]
-          ++ defaultPackage.x86_64-linux.testInputs;
+        packages = [ mkdocs mkdocstrings mkdocs-gen-files ]
+          ++ (with python.pkgs; [
+            tox
+            mkdocs-material-extensions
+            mkdocs-material
+          ]) ++ defaultPackage.x86_64-linux.testInputs
+          ++ defaultPackage.x86_64-linux.propagatedBuildInputs;
       };
     };
 }
