@@ -1,0 +1,49 @@
+site_url: https://berbl.github.io
+site_name: BERBL
+repo_url: https://github.com/berbl-dev/berbl
+# TODO site_description
+
+site_author: David Pätzel
+copyright: © 2022 David Pätzel
+
+nav:
+  - 'index.md'
+  - API:
+    - 'API/BERBL.md'
+
+theme:
+  # name: readthedocs
+  name: material
+  highlightjs: true
+  palette:
+  - scheme: slate
+    toggle:
+      icon: material/toggle-switch
+      name: Switch to light mode
+  - scheme: default
+    toggle:
+      icon: material/toggle-switch-off-outline
+      name: Switch to dark mode
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - footnotes
+
+plugins:
+  # Link to any Markdown heading.
+  - autorefs
+  # Insert doc strings.
+  - mkdocstrings:
+      handlers:
+        python:
+          selection:
+            docstring_style: numpy
+      watch:
+        - src/
+  - search
+  # We manually select stuff we want to doc right now, see gen_ref_pages.py for
+  # how to proceed with this.
+  # - gen-files:
+  #     scripts:
+  #     - docs/gen_ref_pages.py
