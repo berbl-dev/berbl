@@ -51,8 +51,8 @@ class DefaultToolbox(Toolbox):
                       initRepeat_binom,
                       creator.Genotype,
                       self.gene,
-                      n=8,
-                      p=0.5,
+                      n=n,
+                      p=p,
                       random_state=self.random_state)
         self.register("population", tools.initRepeat, list, self.genotype)
 
