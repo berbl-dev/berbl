@@ -23,7 +23,7 @@ class Toolbox(base.Toolbox):
                  literal=False,
                  add_bias=True,
                  phi=None,
-                 fit_mixing="bouchard",
+                 fit_mixing="laplace",
                  **kwargs):
         """
         Parameters

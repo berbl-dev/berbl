@@ -25,7 +25,7 @@ class DefaultToolbox(Toolbox):
                  add_bias=True,
                  phi=None,
                  tournsize=5,
-                 fit_mixing="bouchard",
+                 fit_mixing="laplace",
                  match_args={},
                  **kwargs):
         """
