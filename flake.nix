@@ -1,27 +1,30 @@
 {
   description = "The berbl Python library";
 
-  inputs.nixpkgs.url =
+  inputs = {
+    nixpkgs.url =
     # 2022-03-29
     "github:NixOS/nixpkgs/0e3d0d844e89da74081f0e77c1da36a2eb3a8ff7";
 
-  inputs.overlays.url = "github:dpaetzel/overlays";
+    overlays.url = "github:dpaetzel/overlays";
+    overlays.inputs.nixpkgs.follows = "nixpkgs";
 
-  inputs.mkdocstringsSrc.url = "github:mkdocstrings/mkdocstrings/0.18.0";
-  inputs.mkdocstringsSrc.flake = false;
+    mkdocstringsSrc.url = "github:mkdocstrings/mkdocstrings/0.18.0";
+    mkdocstringsSrc.flake = false;
 
-  inputs.mkdocstringsPythonLegacySrc.url =
+    mkdocstringsPythonLegacySrc.url =
     "github:mkdocstrings/python-legacy/0.2.2";
-  inputs.mkdocstringsPythonLegacySrc.flake = false;
+    mkdocstringsPythonLegacySrc.flake = false;
 
-  inputs.pytkdocsSrc.url = "github:mkdocstrings/pytkdocs/0.16.1";
-  inputs.pytkdocsSrc.flake = false;
+    pytkdocsSrc.url = "github:mkdocstrings/pytkdocs/0.16.1";
+    pytkdocsSrc.flake = false;
 
-  inputs.mkdocsAutorefsSrc.url = "github:mkdocstrings/autorefs/0.4.1";
-  inputs.mkdocsAutorefsSrc.flake = false;
+    mkdocsAutorefsSrc.url = "github:mkdocstrings/autorefs/0.4.1";
+    mkdocsAutorefsSrc.flake = false;
 
-  inputs.mkdocsGenFilesSrc.url = "github:oprypin/mkdocs-gen-files/v0.3.4";
-  inputs.mkdocsGenFilesSrc.flake = false;
+    mkdocsGenFilesSrc.url = "github:oprypin/mkdocs-gen-files/v0.3.4";
+    mkdocsGenFilesSrc.flake = false;
+  };
 
   outputs = inputs@{ self, nixpkgs, overlays, ... }:
 
