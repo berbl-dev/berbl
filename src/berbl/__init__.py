@@ -10,9 +10,13 @@ search_methods = {"drugowitsch": GADrugowitsch}
 
 class BERBL(BaseEstimator, RegressorMixin):
     """
-    An implementation of a Bayesian evolutionary rule-based learning system.
+    An implementation of the Bayesian Learning Classifier System.
+
     Based on (but also extending) the book ‘Design and Analysis of Learning
     Classifier Systems – A Probabilistic Approach’ by Jan Drugowitsch.
+
+    Follows the [scikit-learn estimator
+    pattern](https://scikit-learn.org/stable/developers/develop.html#estimators).
     """
     def __init__(self,
                  toolbox=DefaultToolbox(random_state=None),
@@ -24,11 +28,11 @@ class BERBL(BaseEstimator, RegressorMixin):
         toolbox : object
             A DEAP ``Toolbox`` object that specifies all the operators required
             by the selected search algorithm (``search`` parameter). By default,
-            ``DefaultToolbox(random_state=None)``.
+            [``DefaultToolbox(random_state=None)``](search/operators/#berbl.search.operators.drugowitsch.DefaultToolbox).
         search : str
             Which search algorithm to use to perform model selection. Also see
             ``toolbox`` parameter. For now, only ``'drugowitsch'`` (denoting the
-            simplistic genetic algorithm from [Drugowitsch's book](BERBL.md)) is
+            simplistic genetic algorithm from [Drugowitsch's book](/)) is
             supported.
         n_iter : int
             Number of iterations to run the search.

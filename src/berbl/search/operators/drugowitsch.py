@@ -1,5 +1,7 @@
 """Search operators as defined in Drugowitsch's book."""
 
+from typing import List
+
 import numpy as np
 from deap import creator, tools
 
@@ -10,11 +12,10 @@ from . import Toolbox
 
 class DefaultToolbox(Toolbox):
     """
-    Toolbox specified in Drugowitsch's book. Extends the base toolbox
-    (containing ``evaluate``) by providing ``select``, ``mate`` and ``mutate``.
+    Toolbox specified in [Drugowitsch's book](/).
 
-    A generator for populations is not included due to depending on the regarded
-    problem and representation.
+    Extends the base toolbox (containing ``evaluate``) by providing ``gene``,
+    ``genotype``, ``population``, ``select``, ``mate`` and ``mutate``.
     """
     def __init__(self,
                  random_state,
@@ -29,12 +30,34 @@ class DefaultToolbox(Toolbox):
                  match_args={},
                  **kwargs):
         """
-        n : positive int
+        Initializes this toolbox by creating and registering operators.
+
+        Individuals are created by drawing their size from a binomial
+        distribution and then .
+
+        Parameters
+        ----------
+        random_state : int, NumPy (legacy) RandomState object
+            See [berbl.search.operators.Toolbox.__init__][].
+        matchcls : object
+            Matching function class to be used. By default,
+            [``SoftInterval1D``](/berbl.match.softinterval1d_drugowitsch.SoftInterval1D).
+        n : int, > 0
             n parameter (number of independent experiments) of the binomial
             distribution from which initial individual sizes are drawn.
         p : float
             p parameter (success rate) of the binomial distribution from which
             initial individual sizes are drawn.
+        literal : bool
+            See [berbl.search.operators.Toolbox.__init__][].
+        add_bias : bool
+            See [berbl.search.operators.Toolbox.__init__][].
+        phi : callable
+            See [berbl.search.operators.Toolbox.__init__][].
+        tournsize : int, > 1
+            Size of the tournaments used in the ``select`` operator.
+        fit_mixing : str
+            See [berbl.search.operators.Toolbox.__init__][].
         """
         super().__init__(literal=literal,
                          add_bias=add_bias,
@@ -69,20 +92,53 @@ class DefaultToolbox(Toolbox):
 
 
 def mutate(matchs, random_state: np.random.RandomState):
+    """
+    Drugowitsch's individual-level mutation operator.
+
+    See [Drugowitsch's book](/).
+
+    Go once over the individual and call each gene's `mutate` method with the
+    provided random state.
+
+    Note that the genes are *not* copied which means that in-place alterations
+    of them cannot be ruled out.
+
+    Parameters
+    ----------
+    matchs : list of objects
+        An individual consisting of genes, each gene having a `mutate` method
+        that expects an `np.random.RandomState`.
+
+    Returns
+    -------
+    tuple of object
+        The mutated individual wrapped in a one-tuple (DEAP specification).
+    """
     return [m.mutate(random_state) for m in matchs],
     # TODO Should extract m.mutate to here as well? Or otherwise mark as
     # Drugowitsch operator.
 
 
-def crossover(M_a, M_b, random_state: np.random.RandomState):
+def crossover(M_a: List, M_b: List, random_state: np.random.RandomState):
     """
     Drugowitsch's simple diadic crossover operator.
 
-    [PDF p. 250]
+    See [Drugowitsch's book](/).
 
-    :param other: another model
+    Draw two new sizes for the offspring individuals and then randomly
+    distribute the parent's genes among them.
 
-    :returns: two new (unfitted) models resulting from crossover of the inputs
+    Parameters
+    ----------
+    M_a : list
+        First individual to crossover.
+    M_b : list
+        Second individual to crossover.
+
+    Returns
+    -------
+    pair of objects
+        Two new (unfitted) models resulting from crossover of the inputs.
     """
     # “As two selected individuals can be of different length, we cannot apply
     # standard uniform cross-over but have to use different means: we want the

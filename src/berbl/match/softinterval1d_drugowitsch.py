@@ -13,7 +13,7 @@ class SoftInterval1D():
         the area underneath the matching function to be inside this interval.”
 
         Parameters
-        ==========
+        ----------
         input_bounds : pair of two floats or None
             If ``None`` (the default), input is assumed to be standardized.
             Otherwise, input is assumed to lie within the interval described by
@@ -45,7 +45,7 @@ class SoftInterval1D():
         [PDF p. 260]
 
         Parameters
-        ==========
+        ----------
         input_bounds : pair of two floats or None
             See constructor documentation.
         """
@@ -71,6 +71,7 @@ class SoftInterval1D():
                     self._l, self._u)))
         return self
 
+    # TODO Implement __call__ instead
     def match(self, X: np.ndarray):
         """
         Compute matching vector for given input. Depending on whether the input

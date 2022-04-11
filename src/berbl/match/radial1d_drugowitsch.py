@@ -17,22 +17,21 @@ class RadialMatch1D():
         defined in Drugowitsch's book [PDF p. 256].
 
         Parameters
-        ==========
-
-        a :
+        ----------
+        a : float
             Evolving parameter from which the position of the Gaussian is
             inferred (``0 <= a <= 100``). [PDF p. 256]
 
             Exactly one of ``a`` and ``mu`` has to be given (the other one can
             be inferred); the same goes for ``b`` and ``sigma_2``.
-        b :
+        b : float
             Evolving parameter from which the standard deviation of the
             Gaussian is inferred (``0 <= b <= 50``). See ``a``.
-        mu :
+        mu : float
             Position of the Gaussian. See ``a``.
-        sigma_2 :
+        sigma_2 : float
             Standard deviation. See ``a``.
-        has_bias :
+        has_bias : bool
             Whether to expect 2D data where we always match the first dimension
             (e.g. because it is all ones as a bias to implicitly fit the
             intercept).
@@ -49,6 +48,7 @@ class RadialMatch1D():
             print("Warning: Changed matching function input bounds "
                   f"to {input_bounds}")
         else:
+            # TODO This is not ideal: Standardized does not imply [-1, 1].
             self._l, self._u = -1, 1
 
         if a is not None and mu is None:
@@ -97,6 +97,7 @@ class RadialMatch1D():
         self.b = np.clip(random_state.normal(loc=self.b, scale=5), 0, 50)
         return self
 
+    # TODO Implement __call__ instead
     def match(self, X: np.ndarray):
         """
         Compute matching vector for given input. Depending on whether the input

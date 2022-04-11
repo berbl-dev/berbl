@@ -11,8 +11,7 @@ from ...utils import randseed
 
 class GADrugowitsch:
     """
-    A DEAP-based implementation of the general GA algorithm found in
-    Drugowitsch's book.
+    A DEAP-based implementation of the GA algorithm found in Drugowitsch's book.
 
     The genotypes aren't fixed to be of the same form as Drugowitsch's (i.e.
     this mimics only the general algorithmic part of the GA which can be applied
@@ -31,14 +30,11 @@ class GADrugowitsch:
                  n_iter=250,
                  add_bias=True):
         """
-        Model training hyperparameters can be changed by assigning values to the
-        fields of ``HParams()``; e.g. ``HParams().A_ALPHA = 1e-2``. This might
-        seem ugly (and it certainly is), but, this way, we are able to keep the
-        signatures in berbl.literal.__init__.py clean and very close to the
-        algorithmic description.
-
         Parameters
         ----------
+        toolbox : object
+            A DEAP ``Toolbox`` object that specifies all the operators required
+            by this metaheuristic.
         random_state : int, NumPy (legacy) ``RandomState`` object
             Due to scikit-learn compatibility, we use NumPy's legacy API.
         pop_size : int
@@ -59,6 +55,11 @@ class GADrugowitsch:
         self.add_bias = add_bias
 
     def fit(self, X: np.ndarray, y: np.ndarray):
+        """
+        Fit this to the data.
+
+        This gets called by [berbl.BERBL.fit][].
+        """
 
         random_state = check_random_state(self.random_state)
         # DEAP uses the global ``random.random`` RNG.
@@ -133,22 +134,40 @@ class GADrugowitsch:
         return self
 
     def predict(self, X):
+        """
+        Uses the current elitist to perform a prediction.
+
+        This gets called by [berbl.BERBL.predict][].
+        """
         return self.elitist_[0].phenotype.predict(X)
 
     def predict_mean_var(self, X):
+        """
+        Uses the current elitist to perform a prediction.
+
+        This gets called by [berbl.BERBL.predict_mean_var][].
+        """
         return self.elitist_[0].phenotype.predict_mean_var(X)
 
     def predicts(self, X):
+        """
+        Uses the current elitist to perform a prediction.
+
+        This gets called by [berbl.BERBL.predicts][].
+        """
         return self.elitist_[0].phenotype.predicts(X)
 
     def predict_distribution(self, x):
+        """
+        Uses the current elitist to perform a prediction.
+
+        This gets called by [berbl.BERBL.predict_distribution][].
+        """
         return self.elitist_[0].phenotype.predict_distribution(x)
 
     def frozen(self):
         """
-        Returns a picklable of this object.
-
-        Simply removes the toolbox.
+        Returns a picklable copy of this object (we simply remove the toolbox).
         """
         copy = deepcopy(self)
         del copy.toolbox

@@ -16,7 +16,8 @@ creator.create("Genotype", list, fitness=creator.FitnessMax)
 class Toolbox(base.Toolbox):
     """
     Base class for toolboxes that are used to perform model structure search.
-    Specifies and registers ``evaluate`` depending on the provided parameters.
+
+    Defines and registers ``evaluate`` depending on the provided parameters.
     """
     def __init__(self,
                  random_state,
@@ -28,7 +29,7 @@ class Toolbox(base.Toolbox):
         """
         Parameters
         ----------
-        random_state : int, NumPy (legacy) ``RandomState`` object
+        random_state : int, NumPy (legacy) RandomState object
             Due to scikit-learn compatibility, we use NumPy's legacy API.
         literal : bool
             Whether to use the literal backend (unoptimized but close to the
@@ -43,13 +44,14 @@ class Toolbox(base.Toolbox):
             default LCS mixing feature matrix based on ``phi(x) = 1``.
         fit_mixing : str
             Only applies if ``literal`` is ``False``.  How mixing weights should
-            be fitted. One of ``"bouchard"`` (experimental but may be faster and
-            better-behaving) and ``"laplace"`` (the original method, very slow
-            and possibly suboptimal in terms of the variational bound).
+            be fitted. As of now, only ``"laplace"`` is suported (the original
+            method from [Drugowitsch's book](/), very slow and possibly
+            suboptimal in terms of the variational bound) with a replacement
+            being in the works.
         **kwargs : kwargs
             Passed to the ``Mixture``, ``Mixing`` and ``Rule`` constructors.
             May be used to override their default parameters. Can be accessed
-            later on via ``kwargs``.
+            later on via the ``kwargs`` attribute.
         """
         super().__init__()
 

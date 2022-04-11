@@ -8,13 +8,21 @@ class AllMatch:
     def __init__(self):
         pass
 
+    # TODO Use __call__ here instead
     def match(self, X: np.ndarray):
         """
         Since this matching function matches all inputs, this always returns an
-        all-ones (N × 1) matrix (with each entry corresponding to one of the
-        rows of the input matrix).
+        all-ones matrix of shape `(N, 1)` (with each entry corresponding to one
+        of the rows of the input matrix).
 
-        :param X: input matrix ``(N × D_X)`` with ``D_X == 1``
-        :returns: matching vector ``(N)`` of this matching function
+        Parameters
+        ----------
+        X : array of shape `(N, DX)`
+            Input matrix.
+
+        Returns
+        -------
+        array
+            Matching vector ``(N)`` of this matching function
         """
         return np.ones((len(X), 1))

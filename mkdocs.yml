@@ -8,8 +8,7 @@ copyright: © 2022 David Pätzel
 
 nav:
   - 'index.md'
-  - API:
-    - 'API/BERBL.md'
+  - API: reference/
 
 theme:
   # name: readthedocs
@@ -18,32 +17,46 @@ theme:
   palette:
   - scheme: slate
     toggle:
-      icon: material/toggle-switch
+      icon: material/weather-sunny
       name: Switch to light mode
   - scheme: default
     toggle:
-      icon: material/toggle-switch-off-outline
+      icon: material/weather-night
       name: Switch to dark mode
   icon:
     repo: fontawesome/brands/github
 
 markdown_extensions:
   - footnotes
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 
 plugins:
   # Link to any Markdown heading.
   - autorefs
+  - search
+  # See https://mkdocstrings.github.io/recipes/ .
+  - gen-files:
+      scripts:
+      - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
   # Insert doc strings.
   - mkdocstrings:
       handlers:
         python:
+          import:
+          - https://docs.python.org/3/objects.inv
+          - https://mkdocstrings.github.io/objects.inv
+          - https://mkdocstrings.github.io/griffe/objects.inv
+          rendering:
+            merge_init_into_class: yes
+            show_submodules: no
           selection:
             docstring_style: numpy
       watch:
         - src/
-  - search
-  # We manually select stuff we want to doc right now, see gen_ref_pages.py for
-  # how to proceed with this.
-  # - gen-files:
-  #     scripts:
-  #     - docs/gen_ref_pages.py
