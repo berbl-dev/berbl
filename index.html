@@ -243,9 +243,47 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          The BERBL library
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="." class="md-nav__link md-nav__link--active">
         The BERBL library
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    Usage examples
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#note-on-nomenclature" class="md-nav__link">
+    Note on nomenclature
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -735,6 +773,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    Usage examples
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#note-on-nomenclature" class="md-nav__link">
+    Note on nomenclature
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -757,8 +817,9 @@ BERBL stands for Bayesian Evolutionary Rule-based Learner.</p>
 <p>Note that documentation for this library is still underway. If you have any
 questions, feel free to open an
 <a href="https://github.com/berbl-dev/berbl/issues">issue</a>.</p>
-<p>Usage example (using defaults everywhere but in the population size and the
-number of iterations to run):</p>
+<h2 id="usage-examples">Usage examples</h2>
+<p>You could use defaults everywhere but in the population size and the number of
+iterations to run:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>  <span class="c1"># type: ignore</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">berbl</span> <span class="kn">import</span> <span class="n">BERBL</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span> <span class="nn">berbl.search.operators.drugowitsch</span> <span class="kn">import</span> <span class="n">DefaultToolbox</span>
@@ -848,6 +909,12 @@ to the <a href="https://deap.readthedocs.io/en/master/tutorials/basic/part2.html
 <a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="c1"># Get some metrics.</span>
 <a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MAE on training data: &quot;</span><span class="p">,</span> <span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
 </code></pre></div>
+<h2 id="note-on-nomenclature">Note on nomenclature</h2>
+<p>In the implementation we try to avoid the overloaded term <em>classifier</em> and
+instead use <em>rule</em>. A <em>rule</em> consists of a <em>matching function</em> and a (local)
+<em>submodel</em>. In addition, there is a <em>mixing weight</em> associated with each rule
+that comes in to play when rules overlap (i.e. when an input is matched by the
+matching functions of more than one rule).</p>
 <div class="footnote">
 <hr />
 <ol>
