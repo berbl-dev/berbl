@@ -1,0 +1,1695 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="David Pätzel">
+      
+      
+        <link rel="canonical" href="https://berbl.github.io/reference/berbl/literal/model/">
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.7">
+    
+    
+      
+        <title>model - BERBL</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.9d5733d3.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.e6a45f82.min.css">
+        
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../../../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="" data-md-color-accent="">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#berbl.literal.model" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="BERBL" class="md-header__button md-logo" aria-label="BERBL" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            BERBL
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              model
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="" data-md-color-accent=""  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22z"/></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent=""  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/berbl-dev/berbl/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="BERBL" class="md-nav__button md-logo" aria-label="BERBL" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    BERBL
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/berbl-dev/berbl/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        The BERBL library
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="API" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_1" type="checkbox" id="__nav_2_1" checked>
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../">berbl</a>
+          
+            <label for="__nav_2_1">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="berbl" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_1">
+          <span class="md-nav__icon md-icon"></span>
+          berbl
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_1_1" type="checkbox" id="__nav_2_1_1" checked>
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../">literal</a>
+          
+            <label for="__nav_2_1_1">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="literal" data-md-level="3">
+        <label class="md-nav__title" for="__nav_2_1_1">
+          <span class="md-nav__icon md-icon"></span>
+          literal
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hyperparams/" class="md-nav__link">
+        hyperparams
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          model
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        model
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#berbl.literal.model" class="md-nav__link">
+    berbl.literal.model
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model" class="md-nav__link">
+    Model
+  </a>
+  
+    <nav class="md-nav" aria-label="Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model._predict_vars" class="md-nav__link">
+    _predict_vars()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model._predicts" class="md-nav__link">
+    _predicts()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model.predict_mean_var" class="md-nav__link">
+    predict_mean_var()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model.predict_mean_var1" class="md-nav__link">
+    predict_mean_var1()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model.predict_mean_var_" class="md-nav__link">
+    predict_mean_var_()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model.predict_vars" class="md-nav__link">
+    predict_vars()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model.predicts" class="md-nav__link">
+    predicts()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_1_2" type="checkbox" id="__nav_2_1_2" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../match/">match</a>
+          
+            <label for="__nav_2_1_2">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="match" data-md-level="3">
+        <label class="md-nav__title" for="__nav_2_1_2">
+          <span class="md-nav__icon md-icon"></span>
+          match
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../match/allmatch/" class="md-nav__link">
+        allmatch
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../match/init/" class="md-nav__link">
+        init
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../match/nomatch/" class="md-nav__link">
+        nomatch
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../match/radial1d_drugowitsch/" class="md-nav__link">
+        radial1d_drugowitsch
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../match/softinterval1d_drugowitsch/" class="md-nav__link">
+        softinterval1d_drugowitsch
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mixing/" class="md-nav__link">
+        mixing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mixing_laplace/" class="md-nav__link">
+        mixing_laplace
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mixture/" class="md-nav__link">
+        mixture
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rule/" class="md-nav__link">
+        rule
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_1_7" type="checkbox" id="__nav_2_1_7" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../search/">search</a>
+          
+            <label for="__nav_2_1_7">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="search" data-md-level="3">
+        <label class="md-nav__title" for="__nav_2_1_7">
+          <span class="md-nav__icon md-icon"></span>
+          search
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_1_7_1" type="checkbox" id="__nav_2_1_7_1" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../search/ga/">ga</a>
+          
+            <label for="__nav_2_1_7_1">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="ga" data-md-level="4">
+        <label class="md-nav__title" for="__nav_2_1_7_1">
+          <span class="md-nav__icon md-icon"></span>
+          ga
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../search/ga/drugowitsch/" class="md-nav__link">
+        drugowitsch
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_1_7_2" type="checkbox" id="__nav_2_1_7_2" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../search/operators/">operators</a>
+          
+            <label for="__nav_2_1_7_2">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="operators" data-md-level="4">
+        <label class="md-nav__title" for="__nav_2_1_7_2">
+          <span class="md-nav__icon md-icon"></span>
+          operators
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../search/operators/drugowitsch/" class="md-nav__link">
+        drugowitsch
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utils/" class="md-nav__link">
+        utils
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#berbl.literal.model" class="md-nav__link">
+    berbl.literal.model
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model" class="md-nav__link">
+    Model
+  </a>
+  
+    <nav class="md-nav" aria-label="Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model._predict_vars" class="md-nav__link">
+    _predict_vars()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model._predicts" class="md-nav__link">
+    _predicts()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model.predict_mean_var" class="md-nav__link">
+    predict_mean_var()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model.predict_mean_var1" class="md-nav__link">
+    predict_mean_var1()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model.predict_mean_var_" class="md-nav__link">
+    predict_mean_var_()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model.predict_vars" class="md-nav__link">
+    predict_vars()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#berbl.literal.model.Model.predicts" class="md-nav__link">
+    predicts()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+<a href="https://github.com/berbl-dev/berbl/edit/master/docs/src/berbl/literal/model.py" title="Edit this page" class="md-content__button md-icon">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+</a>
+
+
+
+  <h1>model</h1>
+
+<div class="doc doc-object doc-module">
+
+<a id="berbl.literal.model"></a>
+    <div class="doc doc-contents first">
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="berbl.literal.model.Model" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">Model</span><span class="p">(</span><span class="n">matchs</span><span class="p">,</span> <span class="n">random_state</span><span class="p">,</span> <span class="n">add_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">phi</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+
+
+
+      <p>A model based on mixing localized linear submodels using the given model
+structure.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>matchs</code></td>
+          <td>
+                <code>List</code>
+          </td>
+          <td><p>A list of matching functions (i.e. objects implementing a <code>match</code>
+attribute) defining the structure of this mixture.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>random_state</code></td>
+          <td>
+                <code>RandomState object</code>
+          </td>
+          <td></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>add_bias</code></td>
+          <td>
+                <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>
+          </td>
+          <td><p>Whether to add an all-ones bias column to the input data.</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>phi</code></td>
+          <td>
+          </td>
+          <td><p>mixing feature extractor (N × Dx → N × DV); if <code>None</code> uses the
+default LCS mixing feature matrix based on <code>phi(x) = 1</code></p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+            <details class="quote">
+              <summary>Source code in <code>berbl/literal/model.py</code></summary>
+              <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>             <span class="n">matchs</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a>             <span class="n">random_state</span><span class="p">,</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a>             <span class="n">add_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a>             <span class="n">phi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">    A model based on mixing localized linear submodels using the given model</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="sd">    structure.</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">    Parameters</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    ----------</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">    matchs</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">        A list of matching functions (i.e. objects implementing a ``match``</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">        attribute) defining the structure of this mixture.</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    random_state : RandomState object</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    add_bias : bool</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">        Whether to add an all-ones bias column to the input data.</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    phi</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">        mixing feature extractor (N × Dx → N × DV); if ``None`` uses the</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">        default LCS mixing feature matrix based on ``phi(x) = 1``</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">matchs</span> <span class="o">=</span> <span class="n">matchs</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">add_bias</span> <span class="o">=</span> <span class="n">add_bias</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+</code></pre></div>
+</td></tr></table>
+            </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h3 id="berbl.literal.model.Model._predict_vars" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_predict_vars</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></code>
+
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>No bias is added.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>berbl/literal/model.py</code></summary>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-224">224</a></span>
+<span class="normal"><a href="#__codelineno-0-225">225</a></span>
+<span class="normal"><a href="#__codelineno-0-226">226</a></span>
+<span class="normal"><a href="#__codelineno-0-227">227</a></span>
+<span class="normal"><a href="#__codelineno-0-228">228</a></span>
+<span class="normal"><a href="#__codelineno-0-229">229</a></span>
+<span class="normal"><a href="#__codelineno-0-230">230</a></span>
+<span class="normal"><a href="#__codelineno-0-231">231</a></span>
+<span class="normal"><a href="#__codelineno-0-232">232</a></span>
+<span class="normal"><a href="#__codelineno-0-233">233</a></span>
+<span class="normal"><a href="#__codelineno-0-234">234</a></span>
+<span class="normal"><a href="#__codelineno-0-235">235</a></span>
+<span class="normal"><a href="#__codelineno-0-236">236</a></span>
+<span class="normal"><a href="#__codelineno-0-237">237</a></span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="k">def</span> <span class="nf">_predict_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a><span class="sd">    No bias is added.</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-228" name="__codelineno-0-228"></a>    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229"></a>
+<a id="__codelineno-0-230" name="__codelineno-0-230"></a>    <span class="n">y_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">K_</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dy_</span><span class="p">))</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231"></a>    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K_</span><span class="p">):</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232"></a>        <span class="c1"># A submodel&#39;s prediction variance.</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233"></a>        <span class="n">var</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_tau_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_tau_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234"></a>            <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span> <span class="o">*</span> <span class="n">X</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">Lambda_1_</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235"></a>        <span class="n">y_var</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dy_</span><span class="p">))</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dy_</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236"></a>
+<a id="__codelineno-0-237" name="__codelineno-0-237"></a>    <span class="k">return</span> <span class="n">y_var</span>
+</code></pre></div>
+</td></tr></table>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h3 id="berbl.literal.model.Model._predicts" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_predicts</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></code>
+
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>No bias is added.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>berbl/literal/model.py</code></summary>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span>
+<span class="normal"><a href="#__codelineno-0-205">205</a></span>
+<span class="normal"><a href="#__codelineno-0-206">206</a></span>
+<span class="normal"><a href="#__codelineno-0-207">207</a></span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="k">def</span> <span class="nf">_predicts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">    No bias is added.</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a>    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a>    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">K_</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dy_</span><span class="p">))</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a>    <span class="c1"># TODO Maybe more efficient: np.sum(W[k] * X, axis=1)</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K_</span><span class="p">):</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a>        <span class="c1"># A submodel&#39;s prediction.</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a>        <span class="n">y</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a>    <span class="k">return</span> <span class="n">y</span>
+</code></pre></div>
+</td></tr></table>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h3 id="berbl.literal.model.Model.predict_mean_var" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">predict_mean_var</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></code>
+
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Calculates prediction means and variances of the model for the provided
+inputs.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>berbl/literal/model.py</code></summary>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#__codelineno-0-95">95</a></span>
+<span class="normal"><a href="#__codelineno-0-96">96</a></span>
+<span class="normal"><a href="#__codelineno-0-97">97</a></span>
+<span class="normal"><a href="#__codelineno-0-98">98</a></span>
+<span class="normal"><a href="#__codelineno-0-99">99</a></span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="k">def</span> <span class="nf">predict_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">    Calculates prediction means and variances of the model for the provided</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">    inputs.</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dy_</span><span class="p">))</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="n">y_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dy_</span><span class="p">))</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)):</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>        <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y_var</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_mean_var1</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a>    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_var</span>
+</code></pre></div>
+</td></tr></table>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h3 id="berbl.literal.model.Model.predict_mean_var1" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">predict_mean_var1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></code>
+
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Calculates prediction mean and variance of the model for the provided
+input.</p>
+<p>Literal (and inefficient) version given in Drugowitsch's book.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>berbl/literal/model.py</code></summary>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#__codelineno-0-116">116</a></span>
+<span class="normal"><a href="#__codelineno-0-117">117</a></span>
+<span class="normal"><a href="#__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#__codelineno-0-119">119</a></span>
+<span class="normal"><a href="#__codelineno-0-120">120</a></span>
+<span class="normal"><a href="#__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#__codelineno-0-122">122</a></span>
+<span class="normal"><a href="#__codelineno-0-123">123</a></span>
+<span class="normal"><a href="#__codelineno-0-124">124</a></span>
+<span class="normal"><a href="#__codelineno-0-125">125</a></span>
+<span class="normal"><a href="#__codelineno-0-126">126</a></span>
+<span class="normal"><a href="#__codelineno-0-127">127</a></span>
+<span class="normal"><a href="#__codelineno-0-128">128</a></span>
+<span class="normal"><a href="#__codelineno-0-129">129</a></span>
+<span class="normal"><a href="#__codelineno-0-130">130</a></span>
+<span class="normal"><a href="#__codelineno-0-131">131</a></span>
+<span class="normal"><a href="#__codelineno-0-132">132</a></span>
+<span class="normal"><a href="#__codelineno-0-133">133</a></span>
+<span class="normal"><a href="#__codelineno-0-134">134</a></span>
+<span class="normal"><a href="#__codelineno-0-135">135</a></span>
+<span class="normal"><a href="#__codelineno-0-136">136</a></span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="k">def</span> <span class="nf">predict_mean_var1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="sd">    Calculates prediction mean and variance of the model for the provided</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">    input.</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a><span class="sd">    Literal (and inefficient) version given in Drugowitsch&#39;s book.</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="n">Dy</span><span class="p">,</span> <span class="n">Dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109"></a>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_bias</span><span class="p">:</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a>        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a>    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">])</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114"></a>
+<a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="n">Phi</span> <span class="o">=</span> <span class="n">check_phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a>    <span class="n">M</span> <span class="o">=</span> <span class="n">matching_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matchs</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117"></a>    <span class="n">G</span> <span class="o">=</span> <span class="n">mixing</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">Phi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_</span><span class="p">)</span>  <span class="c1"># shape ((N=1), K)</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118"></a>    <span class="c1"># assert G.shape == (1, self.K_)</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a>    <span class="n">g</span> <span class="o">=</span> <span class="n">G</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-0-120" name="__codelineno-0-120"></a>
+<a id="__codelineno-0-121" name="__codelineno-0-121"></a>    <span class="c1"># Mean (7.108).</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122"></a>    <span class="n">gW</span> <span class="o">=</span> <span class="mi">0</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123"></a>    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W_</span><span class="p">)):</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a>        <span class="n">gW</span> <span class="o">+=</span> <span class="n">g</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125"></a>    <span class="n">y</span> <span class="o">=</span> <span class="n">gW</span> <span class="o">@</span> <span class="n">x</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126"></a>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a>    <span class="c1"># Variance (7.109).</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a>    <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Dy</span><span class="p">)</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Dy</span><span class="p">):</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K_</span><span class="p">):</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a>            <span class="n">var</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">g</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_tau_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_tau_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>                              <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">Lambda_1_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">@</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133"></a>                              <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W_</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">@</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134"></a>        <span class="n">var</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-=</span> <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135"></a>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a>    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">var</span>
+</code></pre></div>
+</td></tr></table>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h3 id="berbl.literal.model.Model.predict_mean_var_" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">predict_mean_var_</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></code>
+
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>[PDF p. 224]</p>
+<p>The mean and variance of the predictive density described by this model
+for each of the provided data points.</p>
+<p>“As the mixture of Student’s t distributions might be multimodal, there
+exists no clear definition for the 95% confidence intervals, but a
+mixture density-related study that deals with this problem can be found
+in [118].  Here, we take the variance as a sufficient indicator of the
+prediction’s confidence.” [PDF p. 224]</p>
+<p>:param X: input vector (N × Dx)</p>
+<p>:returns: mean output vector (N × Dy), variance of output (N × Dy)</p>
+
+        <details class="quote">
+          <summary>Source code in <code>berbl/literal/model.py</code></summary>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-138">138</a></span>
+<span class="normal"><a href="#__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#__codelineno-0-140">140</a></span>
+<span class="normal"><a href="#__codelineno-0-141">141</a></span>
+<span class="normal"><a href="#__codelineno-0-142">142</a></span>
+<span class="normal"><a href="#__codelineno-0-143">143</a></span>
+<span class="normal"><a href="#__codelineno-0-144">144</a></span>
+<span class="normal"><a href="#__codelineno-0-145">145</a></span>
+<span class="normal"><a href="#__codelineno-0-146">146</a></span>
+<span class="normal"><a href="#__codelineno-0-147">147</a></span>
+<span class="normal"><a href="#__codelineno-0-148">148</a></span>
+<span class="normal"><a href="#__codelineno-0-149">149</a></span>
+<span class="normal"><a href="#__codelineno-0-150">150</a></span>
+<span class="normal"><a href="#__codelineno-0-151">151</a></span>
+<span class="normal"><a href="#__codelineno-0-152">152</a></span>
+<span class="normal"><a href="#__codelineno-0-153">153</a></span>
+<span class="normal"><a href="#__codelineno-0-154">154</a></span>
+<span class="normal"><a href="#__codelineno-0-155">155</a></span>
+<span class="normal"><a href="#__codelineno-0-156">156</a></span>
+<span class="normal"><a href="#__codelineno-0-157">157</a></span>
+<span class="normal"><a href="#__codelineno-0-158">158</a></span>
+<span class="normal"><a href="#__codelineno-0-159">159</a></span>
+<span class="normal"><a href="#__codelineno-0-160">160</a></span>
+<span class="normal"><a href="#__codelineno-0-161">161</a></span>
+<span class="normal"><a href="#__codelineno-0-162">162</a></span>
+<span class="normal"><a href="#__codelineno-0-163">163</a></span>
+<span class="normal"><a href="#__codelineno-0-164">164</a></span>
+<span class="normal"><a href="#__codelineno-0-165">165</a></span>
+<span class="normal"><a href="#__codelineno-0-166">166</a></span>
+<span class="normal"><a href="#__codelineno-0-167">167</a></span>
+<span class="normal"><a href="#__codelineno-0-168">168</a></span>
+<span class="normal"><a href="#__codelineno-0-169">169</a></span>
+<span class="normal"><a href="#__codelineno-0-170">170</a></span>
+<span class="normal"><a href="#__codelineno-0-171">171</a></span>
+<span class="normal"><a href="#__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#__codelineno-0-174">174</a></span>
+<span class="normal"><a href="#__codelineno-0-175">175</a></span>
+<span class="normal"><a href="#__codelineno-0-176">176</a></span>
+<span class="normal"><a href="#__codelineno-0-177">177</a></span>
+<span class="normal"><a href="#__codelineno-0-178">178</a></span>
+<span class="normal"><a href="#__codelineno-0-179">179</a></span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="k">def</span> <span class="nf">predict_mean_var_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a><span class="sd">    [PDF p. 224]</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141"></a>
+<a id="__codelineno-0-142" name="__codelineno-0-142"></a><span class="sd">    The mean and variance of the predictive density described by this model</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143"></a><span class="sd">    for each of the provided data points.</span>
+<a id="__codelineno-0-144" name="__codelineno-0-144"></a>
+<a id="__codelineno-0-145" name="__codelineno-0-145"></a><span class="sd">    “As the mixture of Student’s t distributions might be multimodal, there</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146"></a><span class="sd">    exists no clear definition for the 95% confidence intervals, but a</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147"></a><span class="sd">    mixture density-related study that deals with this problem can be found</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148"></a><span class="sd">    in [118].  Here, we take the variance as a sufficient indicator of the</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149"></a><span class="sd">    prediction’s confidence.” [PDF p. 224]</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150"></a>
+<a id="__codelineno-0-151" name="__codelineno-0-151"></a><span class="sd">    :param X: input vector (N × Dx)</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152"></a>
+<a id="__codelineno-0-153" name="__codelineno-0-153"></a><span class="sd">    :returns: mean output vector (N × Dy), variance of output (N × Dy)</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155"></a>    <span class="n">N</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156"></a>    <span class="n">Dy</span><span class="p">,</span> <span class="n">Dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157"></a>
+<a id="__codelineno-0-158" name="__codelineno-0-158"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_bias</span><span class="p">:</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a>        <span class="n">X</span> <span class="o">=</span> <span class="n">add_bias</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a>    <span class="c1"># Collect the independent predictions and variances of each submodel. We</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="c1"># use the definitions of those that do neither perform input checking</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163"></a>    <span class="c1"># nor bias adding to save some time.</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="n">ys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predicts</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a>    <span class="n">y_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict_vars</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a>    <span class="c1"># Next, mix the predictions.</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>    <span class="n">Phi</span> <span class="o">=</span> <span class="n">check_phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a>    <span class="n">M</span> <span class="o">=</span> <span class="n">matching_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matchs</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a>    <span class="n">G_</span> <span class="o">=</span> <span class="n">mixing</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">Phi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_</span><span class="p">)</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="c1"># For each rule&#39;s prediction, we weigh every dimension of the output</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>    <span class="c1"># vector by the same amount, thus we simply repeat the G values over Dy.</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a>    <span class="n">G</span> <span class="o">=</span> <span class="n">G_</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ys</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">Dy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># K × N × Dy</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G</span> <span class="o">*</span> <span class="n">ys</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="n">y_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_vars</span> <span class="o">+</span> <span class="n">ys</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_var</span>
+</code></pre></div>
+</td></tr></table>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h3 id="berbl.literal.model.Model.predict_vars" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">predict_vars</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></code>
+
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Returns this model's submodels' prediction variances, one by one, without
+mixing them.</p>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>array of shape (K, N)</code>
+          </td>
+          <td><p>Prediction variances of each submodel.</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+        <details class="quote">
+          <summary>Source code in <code>berbl/literal/model.py</code></summary>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-209">209</a></span>
+<span class="normal"><a href="#__codelineno-0-210">210</a></span>
+<span class="normal"><a href="#__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#__codelineno-0-212">212</a></span>
+<span class="normal"><a href="#__codelineno-0-213">213</a></span>
+<span class="normal"><a href="#__codelineno-0-214">214</a></span>
+<span class="normal"><a href="#__codelineno-0-215">215</a></span>
+<span class="normal"><a href="#__codelineno-0-216">216</a></span>
+<span class="normal"><a href="#__codelineno-0-217">217</a></span>
+<span class="normal"><a href="#__codelineno-0-218">218</a></span>
+<span class="normal"><a href="#__codelineno-0-219">219</a></span>
+<span class="normal"><a href="#__codelineno-0-220">220</a></span>
+<span class="normal"><a href="#__codelineno-0-221">221</a></span>
+<span class="normal"><a href="#__codelineno-0-222">222</a></span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><a id="__codelineno-0-209" name="__codelineno-0-209"></a><span class="k">def</span> <span class="nf">predict_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a><span class="sd">    Returns this model&#39;s submodels&#39; prediction variances, one by one, without</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a><span class="sd">    mixing them.</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a>
+<a id="__codelineno-0-214" name="__codelineno-0-214"></a><span class="sd">    Returns</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215"></a><span class="sd">    -------</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216"></a><span class="sd">    array of shape (K, N)</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217"></a><span class="sd">        Prediction variances of each submodel.</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_bias</span><span class="p">:</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220"></a>        <span class="n">X</span> <span class="o">=</span> <span class="n">add_bias</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>
+<a id="__codelineno-0-222" name="__codelineno-0-222"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict_vars</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h3 id="berbl.literal.model.Model.predicts" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">predicts</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></code>
+
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Returns this model's submodels' predictions, one by one, without mixing
+them.</p>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>array of shape (K, N, Dy)</code>
+          </td>
+          <td><p>Mean output vectors of each submodel.</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+        <details class="quote">
+          <summary>Source code in <code>berbl/literal/model.py</code></summary>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-181">181</a></span>
+<span class="normal"><a href="#__codelineno-0-182">182</a></span>
+<span class="normal"><a href="#__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#__codelineno-0-184">184</a></span>
+<span class="normal"><a href="#__codelineno-0-185">185</a></span>
+<span class="normal"><a href="#__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#__codelineno-0-194">194</a></span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><a id="__codelineno-0-181" name="__codelineno-0-181"></a><span class="k">def</span> <span class="nf">predicts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="sd">    Returns this model&#39;s submodels&#39; predictions, one by one, without mixing</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a><span class="sd">    them.</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">    Returns</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a><span class="sd">    -------</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="sd">    array of shape (K, N, Dy)</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a><span class="sd">        Mean output vectors of each submodel.</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_bias</span><span class="p">:</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>        <span class="n">X</span> <span class="o">=</span> <span class="n">add_bias</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predicts</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../hyperparams/" class="md-footer__link md-footer__link--prev" aria-label="Previous: hyperparams" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              hyperparams
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../../match/" class="md-footer__link md-footer__link--next" aria-label="Next: match" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              match
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      © 2022 David Pätzel
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../../../assets/javascripts/workers/search.5e67fbfe.min.js"}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.e87a5f81.min.js"></script>
+      
+    
+  </body>
+</html>
