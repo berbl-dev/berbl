@@ -16,8 +16,11 @@ questions, feel free to open an
 [issue](https://github.com/berbl-dev/berbl/issues).
 
 
-Usage example (using defaults everywhere but in the population size and the
-number of iterations to run):
+## Usage examples
+
+
+You could use defaults everywhere but in the population size and the number of
+iterations to run:
 
 ```Python
 --8<-- "docs/examples/identity_function_defaults.py"
@@ -31,3 +34,13 @@ to the [DEAP API](https://deap.readthedocs.io/en/master/tutorials/basic/part2.ht
 ```Python
 --8<-- "docs/examples/identity_function.py"
 ```
+
+
+## Note on nomenclature
+
+
+In the implementation we try to avoid the overloaded term *classifier* and
+instead use *rule*. A *rule* consists of a *matching function* and a (local)
+*submodel*. In addition, there is a *mixing weight* associated with each rule
+that comes in to play when rules overlap (i.e. when an input is matched by the
+matching functions of more than one rule).
