@@ -3,8 +3,8 @@
 
   inputs = {
     nixpkgs.url =
-    # 2022-03-29
-    "github:NixOS/nixpkgs/0e3d0d844e89da74081f0e77c1da36a2eb3a8ff7";
+      # 2022-03-29
+      "github:NixOS/nixpkgs/0e3d0d844e89da74081f0e77c1da36a2eb3a8ff7";
 
     overlays.url = "github:dpaetzel/overlays";
     overlays.inputs.nixpkgs.follows = "nixpkgs";
@@ -12,9 +12,11 @@
     mkdocstringsSrc.url = "github:mkdocstrings/mkdocstrings/0.18.0";
     mkdocstringsSrc.flake = false;
 
-    mkdocstringsPythonLegacySrc.url =
-    "github:mkdocstrings/python-legacy/0.2.2";
+    mkdocstringsPythonLegacySrc.url = "github:mkdocstrings/python-legacy/0.2.2";
     mkdocstringsPythonLegacySrc.flake = false;
+
+    mkdocstringsPythonSrc.url = "github:mkdocstrings/python/0.6.6";
+    mkdocstringsPythonSrc.flake = false;
 
     pytkdocsSrc.url = "github:mkdocstrings/pytkdocs/0.16.1";
     pytkdocsSrc.flake = false;
@@ -24,6 +26,15 @@
 
     mkdocsGenFilesSrc.url = "github:oprypin/mkdocs-gen-files/v0.3.4";
     mkdocsGenFilesSrc.flake = false;
+
+    mkdocsLiterateNavSrc.url = "github:oprypin/mkdocs-literate-nav/v0.4.1";
+    mkdocsLiterateNavSrc.flake = false;
+
+    mkdocsSectionIndexSrc.url = "github:oprypin/mkdocs-section-index/v0.3.4";
+    mkdocsSectionIndexSrc.flake = false;
+
+    griffeSrc.url = "github:mkdocstrings/griffe/0.16.0";
+    griffeSrc.flake = false;
   };
 
   outputs = inputs@{ self, nixpkgs, overlays, ... }:
@@ -36,8 +47,59 @@
 
       python = python39;
 
+      griffe = python.pkgs.buildPythonPackage rec {
+        pname = "griffe";
+        version = "0.15.0";
+
+        src = inputs.griffeSrc;
+
+        format = "pyproject";
+
+        # Dynamically getting version via pdm doesn't seem to work.
+        postPatch = ''
+          sed -i 's/dynamic = \[\"version\"\]/version = \"${version}\"/' pyproject.toml
+          sed -i 's/^version.*use_scm.*$//' pyproject.toml
+        '';
+
+        nativeBuildInputs = [ python.pkgs.pdm-pep517 ];
+
+        propagatedBuildInputs = with python.pkgs; [ cached-property ];
+
+        doCheck = false;
+      };
+
+      mkdocs-section-index = python.pkgs.buildPythonPackage rec {
+        pname = "mkdocs-section-index";
+        version = "0.3.4";
+
+        src = inputs.mkdocsSectionIndexSrc;
+
+        format = "pyproject";
+
+        nativeBuildInputs = [ python.pkgs.poetry ];
+
+        propagatedBuildInputs = with python.pkgs; [ mkdocs ];
+
+        doCheck = false;
+      };
+
+      mkdocs-literate-nav = python.pkgs.buildPythonPackage rec {
+        pname = "mkdocs-literate-nav";
+        version = "0.4.1";
+
+        src = inputs.mkdocsLiterateNavSrc;
+
+        format = "pyproject";
+
+        nativeBuildInputs = [ python.pkgs.poetry ];
+
+        propagatedBuildInputs = with python.pkgs; [ mkdocs ];
+
+        doCheck = false;
+      };
+
       mkdocs-gen-files = python.pkgs.buildPythonPackage rec {
-        pname = "pytkdocs";
+        pname = "mkdocs-gen-files";
         version = "0.3.4";
 
         src = inputs.mkdocsGenFilesSrc;
@@ -80,6 +142,7 @@
         doCheck = false;
 
       };
+
       mkdocstrings-python-legacy = python.pkgs.buildPythonPackage rec {
         pname = "mkdocstrings-python-legacy";
         version = "0.2.2";
@@ -104,6 +167,31 @@
         doCheck = false;
 
       };
+
+      mkdocstrings-python = python.pkgs.buildPythonPackage rec {
+        pname = "mkdocstrings-python";
+        version = "0.6.6";
+
+        src = inputs.mkdocstringsPythonSrc;
+
+        format = "pyproject";
+
+        # Dynamically getting version via pdm doesn't seem to work.
+        postPatch = ''
+          sed -i 's/dynamic = \[\"version\"\]/version = \"${version}\"/' pyproject.toml
+          sed -i 's/^version.*use_scm.*$//' pyproject.toml
+
+          # There seems to be a circular dependency here.
+          sed -i "s/^.*\"mkdocstrings>=.*$//" pyproject.toml
+        '';
+
+        nativeBuildInputs = [ python.pkgs.pdm-pep517 ];
+
+        propagatedBuildInputs = [ griffe ];
+
+        doCheck = false;
+      };
+
       mkdocs-autorefs = python.pkgs.buildPythonPackage rec {
         pname = "mkdocs-autorefs";
 
@@ -149,6 +237,7 @@
           markupsafe
           pymdown-extensions
           mkdocstrings-python-legacy
+          mkdocstrings-python
           mkdocs-autorefs
         ];
 
@@ -187,12 +276,17 @@
       };
 
       devShell.x86_64-linux = mkShell {
-        packages = [ mkdocs mkdocstrings mkdocs-gen-files ]
-          ++ (with python.pkgs; [
-            tox
-            mkdocs-material-extensions
-            mkdocs-material
-          ]) ++ defaultPackage.x86_64-linux.testInputs
+        packages = [
+          mkdocs
+          mkdocstrings
+          mkdocs-gen-files
+          mkdocs-literate-nav
+          mkdocs-section-index
+        ] ++ (with python.pkgs; [
+          tox
+          mkdocs-material-extensions
+          mkdocs-material
+        ]) ++ defaultPackage.x86_64-linux.testInputs
           ++ defaultPackage.x86_64-linux.propagatedBuildInputs;
       };
     };

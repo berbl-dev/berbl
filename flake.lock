@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "griffeSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1649504151,
+        "narHash": "sha256-bC7mLGQyTQ9vsgBq8lGhWaf9mZic1sRZJCAifeFGWv8=",
+        "owner": "mkdocstrings",
+        "repo": "griffe",
+        "rev": "524a516849d67f86953c5f70c9fe0ce9845707e6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mkdocstrings",
+        "ref": "0.16.0",
+        "repo": "griffe",
+        "type": "github"
+      }
+    },
     "kerasTunerSrc": {
       "flake": false,
       "locked": {
@@ -67,6 +84,40 @@
         "type": "github"
       }
     },
+    "mkdocsLiterateNavSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1639822277,
+        "narHash": "sha256-nPd5bbny19G+V6yB7XZy0uSFKS7oHFm9l7PbezMPU58=",
+        "owner": "oprypin",
+        "repo": "mkdocs-literate-nav",
+        "rev": "6b3b28e582dd3a002cd7f5f471170c744876ebab",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oprypin",
+        "ref": "v0.4.1",
+        "repo": "mkdocs-literate-nav",
+        "type": "github"
+      }
+    },
+    "mkdocsSectionIndexSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1648675420,
+        "narHash": "sha256-g8dRS10NjCICyTPT3aL839KcqRFOI2D4x55t+APncdk=",
+        "owner": "oprypin",
+        "repo": "mkdocs-section-index",
+        "rev": "56b32cc817e520de3f441fd137297ff85aa91eab",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oprypin",
+        "ref": "v0.3.4",
+        "repo": "mkdocs-section-index",
+        "type": "github"
+      }
+    },
     "mkdocstringsPythonLegacySrc": {
       "flake": false,
       "locked": {
@@ -81,6 +132,23 @@
         "owner": "mkdocstrings",
         "ref": "0.2.2",
         "repo": "python-legacy",
+        "type": "github"
+      }
+    },
+    "mkdocstringsPythonSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1646521936,
+        "narHash": "sha256-Tr4xqW0UQshnJTmxANsNJd4LXSEwSevC9rwDJ2RETWY=",
+        "owner": "mkdocstrings",
+        "repo": "python",
+        "rev": "b43e1a588fcf8d738bc3100edd60d735af8171f4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mkdocstrings",
+        "ref": "0.6.6",
+        "repo": "python",
         "type": "github"
       }
     },
@@ -155,9 +223,13 @@
     },
     "root": {
       "inputs": {
+        "griffeSrc": "griffeSrc",
         "mkdocsAutorefsSrc": "mkdocsAutorefsSrc",
         "mkdocsGenFilesSrc": "mkdocsGenFilesSrc",
+        "mkdocsLiterateNavSrc": "mkdocsLiterateNavSrc",
+        "mkdocsSectionIndexSrc": "mkdocsSectionIndexSrc",
         "mkdocstringsPythonLegacySrc": "mkdocstringsPythonLegacySrc",
+        "mkdocstringsPythonSrc": "mkdocstringsPythonSrc",
         "mkdocstringsSrc": "mkdocstringsSrc",
         "nixpkgs": "nixpkgs",
         "overlays": "overlays",
