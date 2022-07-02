@@ -3,7 +3,8 @@ import numpy as np  # type: ignore
 
 class AllMatch:
     """
-    ``self.match`` is a matching function that matches all inputs.
+    [``self.match``][berbl.match.allmatch.AllMatch.match] is a matching 
+    function that matches all inputs.
     """
     def __init__(self):
         pass

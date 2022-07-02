@@ -2,6 +2,7 @@
 Module implementing the algorithm presented in ‘Design and Analysis of Learning
 Classifier Systems – A Probabilistic Approach’ by Jan Drugowitsch.
 
+
 This implementation intentionally breaks with several Python conventions (e.g.
 PEP8 regarding variable naming) in order to stay as close as possible to the
 formulation of the algorithm in aforementioned work.
@@ -12,39 +13,48 @@ used by the original algorithms.
 
 The only deviations from the book are:
 
-* ``model_probability`` returns L(q) - ln K! instead of L(q) + ln K! as the
-  latter is presumably a typographical error in the book (the corresponding
-  formula in Section 7 uses ``-`` as well, which seems to be correct).
+* [``model_probability``][berbl.literal.model_probability] returns L(q) - ln K!
+  instead of L(q) + ln K! as the latter is presumably a typographical error in 
+  the book (the corresponding formula in Section 7 uses ``-`` as well, which 
+  seems to be correct).
 * We initialize the mixing model parameters ``V`` using the correct scale of
   ``b_beta / a_beta`` (there is a typographical error in the TrainMixing
-  algorithm in Drugowitsch's book).
+  algorithm in [Drugowitsch's book](/)).
+  
 * We always use Moore-Penrose pseudo-inverses instead of actual inverses due to
   (very seldomly) matrices being invertible—probably due to numerical
   inaccuracies. This is also done in the code that Jan Drugowitsch published to
-  accompany his book: `1
-  <https://github.com/jdrugo/LCSBookCode/blob/master/cl.py#L120>`_, `2
-  <https://github.com/jdrugo/LCSBookCode/blob/master/cl.py#L385>`_, `3
-  <https://github.com/jdrugo/LCSBookCode/blob/master/cl.py#L409>`_.
-* Since the IRLS training of the mixing weights sometimes starts to oscillate in
-  an infinite loop between several weight values, we add a maximum number of
+  accompany his book:
+  [1](https://github.com/jdrugo/LCSBookCode/blob/master/cl.py#L120>), 
+  [2](https://github.com/jdrugo/LCSBookCode/blob/master/cl.py#L385>), 
+  [3](https://github.com/jdrugo/LCSBookCode/blob/master/cl.py#L409>).
+* Since the IRLS training of the mixing weights sometimes starts to oscillate 
+  in an infinite loop between several weight values, we add a maximum number of
   iterations to the three main training loops:
 
-  * submodel training (``train_classifier``)
-  * mixing model training (``train_mixing``)
-  * mixing weight training (``train_mix_weights``)
+    * submodel training 
+      ([``train_classifier``][berbl.literal.train_classifier])
+    * mixing model training 
+      ([``train_mixing``][berbl.literal.train_mixing])
+    * mixing weight training 
+      ([``train_mix_weights``][berbl.literal.train_mix_weights])
 
-  This seems reasonable, especially since Jan Drugowitsch's code does the same
-  (a behaviour that is *not documented in the book*).
-* Since the oscillations in ``train_mix_weights`` are (at least sometimes)
-  caused by the Kullback-Leibler divergence between ``G`` and ``R`` being
-  optimal followed by another unnecessary execution of the loop thereafter we
-  also abort if that is the case (i.e. if the Kullback-Leibler divergence is
-  zero) and always compute the divergence before starting the loop first time.
+    This seems reasonable, especially since Jan Drugowitsch's code does the 
+    same (a behaviour that is *not documented in the book*).
+
+* Since the oscillations in 
+  [``train_mix_weights``][berbl.literal.train_mix_weights] are (at least 
+  sometimes) caused by the Kullback-Leibler divergence between ``G`` and  ``R``
+  being optimal followed by another unnecessary execution of the loop 
+  thereafter we also abort if that is the case (i.e. if the Kullback-Leibler 
+  divergence is zero) and always compute the divergence before starting the 
+  loop first time.
 * We deal with minor numerical issues in a few places (e.g. in
-  ``train_mix_priors``, ``responsibilities``).
+  [``train_mix_priors``][berbl.literal.train_mix_priors], 
+  [``responsibilities``][berbl.literal.responsibilities]).
 
-Within the code, comments referring to “LCSBookCode” refer to `Jan Drugowitsch's
-code <https://github.com/jdrugo/LCSBookCode>`_.
+Within the code, comments referring to “LCSBookCode” refer to 
+[`Jan Drugowitsch's code`](https://github.com/jdrugo/LCSBookCode).
 """
 from typing import *
 
@@ -449,7 +459,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
                       b_beta: np.ndarray):
     """
     Training routine for mixing weights based on a Laplace approximation
-    (see Drugowitsch's book [PDF p. 241]).
+    (see [Drugowitsch's book](/) [PDF p. 241]).
 
     Parameters
     ----------
@@ -565,8 +575,9 @@ def _kl(R, G):
     Computes the negative Kullback-Leibler divergence between the given arrays.
 
     Drugowitsch does not introduce this subroutine. We do so to reduce code
-    duplication in ``train_mix_weights`` (where we deviated from the original
-    text by one additional calculation of ``_kl(R, G)``).
+    duplication in [``train_mix_weights``][berbl.literal.train_mix_weights] 
+    (where we deviated from the original text by one additional calculation of 
+    [``_kl(R, G)``][berbl.literal._kl]).
     """
     # NumPy uses subnormal numbers “to fill the gap between 0 and
     # [np.finfo(None).tiny]”. This means that R may contain elements that do not

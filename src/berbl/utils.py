@@ -79,7 +79,7 @@ def add_bias(X: np.ndarray):
 def pr_in_sd1(r=1):
     """
     Expected percentage of examples falling within one standard deviation of a
-    one-dimensional Gaussian distribution. See ``pr_in_sd``.
+    one-dimensional Gaussian distribution. See [``pr_in_sd``][berbl.utils.pr_in_sd].
 
     Parameters
     ----------
@@ -93,7 +93,7 @@ def pr_in_sd1(r=1):
 def pr_in_sd2(r=1):
     """
     Expected percentage of examples falling within one standard deviation of a
-    two-dimensional Gaussian distribution. See ``pr_in_sd``.
+    two-dimensional Gaussian distribution. See [``pr_in_sd``][berbl.utils.pr_in_sd].
 
     Parameters
     ----------
@@ -108,8 +108,7 @@ def pr_in_sd(n=3, r=1):
     Expected percentage of examples falling within multiples of a standard
     deviation of a multivariate Gaussian distribution.
 
-    Reference for the used formulae:
-    https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118537 .
+    [Reference for the used formulae](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118537).
 
     Parameters
     ----------

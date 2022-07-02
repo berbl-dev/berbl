@@ -6,8 +6,7 @@ class HParams():
     We use Alex Martelli's Borg pattern for not having to add Drugowitsch's
     hyper parameters to all signatures.
 
-    See `this
-    <https://code.activestate.com/recipes/66531-singleton-we-dont-need-no-stinkin-singleton-the-bo/>`_.
+    See [this](https://code.activestate.com/recipes/66531-singleton-we-dont-need-no-stinkin-singleton-the-bo/).
     """
     __shared_state = {
         "A_ALPHA": 10**-2,

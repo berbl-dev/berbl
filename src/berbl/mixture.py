@@ -34,7 +34,8 @@ class Mixture:
         fit_mixing : str
             Either of "bouchard" or "laplace".
         **kwargs
-            This is passed through unchanged to both ``Mixing`` and ``Rule``.
+            This is passed through unchanged to both 
+            [``Mixing``][berbl.mixing.Mixing] and [``Rule``][berbl.rule.Rule].
         """
 
         self.matchs = matchs

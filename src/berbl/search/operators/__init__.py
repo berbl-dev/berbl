@@ -49,7 +49,9 @@ class Toolbox(base.Toolbox):
             suboptimal in terms of the variational bound) with a replacement
             being in the works.
         **kwargs : kwargs
-            Passed to the ``Mixture``, ``Mixing`` and ``Rule`` constructors.
+            Passed to the [``Mixture``][berbl.mixture.Mixture], 
+            [``Mixing``][berbl.mixing.Mixing] and [``Rule``][berbl.rule.Rule] 
+            constructors.
             May be used to override their default parameters. Can be accessed
             later on via the ``kwargs`` attribute.
         """

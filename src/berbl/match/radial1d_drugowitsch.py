@@ -13,8 +13,9 @@ class RadialMatch1D():
                  # TODO Detect input_bounds automatedly
                  input_bounds=None):
         """
-        ``self.match`` is a radial basis function–based matching function as
-        defined in Drugowitsch's book [PDF p. 256].
+        [``self.match``][berbl.match.radial1d_drugowitsch.RadialMatch1D.match] 
+        is a radial basis function–based matching function as
+        defined in [Drugowitsch's book](/) [PDF p. 256].
 
         Parameters
         ----------

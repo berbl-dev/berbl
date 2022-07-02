@@ -4,8 +4,9 @@ import numpy as np  # type: ignore
 class SoftInterval1D():
     def __init__(self, l: float, u: float, has_bias=True, input_bounds=None):
         """
-        ``self.match`` is a soft interval–based matching function as defined in
-        Drugowitsch's book [PDF p. 260].
+        [``self.match``][berbl.match.softinterval1d_drugowitsch.SoftInterval1D.match] 
+        is a soft interval–based matching function as defined in
+        [Drugowitsch's book](/) [PDF p. 260].
 
         “When specifying the interval for [rule] k by its lower bound l_k
         and upper bound u_k, we want exactly one standard deviation of the

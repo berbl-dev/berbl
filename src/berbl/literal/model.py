@@ -103,7 +103,7 @@ class Model:
         Calculates prediction mean and variance of the model for the provided
         input.
 
-        Literal (and inefficient) version given in Drugowitsch's book.
+        Literal (and inefficient) version given in [Drugowitsch's book](/).
         """
         Dy, Dx = self.W_[0].shape
 
