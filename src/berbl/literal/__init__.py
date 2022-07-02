@@ -457,7 +457,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         Matching matrix.
     X : array of shape (N, DX)
         Input matrix.
-    y : array of shape (N, Dy)
+    Y : array of shape (N, Dy)
         Output matrix.
     Phi : array of shape (N, DV)
         Mixing feature matrix.
