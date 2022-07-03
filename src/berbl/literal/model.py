@@ -103,7 +103,7 @@ class Model:
         Calculates prediction mean and variance of the model for the provided
         input.
 
-        Literal (and inefficient) version given in Drugowitsch's book.
+        Literal (and inefficient) version given in [Drugowitsch's book](/).
         """
         Dy, Dx = self.W_[0].shape
 
@@ -146,11 +146,22 @@ class Model:
         exists no clear definition for the 95% confidence intervals, but a
         mixture density-related study that deals with this problem can be found
         in [118].  Here, we take the variance as a sufficient indicator of the
-        prediction’s confidence.” [PDF p. 224]
+        prediction’s confidence.” [^1]
+        
+        [^1]: Jan Drugowitsch. 2008. Design and Analysis of Learning Classifier
+        Systems - A Probabilistic Approach. [PDF p. 224]
+        
+        Parameters
+        ----------
+        X : array of shape (N, Dx)
+            Input vector
 
-        :param X: input vector (N × Dx)
-
-        :returns: mean output vector (N × Dy), variance of output (N × Dy)
+        Returns
+        -------
+        y : array of shape (N, Dy)
+            Mean output vector 
+        y_var : array of shape (N, Dy)
+            Variance of output
         """
         N, _ = X.shape
         Dy, Dx = self.W_[0].shape

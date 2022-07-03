@@ -42,8 +42,10 @@ class Rule():
             updates (abort then, even if stopping criterion is not yet met).
         **kwargs : kwargs
             This is here so that we don't need to repeat all the hyperparameters
-            in ``Mixture`` etc. ``Mixture`` simply passes through all
-            ``**kwargs`` to both ``Mixing`` and ``Rule``. This means that during
+            in [``Mixture``][berbl.mixture.Mixture] etc. 
+            [``Mixture``][berbl.mixture.Mixture] simply passes through all
+            ``**kwargs`` to both [``Mixing``][berbl.mixing.Mixing] and 
+            [``Rule``][berbl.rule.Rule]. This means that during
             implementation, we need to be aware that if there are parameters in
             those two classes with the same name, they always receive the same
             value.

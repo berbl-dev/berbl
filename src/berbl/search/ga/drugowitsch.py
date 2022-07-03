@@ -11,7 +11,8 @@ from ...utils import randseed
 
 class GADrugowitsch:
     """
-    A DEAP-based implementation of the GA algorithm found in Drugowitsch's book.
+    A [DEAP](https://github.com/DEAP/deap)-based implementation of the GA 
+    algorithm found in [Drugowitsch's book](/).
 
     The genotypes aren't fixed to be of the same form as Drugowitsch's (i.e.
     this mimics only the general algorithmic part of the GA which can be applied
@@ -19,7 +20,7 @@ class GADrugowitsch:
 
     The exact operator instances used are expected to be given as part of the
     toolbox object (just as it is the case for the algorithms implementations
-    that are part of DEAP).
+    that are part of [DEAP](https://github.com/DEAP/deap)).
     """
     def __init__(self,
                  toolbox,

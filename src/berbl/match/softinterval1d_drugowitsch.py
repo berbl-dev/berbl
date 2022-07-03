@@ -4,13 +4,17 @@ import numpy as np  # type: ignore
 class SoftInterval1D():
     def __init__(self, l: float, u: float, has_bias=True, input_bounds=None):
         """
-        ``self.match`` is a soft interval–based matching function as defined in
-        Drugowitsch's book [PDF p. 260].
+        [``self.match``][berbl.match.softinterval1d_drugowitsch.SoftInterval1D.match] 
+        is a soft interval–based matching function as defined in
+        [Drugowitsch's book](/) [PDF p. 260].
 
         “When specifying the interval for [rule] k by its lower bound l_k
         and upper bound u_k, we want exactly one standard deviation of the
         Gaussian to lie inside this interval, and additionally require 95% of
-        the area underneath the matching function to be inside this interval.”
+        the area underneath the matching function to be inside this interval.”[^1]
+
+        [^1]: Jan Drugowitsch. 2008. Design and Analysis of Learning Classifier
+        Systems - A Probabilistic Approach.
 
         Parameters
         ----------
@@ -80,12 +84,12 @@ class SoftInterval1D():
 
         Parameters
         ----------
-        X : array of shape ``(N, 1)`` or ``(N, 2)`` if ``self.has_bias``
+        X : array of shape (N, 1) or (N, 2) if self.has_bias
             Input matrix.
 
         Returns
         -------
-        array of shape ``(N)``
+        array of shape (N)
             Matching vector of this matching function for the given input.
         """
 
@@ -103,11 +107,11 @@ class SoftInterval1D():
 
         Parameters
         ----------
-        X : input matrix of shape ``(N, DX)`` with ``DX == 1``
+        X : input matrix of shape (N, DX) with DX equals 1
 
         Returns
         -------
-        array of shape ``(N)``
+        array of shape (N)
             Matching vector of this matching function for the given input.
         """
         sigma2 = self.sigma2()

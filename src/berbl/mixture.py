@@ -34,7 +34,8 @@ class Mixture:
         fit_mixing : str
             Either of "bouchard" or "laplace".
         **kwargs
-            This is passed through unchanged to both ``Mixing`` and ``Rule``.
+            This is passed through unchanged to both 
+            [``Mixing``][berbl.mixing.Mixing] and [``Rule``][berbl.rule.Rule].
         """
 
         self.matchs = matchs
@@ -127,7 +128,10 @@ class Mixture:
         exists no clear definition for the 95% confidence intervals, but a
         mixture density-related study that deals with this problem can be found
         in [118].  Here, we take the variance as a sufficient indicator of the
-        prediction’s confidence.” [PDF p. 224]
+        prediction’s confidence.” [^1] 
+        
+        [^1]: Jan Drugowitsch. 2008. Design and Analysis of Learning Classifier
+        Systems - A Probabilistic Approach. [PDF p. 224]
 
         Parameters
         ----------
@@ -136,7 +140,8 @@ class Mixture:
 
         Returns
         -------
-        y, y_var : tuple of two arrays of shape (N, Dy)
+        y : array of shape (N, Dy)
+        y_var : array of shape (N, Dy)
         """
         N, _ = X.shape
         Dy, DX = self.rules_[0].W_.shape
