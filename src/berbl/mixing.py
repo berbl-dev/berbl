@@ -28,8 +28,8 @@ class Mixing:
             List of rules (which are held fixed during mixing training).
         phi : callable
             Mixing feature function taking input matrices of shape (N, DX) and
-            returning mixing feature matrices of shape (n, V). If ``None`` use
-            the LCS default of ``phi(x) = 1``.
+            returning mixing feature matrices of shape (n, V). If `None` use
+            the LCS default of `phi(x) = 1`.
         random_state : RandomState object
         A_BETA : float
             Scale parameter of mixing weight vector variance prior.
@@ -41,19 +41,19 @@ class Mixing:
             Only perform up to this many iterations of variational updates
             (abort then, even if stopping criterion is not yet met).
         EXP_MIN : float
-            Lowest real number ``x`` on system such that ``exp(x) > 0``. The
+            Lowest real number `x` on system such that `exp(x) > 0`. The
             default is the logarithm of the smallest positive number of the
             default dtype (as of 2020-10-06, this dtype is float64).
         LN_MAX : float
-            ``ln(x)``, where ``x`` is the highest real number on the system. The
+            `ln(x)`, where `x` is the highest real number on the system. The
             default is the logarithm of the highest number of the default dtype
             (as of 2020-10-06, this dtype is float64).
         **kwargs : kwargs
             This is here so that we don't need to repeat all the hyperparameters
-            in [``Mixture``][berbl.mixture.Mixture] etc. 
-            [``Mixture``][berbl.mixture.Mixture] simply passes through all
-            ``**kwargs`` to both [``Mixing``][berbl.mixing.Mixing] and 
-            [``Rule``][berbl.rule.Rule]. This means that during
+            in [`Mixture`][berbl.mixture.Mixture] etc. 
+            [`Mixture`][berbl.mixture.Mixture] simply passes through all
+            `**kwargs` to both [`Mixing`][berbl.mixing.Mixing] and 
+            [`Rule`][berbl.rule.Rule]. This means that during
             implementation, we need to be aware that if there are parameters in
             those two classes with the same name, they always receive the same
             value.
@@ -250,17 +250,17 @@ class Mixing:
         V : array of shape (DV, K)
             Mixing weight matrix.
         alpha : array of shape (N, 1)
-            Current value of ``alpha`` variational parameters of Bouchard's
+            Current value of `alpha` variational parameters of Bouchard's
             bound.
         lxi : array of shape (N, K)
-            Current value of ``lxi`` variational parameters of Bouchard's bound.
+            Current value of `lxi` variational parameters of Bouchard's bound.
 
         Returns
         -------
         lxi : array of shape (N, 1)
-            New value for the variational parameter ``lxi``.
+            New value for the variational parameter `lxi`.
         alpha : array of shape (N, K)
-            New value for the variational parameter ``alpha``.
+            New value for the variational parameter `alpha`.
         """
         N, _ = Phi.shape
 
@@ -371,8 +371,8 @@ class Mixing:
         """
         [PDF p. 244]
 
-        TrainMixPriors but only the part concerned with ``b_beta`` since
-        ``a_beta`` is constant.
+        TrainMixPriors but only the part concerned with `b_beta` since
+        `a_beta` is constant.
 
         Parameters
         ----------
@@ -384,7 +384,7 @@ class Mixing:
         Returns
         -------
         b_beta : array of shape (K,)
-            mixing weight vector prior parameter
+            Mixing weight vector prior parameter.
         """
         DV, _ = V.shape
         b_beta = np.repeat(self.B_BETA, (self.K, ))

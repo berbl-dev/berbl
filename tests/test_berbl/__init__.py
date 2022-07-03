@@ -64,7 +64,7 @@ def Xs_and_match1ds(draw, matchgen, N=10, DX=1):
     Parameters
     ----------
     matchgen
-        Match function test case generator (probably ``rmatch1ds`` or ``imatch1ds``).
+        Match function test case generator (probably `rmatch1ds` or `imatch1ds`).
     """
     bias_column = draw(st.booleans())
     X = draw(Xs(N=N, DX=DX, bias_column=bias_column))

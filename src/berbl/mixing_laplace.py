@@ -13,10 +13,10 @@ class MixingLaplace(Mixing):
     Model for the mixing weights of a set of linear regression rules. Fitted
     using Drugowitsch's Laplace approximation.
 
-    Structurally, the main difference to [``Mixing``][berbl.mixing.Mixing] is 
-    that ``Lambda_V_1`` is a matrix of shape ``(K * DV, K * DV)`` (i.e. the 
+    Structurally, the main difference to [`Mixing`][berbl.mixing.Mixing] is 
+    that `Lambda_V_1` is a matrix of shape `(K * DV, K * DV)` (i.e. the 
     mixing problem is solved for all submodels at once), whereas 
-    [``Mixing``][berbl.mixing.Mixing] has ``K`` mixing matrices (one for each 
+    [`Mixing`][berbl.mixing.Mixing] has `K` mixing matrices (one for each 
     submodel).
     """
     def __init__(self, DELTA_S_KLRG=10**-8, **kwargs):
@@ -28,12 +28,12 @@ class MixingLaplace(Mixing):
             mixing weight update.
         **kwargs : kwargs
             This is here for two reasons: To be able to provide the parent with
-            all the parameters it uses (we only add ``DELTA_S_KLRG``) and so
+            all the parameters it uses (we only add `DELTA_S_KLRG`) and so
             that we don't need to repeat all the hyperparameters in 
-            [``Mixture``][berbl.mixture.Mixture] etc. 
-            [``Mixture``][berbl.mixture.Mixture] simply passes through all 
-            ``**kwargs`` to both [``Mixing``][berbl.mixing.Mixing] and 
-            [``Rule``][berbl.rule.Rule]. This means that during implementation,
+            [`Mixture`][berbl.mixture.Mixture] etc. 
+            [`Mixture`][berbl.mixture.Mixture] simply passes through all 
+            `**kwargs` to both [`Mixing`][berbl.mixing.Mixing] and 
+            [`Rule`][berbl.rule.Rule]. This means that during implementation,
             we need to be aware that if there are parameters in those two 
             classes with the same name, they always receive the same value.
         """
@@ -198,24 +198,24 @@ class MixingLaplace(Mixing):
         """
         [PDF p. 244]
 
-        TrainMixPriors but only the part concerned with ``b_beta`` since
-        ``a_beta`` is constant.
+        TrainMixPriors but only the part concerned with `b_beta` since
+        `a_beta` is constant.
 
-        Note that we override this because ``Lambda_V_1`` has a different form
-        here than in [``Mixing``][berbl.mixing.Mixing] (where it is a list of 
-        ``K`` matrices with shapes ``(DV, DV)``).
+        Note that we override this because `Lambda_V_1` has a different form
+        here than in [`Mixing`][berbl.mixing.Mixing] (where it is a list of 
+        `K` matrices with shapes `(DV, DV)`).
 
         Parameters
         ----------
         V : array of shape (DV, K)
-            Mixing weight matrix. 
+            Mixing weight matrix.
         Lambda_V_1 : array of shape (K DV, K DV)
             Mixing weight covariance matrix.
 
         Returns
         -------
         b_beta : array of shape (K,)
-            mixing weight vector prior parameter
+            Mixing weight vector prior parameter.
         """
         DV, K = V.shape
         b_beta = np.repeat(self.B_BETA, (self.K, ))

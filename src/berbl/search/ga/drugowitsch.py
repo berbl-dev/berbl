@@ -34,9 +34,9 @@ class GADrugowitsch:
         Parameters
         ----------
         toolbox : object
-            A DEAP ``Toolbox`` object that specifies all the operators required
+            A DEAP `Toolbox` object that specifies all the operators required
             by this metaheuristic.
-        random_state : int, NumPy (legacy) ``RandomState`` object
+        random_state : int, NumPy (legacy) `RandomState` object
             Due to scikit-learn compatibility, we use NumPy's legacy API.
         pop_size : int
             Population size.

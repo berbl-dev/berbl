@@ -14,8 +14,8 @@ class DefaultToolbox(Toolbox):
     """
     Toolbox specified in [Drugowitsch's book](/).
 
-    Extends the base toolbox (containing ``evaluate``) by providing ``gene``,
-    ``genotype``, ``population``, ``select``, ``mate`` and ``mutate``.
+    Extends the base toolbox (containing `evaluate`) by providing `gene`,
+    `genotype`, `population`, `select`, `mate` and `mutate`.
     """
     def __init__(self,
                  random_state,
@@ -41,7 +41,7 @@ class DefaultToolbox(Toolbox):
             See [berbl.search.operators.Toolbox][].
         matchcls : object
             Matching function class to be used. By default,
-            [``SoftInterval1D``][berbl.match.softinterval1d_drugowitsch.SoftInterval1D].
+            [`SoftInterval1D`][berbl.match.softinterval1d_drugowitsch.SoftInterval1D].
         n : int, > 0
             n parameter (number of independent experiments) of the binomial
             distribution from which initial individual sizes are drawn.
@@ -55,7 +55,7 @@ class DefaultToolbox(Toolbox):
         phi : callable
             See [berbl.search.operators.Toolbox][].
         tournsize : int, > 1
-            Size of the tournaments used in the ``select`` operator.
+            Size of the tournaments used in the `select` operator.
         fit_mixing : str
             See [berbl.search.operators.Toolbox][].
         """

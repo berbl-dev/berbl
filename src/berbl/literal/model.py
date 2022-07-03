@@ -27,14 +27,14 @@ class Model:
         Parameters
         ----------
         matchs
-            A list of matching functions (i.e. objects implementing a ``match``
+            A list of matching functions (i.e. objects implementing a `match`
             attribute) defining the structure of this mixture.
         random_state : RandomState object
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi
-            mixing feature extractor (N × Dx → N × DV); if ``None`` uses the
-            default LCS mixing feature matrix based on ``phi(x) = 1``
+            mixing feature extractor (N × Dx → N × DV); if `None` uses the
+            default LCS mixing feature matrix based on `phi(x) = 1`.
         """
         self.matchs = matchs
         self.add_bias = add_bias
@@ -146,19 +146,22 @@ class Model:
         exists no clear definition for the 95% confidence intervals, but a
         mixture density-related study that deals with this problem can be found
         in [118].  Here, we take the variance as a sufficient indicator of the
-        prediction’s confidence.” [PDF p. 224]
+        prediction’s confidence.” [^1]
+        
+        [^1]: Jan Drugowitsch. 2008. Design and Analysis of Learning Classifier
+        Systems - A Probabilistic Approach. [PDF p. 224]
         
         Parameters
         ----------
         X : array of shape (N, Dx)
-            Input vector
+            Input vector.
 
         Returns
         -------
         y : array of shape (N, Dy)
-            Mean output vector 
+            Mean output vector.
         y_var : array of shape (N, Dy)
-            Variance of output
+            Variance of output.
         """
         N, _ = X.shape
         Dy, Dx = self.W_[0].shape

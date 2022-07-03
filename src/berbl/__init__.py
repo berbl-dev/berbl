@@ -26,12 +26,12 @@ class BERBL(BaseEstimator, RegressorMixin):
         Parameters
         ----------
         toolbox : object
-            A DEAP ``Toolbox`` object that specifies all the operators required
-            by the selected search algorithm (``search`` parameter). By default,
-            [``DefaultToolbox(random_state=None)``](search/operators/#berbl.search.operators.drugowitsch.DefaultToolbox).
+            A DEAP `Toolbox` object that specifies all the operators required
+            by the selected search algorithm (`search` parameter). By default,
+            [`DefaultToolbox(random_state=None)`](search/operators/#berbl.search.operators.drugowitsch.DefaultToolbox).
         search : str
             Which search algorithm to use to perform model selection. Also see
-            ``toolbox`` parameter. For now, only ``'drugowitsch'`` (denoting the
+            `toolbox` parameter. For now, only `'drugowitsch'` (denoting the
             simplistic genetic algorithm from [Drugowitsch's book](/)) is
             supported.
         n_iter : int
@@ -45,14 +45,13 @@ class BERBL(BaseEstimator, RegressorMixin):
         """
         Fit BERBL to the data.
 
-        Note: Input to this function (each of ``X`` and ``y``) is assumed to be
+        Note: Input to this function (each of `X` and `y`) is assumed to be
         standardized.
 
         Parameters
         ----------
         X : array of shape (N, DX)
             Training data.
-
         y : array of shape (N, Dy)
             Target values.
 
@@ -118,7 +117,8 @@ class BERBL(BaseEstimator, RegressorMixin):
 
         Returns
         -------
-        y, y_var : tuple of two arrays of shape (N, Dy)
+        y : array of shape (N, Dy)
+        y_var : array of shape (N, Dy)
             Means and variances.
         """
 
@@ -159,8 +159,8 @@ class BERBL(BaseEstimator, RegressorMixin):
         Returns
         -------
         pdf : callable
-            A callable that, when given a possible output value ``y`` (an array
-            of shape ``(Dy, )``) returns the value of the predictive
+            A callable that, when given a possible output value `y` (an array
+            of shape `(Dy, )`) returns the value of the predictive
             distribution at that point.
         """
         # TODO Properly validate input here

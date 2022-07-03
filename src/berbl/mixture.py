@@ -23,19 +23,19 @@ class Mixture:
         Parameters
         ----------
         matchs
-            A list of matching functions (i.e. objects implementing a ``match``
+            A list of matching functions (i.e. objects implementing a `match`
             attribute) defining the structure of this mixture.
         random_state : RandomState object
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi : callable
-            Mixing feature extractor (N × DX → N × DV); if ``None`` uses the
-            default LCS mixing feature matrix based on ``phi(x) = 1``.
+            Mixing feature extractor (N × DX → N × DV); if `None` uses the
+            default LCS mixing feature matrix based on `phi(x) = 1`.
         fit_mixing : str
             Either of "bouchard" or "laplace".
         **kwargs
             This is passed through unchanged to both 
-            [``Mixing``][berbl.mixing.Mixing] and [``Rule``][berbl.rule.Rule].
+            [`Mixing`][berbl.mixing.Mixing] and [`Rule`][berbl.rule.Rule].
         """
 
         self.matchs = matchs
@@ -128,7 +128,10 @@ class Mixture:
         exists no clear definition for the 95% confidence intervals, but a
         mixture density-related study that deals with this problem can be found
         in [118].  Here, we take the variance as a sufficient indicator of the
-        prediction’s confidence.” [PDF p. 224]
+        prediction’s confidence.” [^1] 
+        
+        [^1]: Jan Drugowitsch. 2008. Design and Analysis of Learning Classifier
+        Systems - A Probabilistic Approach. [PDF p. 224]
 
         Parameters
         ----------
@@ -201,8 +204,8 @@ class Mixture:
 
     def predict_vars(self, X):
         """
-        Returns this model's submodel's prediction variances, one by one, without
-        mixing them.
+        Returns this model's submodel's prediction variances, one by one, 
+        without mixing them.
 
         Parameters
         ----------
@@ -236,8 +239,8 @@ class Mixture:
         Returns
         -------
         callable
-            A function expecting a ``y`` and returning the values of the
-            predictive distributions at positions ``X``.
+            A function expecting a `y` and returning the values of the
+            predictive distributions at positions `X`.
         """
 
         if self.add_bias:

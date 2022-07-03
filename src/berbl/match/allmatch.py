@@ -3,7 +3,7 @@ import numpy as np  # type: ignore
 
 class AllMatch:
     """
-    [``self.match``][berbl.match.allmatch.AllMatch.match] is a matching 
+    [`self.match`][berbl.match.allmatch.AllMatch.match] is a matching 
     function that matches all inputs.
     """
     def __init__(self):
@@ -24,6 +24,6 @@ class AllMatch:
         Returns
         -------
         array
-            Matching vector ``(N)`` of this matching function
+            Matching vector `(N)` of this matching function.
         """
         return np.ones((len(X), 1))
