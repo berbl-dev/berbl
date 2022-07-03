@@ -11,7 +11,10 @@ class SoftInterval1D():
         “When specifying the interval for [rule] k by its lower bound l_k
         and upper bound u_k, we want exactly one standard deviation of the
         Gaussian to lie inside this interval, and additionally require 95% of
-        the area underneath the matching function to be inside this interval.”
+        the area underneath the matching function to be inside this interval.”[^1]
+
+        [^1]: Jan Drugowitsch. 2008. Design and Analysis of Learning Classifier
+        Systems - A Probabilistic Approach.
 
         Parameters
         ----------

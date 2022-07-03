@@ -146,7 +146,10 @@ class Model:
         exists no clear definition for the 95% confidence intervals, but a
         mixture density-related study that deals with this problem can be found
         in [118].  Here, we take the variance as a sufficient indicator of the
-        prediction’s confidence.” [PDF p. 224]
+        prediction’s confidence.” [^1]
+        
+        [^1]: Jan Drugowitsch. 2008. Design and Analysis of Learning Classifier
+        Systems - A Probabilistic Approach. [PDF p. 224]
         
         Parameters
         ----------
