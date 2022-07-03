@@ -147,10 +147,18 @@ class Model:
         mixture density-related study that deals with this problem can be found
         in [118].  Here, we take the variance as a sufficient indicator of the
         prediction’s confidence.” [PDF p. 224]
+        
+        Parameters
+        ----------
+        X : array of shape (N, Dx)
+            Input vector
 
-        :param X: input vector (N × Dx)
-
-        :returns: mean output vector (N × Dy), variance of output (N × Dy)
+        Returns
+        -------
+        y : array of shape (N, Dy)
+            Mean output vector 
+        y_var : array of shape (N, Dy)
+            Variance of output
         """
         N, _ = X.shape
         Dy, Dx = self.W_[0].shape

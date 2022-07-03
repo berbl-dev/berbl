@@ -185,8 +185,10 @@ class MixingLaplace(Mixing):
 
         Returns
         -------
-        V, Lambda_V_1 : tuple of arrays of shapes (DV, K) and (K * DV, K * DV)
-            Updated mixing weight matrix and mixing weight covariance matrix.
+        V : array of shape (DV, K) 
+            Updated mixing weight matrix.
+        Lambda_V_1 : array of shape (K DV, K DV)
+            Updated mixing weight covariance matrix.
         """
         # NOTE We don't use the version from literal here because we
         # cache/precompute several values that are computed each time
@@ -207,7 +209,7 @@ class MixingLaplace(Mixing):
         ----------
         V : array of shape (DV, K)
             Mixing weight matrix. 
-        Lambda_V_1 : array of shape (K * DV, K * DV)
+        Lambda_V_1 : array of shape (K DV, K DV)
             Mixing weight covariance matrix.
 
         Returns
@@ -259,7 +261,7 @@ class MixingLaplace(Mixing):
             Responsibility matrix.
         V : array of shape (DV, K)
             Mixing weight matrix.
-        Lambda_V_1 : array of shape (K * DV, K * DV)
+        Lambda_V_1 : array of shape (K DV, K DV)
             Mixing weight covariance matrix.
         a_beta : array of shape (K,)
             Mixing weight prior parameter (row vector).

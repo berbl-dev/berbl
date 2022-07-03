@@ -53,10 +53,16 @@ def logstartstop(f):
 def get_ranges(X: np.ndarray):
     """
     Computes the value range for each dimension.
+    
+    Parameters
+    ----------
+    X : array of shape (N, DX)
+        Input data as an ``(N, DX)`` matrix
 
-    :param X: input data as an ``(N, DX)`` matrix
-
-    :returns: a ``(DX, 2)`` matrix where each row consists the minimum and
+    Returns
+    -------
+    a : an array of shape (DX, 2) 
+        Matrix where each row consists the minimum and
         maximum in the respective dimension
     """
     return np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
@@ -67,9 +73,15 @@ def add_bias(X: np.ndarray):
     Prefixes each input vector (i.e. row) in the given input matrix with 1 for
     fitting the intercept.
 
-    :param X: input data as an ``(N, DX)`` matrix
+    Parameters
+    ----------
+    X : array of shape (N, DX) 
+        Input data as an ``(N, DX)`` matrix
 
-    :returns: a ``(N, DX + 1)`` matrix where each row is the corresponding
+    Returns
+    -------
+    a : array of shape (N, DX plus 1) m
+        Matrix where each row is the corresponding
         original matrix's row prefixed with 1
     """
     N, DX = X.shape
@@ -230,10 +242,17 @@ def check_phi(phi, X: np.ndarray):
 
 def matching_matrix(matchs: List, X: np.ndarray):
     """
-    :param ind: an individual for which the matching matrix is returned
-    :param X: input matrix (N × DX)
+    Parameters
+    ----------
+    ind :
+        An individual for which the matching matrix is returned.
+    X : array of shape (N, DX)
+        Input matrix.
 
-    :returns: matching matrix (N × K)
+    Returns
+    -------
+    array of shape (N, K) 
+        Matching matrix.
     """
     # TODO Can we maybe vectorize this?
     return np.hstack([m.match(X) for m in matchs])

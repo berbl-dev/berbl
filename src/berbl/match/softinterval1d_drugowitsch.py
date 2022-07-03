@@ -81,12 +81,12 @@ class SoftInterval1D():
 
         Parameters
         ----------
-        X : array of shape ``(N, 1)`` or ``(N, 2)`` if ``self.has_bias``
+        X : array of shape (N, 1) or (N, 2) if self.has_bias
             Input matrix.
 
         Returns
         -------
-        array of shape ``(N)``
+        array of shape (N)
             Matching vector of this matching function for the given input.
         """
 
@@ -104,11 +104,11 @@ class SoftInterval1D():
 
         Parameters
         ----------
-        X : input matrix of shape ``(N, DX)`` with ``DX == 1``
+        X : input matrix of shape (N, DX) with DX equals 1
 
         Returns
         -------
-        array of shape ``(N)``
+        array of shape (N)
             Matching vector of this matching function for the given input.
         """
         sigma2 = self.sigma2()

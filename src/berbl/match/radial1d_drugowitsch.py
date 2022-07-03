@@ -107,12 +107,12 @@ class RadialMatch1D():
 
         Parameters
         ----------
-        X : array of shape ``(N, 1)`` or ``(N, 2)`` if ``self.has_bias``
+        X : array of shape (N, 1) or (N, 2) if self.has_bias
             Input matrix.
 
         Returns
         -------
-        array of shape ``(N)``
+        array of shape (N)
             Matching vector of this matching function for the given input.
         """
 
@@ -133,8 +133,15 @@ class RadialMatch1D():
             for n in range(len(X)):
                 M[n] = np.exp(-0.5 / sigma_2 * (x - mu)**2)
 
-        :param X: input matrix ``(N × D_X)`` with ``D_X == 1``
-        :returns: matching vector ``(N)`` of this matching function (i.e. of
+        Parameters
+        ----------
+        X : array of shape (N, D_X)
+            Input matrix ``(N × D_X)`` with ``D_X == 1``
+        
+        Returns
+        -------
+        array of shape (N)
+            Matching vector of this matching function (i.e. of
             this rule)
         """
         # We have to clip this so we don't return 0 here (0 should never be

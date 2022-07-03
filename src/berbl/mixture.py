@@ -137,7 +137,8 @@ class Mixture:
 
         Returns
         -------
-        y, y_var : tuple of two arrays of shape (N, Dy)
+        y : array of shape (N, Dy)
+        y_var : array of shape (N, Dy)
         """
         N, _ = X.shape
         Dy, DX = self.rules_[0].W_.shape

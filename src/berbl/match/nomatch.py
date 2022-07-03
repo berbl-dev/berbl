@@ -17,7 +17,14 @@ class NoMatch:
         all-ones (N × 1) matrix (with each entry corresponding to one of the
         rows of the input matrix).
 
-        :param X: input matrix ``(N × D_X)`` with ``D_X == 1``
-        :returns: matching vector ``(N)`` of this matching function
+        Parameters
+        ----------
+        X : array of shape (N, D_X)
+            Input matrix ``(N × D_X)`` with ``D_X == 1``
+
+        Returns
+        -------
+        array of shape (N)
+            Matching vector of this matching function
         """
         return np.repeat(np.finfo(None).tiny, len(X))[:, np.newaxis]

@@ -97,8 +97,10 @@ def model_probability(matchs: List,
 
     Returns
     -------
-    metrics, params : pair of dict
-        Model metrics and model parameters.
+    metrics : dict
+        Model metrics. 
+    params : dict
+        Model parameters.
     """
 
     # Underflows may occur in many places, e.g. if X contains values very close to
@@ -188,9 +190,18 @@ def train_classifier(m_k, X, Y):
 
     Returns
     -------
-    W_k, Lambda_k_1, a_tau_k, b_tau_k, a_alpha_k, b_alpha_k : arrays of shapes (DY, DX) and (DX, DX) and float
-        Weight matrix (DY × DX), covariance matrix (DX × DX), noise precision
-        parameters, weight vector parameters.
+    W_k : array of shape (DY, DX)
+        Weight matrix
+    Lambda_k_1 : array of shape (DX, DX)
+        Covariance matrix
+    a_tau_k :  
+        Noise precision parameter
+    b_tau_k : 
+        Noise precision parameter
+    a_alpha_k :
+        Weight vector parameter
+    b_alpha_k : 
+        Weight vector parameter
     """
     N, DX = X.shape
     N, DY = Y.shape
@@ -282,9 +293,14 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
 
     Returns
     -------
-    V, Lambda_V_1, a_beta, b_beta : tuple of arrays of shapes (DV, K), (K * DV, K * DV), (K,) and (K,)
-        Mixing weight matrix, mixing weight covariance matrix, mixing weight
-        prior parameter vectors.
+    V : array of shape (DV, K) 
+        Mixing weight matrix
+    Lambda_V_1 : array of shape (K DV, K DV)
+        Mixing weight covariance matrix
+    a_beta : array of shape (K, )
+        Mixing weight prior parameter vector
+    b_beta : array of shape (K, )
+        Mixing weight prior parameter vector
     """
     N, K = M.shape
     N, DX = X.shape
@@ -412,15 +428,27 @@ def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
     """
     [PDF p. 240]
 
-    :param X: input matrix (N × DX)
-    :param Y: output matrix (N × DY)
-    :param G: mixing (“gating”) matrix (N × K)
-    :param W: submodel weight matrices (list of DY × DX)
-    :param Lambda_1: submodel covariance matrices (list of DX × DX)
-    :param a_tau: submodel noise precision parameters
-    :param b_tau: submodel noise precision parameters
+    Parameters
+    ----------
+    X : array of shape (N, DX)
+        Input matrix
+    Y : array of shape (N, DY) 
+        Output matrix
+    G : array of shape (N, K)
+        Mixing (“gating”) matrix
+    W : list of arrays of shape (DY, DX)
+        Submodel weight matrices
+    Lambda_1 : list of arrays of shape (DX, DX)
+        Submodel covariance matrices
+    a_tau : array of shape (K,)
+        Submodel noise precision parameters
+    b_tau : array of shape (K,)
+        Submodel noise precision parameters
 
-    :returns: responsibility matrix (N × K)
+    Returns
+    -------
+    R : array of shape (N, K)
+        Responsibility matrix
     """
     N, K = G.shape
     N, DY = Y.shape
@@ -492,8 +520,10 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
 
     Returns
     -------
-    V, Lambda_V_1 : tuple of arrays of shapes (DV, K) and (K * DV, K * DV)
-        Updated mixing weight matrix and mixing weight covariance matrix.
+    V : array of shape (DV, K)
+        Updated mixing weight matrix
+    Lambda_V_1 : array of shape (K  DV, K DV)
+        Updated mixing weight covariance matrix.
     """
     DV, K = V.shape
 
@@ -626,7 +656,7 @@ def hessian(Phi: np.ndarray, G: np.ndarray, a_beta: np.ndarray,
 
     Returns
     -------
-    array of shape (K * DV, K * DV)
+    array of shape (K DV, K DV)
         Hessian matrix.
     """
     N, DV = Phi.shape
@@ -655,11 +685,20 @@ def hessian(Phi: np.ndarray, G: np.ndarray, a_beta: np.ndarray,
 def train_mix_priors(V: np.ndarray, Lambda_V_1: np.ndarray):
     """
     [PDF p. 244]
+    
+    Parameters
+    ----------
+    V : array of shape (DV, K)
+        Mixing weight matrix
+    Lambda_V_1 : array of shape (K DV, K DV) 
+        Mixing covariance matrix
 
-    :param V: mixing weight matrix (DV × K)
-    :param Lambda_V_1: mixing covariance matrix (K DV × K DV)
-
-    :returns: mixing weight vector prior parameters a_beta, b_beta
+    Returns
+    ------- 
+    a_beta : 
+        Mixing weight vector prior parameter
+    b_beta : 
+        Mixing weight vector prior parameter 
     """
     DV, K = V.shape
     assert Lambda_V_1.shape == (K * DV, K * DV)
@@ -693,22 +732,41 @@ def var_bound(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     """
     [PDF p. 244]
 
-    :param M: matching matrix (N × K)
-    :param X: input matrix (N × DX)
-    :param Y: output matrix (N × DY)
-    :param Phi: mixing feature matrix (N × DV)
-    :param W: submodel weight matrices (list of DY × DX)
-    :param Lambda_1: submodel covariance matrices (list of DX × DX)
-    :param a_tau: submodel noise precision parameters
-    :param b_tau: submodel noise precision parameters
-    :param a_alpha: weight vector prior parameters
-    :param b_alpha: weight vector prior parameters
-    :param V: mixing weight matrix (DV × K)
-    :param Lambda_V_1: mixing covariance matrix (K DV × K DV)
-    :param a_beta: mixing weight prior parameter (row vector of length K)
-    :param b_beta: mixing weight prior parameter (row vector of length K)
+    Parameters
+    ----------
+    M : array of shape (N, K)
+        Matching matrix
+    X : array of shape (N, DX)
+        Input matrix
+    Y : array of shape (N, DY)
+        Output matrix
+    Phi : array of shape (N, DV) 
+        Mixing feature matrix
+    W : list of arrays of shape (DY, DX)
+        Aubmodel weight matrices
+    Lambda_1 : list of arrays of shape (DX, DX)
+        Submodel covariance matrices
+    a_tau : 
+        Submodel noise precision parameters
+    b_tau : 
+        Submodel noise precision parameters
+    a_alpha : 
+        Weight vector prior parameters
+    b_alpha : 
+        Weight vector prior parameters
+    V : array of shape (DV, K)
+        Mixing weight matrix
+    Lambda_V_1 : array of shape (K DV, K DV)
+        Mixing covariance matrix
+    a_beta : row vector of length K
+        Mixing weight prior parameter
+    b_beta : row vector of length K 
+        Mixing weight prior parameter
 
-    :returns: variational bound L(q)
+    Returns
+    ------- 
+    L_q : 
+        Variational bound L(q) 
     """
     DV, K = V.shape
     assert Lambda_V_1.shape == (K * DV, K * DV)
@@ -743,19 +801,32 @@ def var_cl_bound(X: np.ndarray, Y: np.ndarray, W_k: np.ndarray,
                  a_alpha_k: float, b_alpha_k: float, r_k: np.ndarray):
     """
     [PDF p. 245]
+    
+    Parameters
+    ----------
+    X : array of shape (N, DX)
+        Input matrix
+    Y : array of shape (N, DY)
+        Output matrix
+    W_k : array of shape (DY, DX) 
+        Submodel weight matrix
+    Lambda_k_1 : array of shape (DX, DX) 
+        Submodel covariance matrix
+    a_tau_k : 
+        Submodel noise precision parameter
+    b_tau_k : 
+        Submodel noise precision parameter
+    a_alpha_k : 
+        Weight vector prior parameter
+    b_alpha_k : 
+        Weight vector prior parameter
+    r_k : NumPy row or column vector, we reshape to (-1) anyways
+        responsibility vector
 
-    :param X: input matrix (N × DX)
-    :param Y: output matrix (N × DY)
-    :param W_k: submodel weight matrix (DY × DX)
-    :param Lambda_k_1: submodel covariance matrix (DX × DX)
-    :param a_tau_k: submodel noise precision parameter
-    :param b_tau_k: submodel noise precision parameter
-    :param a_alpha_k: weight vector prior parameter
-    :param b_alpha_k: weight vector prior parameter
-    :param r_k: responsibility vector (NumPy row or column vector, we reshape to
-        (-1) anyways)
-
-    :returns: rule component L_k(q) of variational bound
+    Returns
+    ------- 
+    L_k_q :  
+        rule component L_k(q) of variational bound
     """
     DY, DX = W_k.shape
     E_tau_tau_k = a_tau_k / b_tau_k
