@@ -1,6 +1,6 @@
 """Base definitions for all toolboxes."""
 
-from deap import base, creator
+from deap import base, creator  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
 from ...literal.model import Model

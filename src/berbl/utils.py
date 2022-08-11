@@ -7,7 +7,7 @@ import numpy as np  # type: ignore
 import scipy.stats as st  # type: ignore
 import scipy.optimize  # type: ignore
 import scipy.special as sp  # type: ignore
-from deap import tools
+from deap import tools  # type: ignore
 
 # np.seterr(all="raise", under="ignore")
 

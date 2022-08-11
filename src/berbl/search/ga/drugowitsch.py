@@ -2,8 +2,8 @@ import random
 from copy import deepcopy
 
 import numpy as np  # type: ignore
-from deap import creator, tools
-from mlflow import log_metric
+from deap import creator, tools  # type: ignore
+from mlflow import log_metric  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
 
 from ...utils import randseed
