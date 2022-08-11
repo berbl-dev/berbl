@@ -1,7 +1,7 @@
 """Search operators as defined in Drugowitsch's book."""
 
-import numpy as np
-from deap import creator, tools
+import numpy as np  # type: ignore
+from deap import creator, tools  # type: ignore
 
 from ...match.softinterval1d_drugowitsch import SoftInterval1D
 from ...utils import initRepeat_binom
