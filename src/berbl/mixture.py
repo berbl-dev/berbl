@@ -109,7 +109,7 @@ class Mixture:
         # book s.t. p(K) = \exp(-V) V^K/K!).
         self.ln_p_M_ = -np.log(float(np.math.factorial(
             self.K_)))  # (7.3), i.e. p_M \propto 1/K
-        self.p_M_D_ = self.L_q_ + self.ln_p_M_
+        self.ln_p_M_D_ = self.L_q_ + self.ln_p_M_
 
         return self
 

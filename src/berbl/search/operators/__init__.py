@@ -68,7 +68,7 @@ class Toolbox(base.Toolbox):
                                            random_state=self.random_state,
                                            add_bias=add_bias,
                                            phi=phi).fit(X, y)
-                return (genotype.phenotype.p_M_D_, )
+                return (genotype.phenotype.ln_p_M_D_, )
         else:
 
             def _evaluate(genotype, X, y):
@@ -78,6 +78,6 @@ class Toolbox(base.Toolbox):
                                              phi=phi,
                                              fit_mixing=fit_mixing,
                                              **self.kwargs).fit(X, y)
-                return (genotype.phenotype.p_M_D_, )
+                return (genotype.phenotype.ln_p_M_D_, )
 
         self.register("evaluate", _evaluate)

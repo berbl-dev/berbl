@@ -150,10 +150,10 @@ def model_probability(matchs: List,
                                       b_beta=b_beta)
 
         ln_p_M = -np.log(float(np.math.factorial(K)))
-        p_M_D = L_q + ln_p_M
+        ln_p_M_D = L_q + ln_p_M
 
         return {
-            "p_M_D": p_M_D,
+            "ln_p_M_D": ln_p_M_D,
             "L_q": L_q,
             "ln_p_M": ln_p_M,
             "L_C_q": L_C_q,

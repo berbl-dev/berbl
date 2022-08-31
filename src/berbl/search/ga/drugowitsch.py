@@ -1,5 +1,6 @@
 import random
 from copy import deepcopy
+from typing import List
 
 import numpy as np  # type: ignore
 from deap import creator, tools  # type: ignore
@@ -80,13 +81,13 @@ class GADrugowitsch:
             elitist = self.elitist_[0]
 
             # TODO Consider a more modular setup for logging
-            log_metric("elitist.p_M_D", elitist.fitness.values[0], i)
+            log_metric("elitist.ln_p_M_D", elitist.fitness.values[0], i)
 
             print(
                 f"Generation {i}. Elitist of size {len(elitist)} with p(M | D) "
                 f"= {elitist.fitness.values[0]:.2}")
 
-            pop_new = []
+            pop_new: List = []
             while len(pop_new) < self.pop_size:
                 # “We create a new population by selecting two individuals from
                 # the current population. … is repeated until the new population
@@ -130,7 +131,7 @@ class GADrugowitsch:
 
         # TODO Doc those
         self.size_ = [len(i) for i in self.elitist_]
-        self.p_M_D_ = [i.phenotype.p_M_D_ for i in self.elitist_]
+        self.ln_p_M_D_ = [i.phenotype.ln_p_M_D_ for i in self.elitist_]
 
         return self
 

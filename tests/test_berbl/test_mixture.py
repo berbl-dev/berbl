@@ -145,4 +145,4 @@ def test_varbounds_like_literal(data, matchs, random_state):
                    rtol=0.01)
     assert_isclose(mixture.L_M_q_, model.L_M_q_, label="L_M_q_", rtol=0.01)
     assert_isclose(mixture.L_q_, model.L_q_, label="L_q_", rtol=0.01)
-    assert_isclose(mixture.p_M_D_, model.p_M_D_, label="p_M_D_", rtol=0.01)
+    assert_isclose(mixture.ln_p_M_D_, model.ln_p_M_D_, label="ln_p_M_D_", rtol=0.01)
