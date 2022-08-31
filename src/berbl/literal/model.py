@@ -2,7 +2,7 @@ from typing import *
 
 import numpy as np  # type: ignore
 
-from ..utils import add_bias, check_phi, matching_matrix
+from ..utils import EXP_MIN, LN_MAX, add_bias, check_phi, matching_matrix
 from . import mixing, model_probability
 
 
@@ -114,7 +114,7 @@ class Model:
 
         Phi = check_phi(self.phi, X)
         M = matching_matrix(self.matchs, X)
-        G = mixing(M, Phi, self.V_)  # shape ((N=1), K)
+        G = mixing(M, Phi, self.V_, exp_min=EXP_MIN, ln_max=LN_MAX)  # shape ((N=1), K)
         # assert G.shape == (1, self.K_)
         g = G[0]
 
@@ -178,7 +178,8 @@ class Model:
         # Next, mix the predictions.
         Phi = check_phi(self.phi, X)
         M = matching_matrix(self.matchs, X)
-        G_ = mixing(M, Phi, self.V_)
+        # shape: ((N=1), K)
+        G_ = mixing(M, Phi, self.V_, exp_min=EXP_MIN, ln_max=LN_MAX)
 
         # For each rule's prediction, we weigh every dimension of the output
         # vector by the same amount, thus we simply repeat the G values over Dy.

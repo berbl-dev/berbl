@@ -7,8 +7,9 @@ from berbl.match.allmatch import AllMatch
 from berbl.match.nomatch import NoMatch
 from berbl.mixing_laplace import MixingLaplace
 from berbl.rule import Rule
-from berbl.utils import check_phi, matching_matrix
+from berbl.utils import EXP_MIN, LN_MAX, check_phi, matching_matrix
 from hypothesis import given, settings  # type: ignore
+
 from test_berbl import (Xs, assert_isclose, noshrinking, random_data,
                         random_states, rmatch1ds, ys)
 
@@ -65,8 +66,8 @@ def test_fit_like_literal(matchs, data, random_state):
         Lambda_1=Lambda_1,
         a_tau=a_tau,
         b_tau=b_tau,
-        exp_min=mix.EXP_MIN,
-        ln_max=mix.LN_MAX,
+        exp_min=EXP_MIN,
+        ln_max=LN_MAX,
         random_state=copy(random_state))
 
     assert_isclose(mix.V_, V, label="V_")

@@ -307,3 +307,8 @@ def t(mu, prec, df):
                                          (X - mu)**2) / df)**(-(df + 1) / 2)
 
     return pdf
+
+
+# TODO Document these as well as their use
+EXP_MIN = np.log(np.finfo(None).tiny)
+LN_MAX = np.log(np.finfo(None).max)

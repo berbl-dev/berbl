@@ -1,5 +1,7 @@
 import numpy as np # type: ignore
 
+from ..utils import EXP_MIN, LN_MAX
+
 
 class HParams():
     """
@@ -18,8 +20,8 @@ class HParams():
         "DELTA_S_L_K_Q": 10**-4,
         "DELTA_S_L_M_Q": 10**-2,
         "DELTA_S_KLRG": 10**-8,
-        "EXP_MIN": np.log(np.finfo(None).tiny),
-        "LN_MAX": np.log(np.finfo(None).max),
+        "EXP_MIN": EXP_MIN,
+        "LN_MAX": LN_MAX,
         # This is not documented in the book but in the code at
         # https://github.com/jdrugo/LCSBookCode
         # TODO Rename to MAX_ITER_RULE

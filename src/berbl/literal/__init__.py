@@ -61,7 +61,7 @@ import scipy.special as ss  # type: ignore
 import scipy.stats as sstats  # type: ignore
 import mlflow  # type: ignore
 
-from ..utils import known_issue, matching_matrix
+from ..utils import known_issue, matching_matrix, EXP_MIN, LN_MAX
 from .hyperparams import HParams
 
 
@@ -70,8 +70,8 @@ def model_probability(matchs: List,
                       Y: np.ndarray,
                       Phi: np.ndarray,
                       random_state: np.random.RandomState,
-                      exp_min: float = np.log(np.finfo(None).tiny),
-                      ln_max: float = np.log(np.finfo(None).max)):
+                      exp_min: float = EXP_MIN,
+                      ln_max: float = LN_MAX):
     """
     [PDF p. 235]
 
@@ -339,7 +339,11 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
                                           b_beta=b_beta)
         # NOTE LCSBookCode only updates b_beta here as a_beta is constant.
         a_beta, b_beta = train_mix_priors(V, Lambda_V_1)
-        G = mixing(M, Phi, V)
+        G = mixing(M,
+                   Phi,
+                   V,
+                   exp_min=HParams().EXP_MIN,
+                   ln_max=HParams().LN_MAX)
         R = responsibilities(X=X,
                              Y=Y,
                              G=G,
@@ -376,7 +380,8 @@ def train_mixing(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     return V, Lambda_V_1, a_beta, b_beta
 
 
-def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
+def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray, exp_min: float,
+           ln_max: float):
     """
     [PDF p. 239]
 
@@ -401,7 +406,7 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
     # shape (N, DV).
     G = Phi @ V
 
-    G = np.clip(G, HParams().EXP_MIN, HParams().LN_MAX - np.log(K))
+    G = np.clip(G, exp_min, ln_max - np.log(K))
 
     G = np.exp(G) * M
 
@@ -422,7 +427,8 @@ def mixing(M: np.ndarray, Phi: np.ndarray, V: np.ndarray):
 
 def responsibilities(X: np.ndarray, Y: np.ndarray, G: np.ndarray,
                      W: List[np.ndarray], Lambda_1: List[np.ndarray],
-                     a_tau: np.ndarray, b_tau: np.ndarray):
+                     # TODO float OK here or do we need a NumPy type?
+                     a_tau: List[float], b_tau: List[float]):
     """
     [PDF p. 240]
 
@@ -526,7 +532,7 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
     DV, K = V.shape
 
     E_beta_beta = a_beta / b_beta
-    G = mixing(M, Phi, V)
+    G = mixing(M, Phi, V, exp_min=HParams().EXP_MIN, ln_max=HParams().LN_MAX)
     R = responsibilities(X=X,
                          Y=Y,
                          G=G,
@@ -568,7 +574,11 @@ def train_mix_weights(M: np.ndarray, X: np.ndarray, Y: np.ndarray,
         # of v.” (Probably means “delta_v”.)
         delta_V = delta_v.reshape((K, DV)).T
         V = V + delta_V
-        G = mixing(M, Phi, V)
+        G = mixing(M,
+                   Phi,
+                   V,
+                   exp_min=HParams().EXP_MIN,
+                   ln_max=HParams().LN_MAX)
         R = responsibilities(X=X,
                              Y=Y,
                              G=G,
@@ -771,7 +781,7 @@ def var_bound(M: np.ndarray, X: np.ndarray, Y: np.ndarray, Phi: np.ndarray,
     assert a_beta.shape == b_beta.shape
     assert a_beta.shape == (K, )
 
-    G = mixing(M, Phi, V)
+    G = mixing(M, Phi, V, exp_min=HParams().EXP_MIN, ln_max=HParams().LN_MAX)
     R = responsibilities(X=X,
                          Y=Y,
                          G=G,
