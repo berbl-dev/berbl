@@ -17,7 +17,7 @@ class Toolbox(base.Toolbox):
     """
     Base class for toolboxes that are used to perform model structure search.
 
-    Defines and registers ``evaluate`` depending on the provided parameters.
+    Defines and registers `evaluate` depending on the provided parameters.
     """
     def __init__(self,
                  random_state,
@@ -40,18 +40,20 @@ class Toolbox(base.Toolbox):
         add_bias : bool
             Whether to add an all-ones bias column to the input data.
         phi : callable
-            Mixing feature extractor (N × D_X → N × DV); if ``None`` uses the
-            default LCS mixing feature matrix based on ``phi(x) = 1``.
+            Mixing feature extractor (N × D_X → N × DV); if `None` uses the
+            default LCS mixing feature matrix based on `phi(x) = 1`.
         fit_mixing : str
-            Only applies if ``literal`` is ``False``.  How mixing weights should
-            be fitted. As of now, only ``"laplace"`` is suported (the original
+            Only applies if `literal` is `False`.  How mixing weights should
+            be fitted. As of now, only `"laplace"` is suported (the original
             method from [Drugowitsch's book](/), very slow and possibly
             suboptimal in terms of the variational bound) with a replacement
             being in the works.
         **kwargs : kwargs
-            Passed to the ``Mixture``, ``Mixing`` and ``Rule`` constructors.
+            Passed to the [`Mixture`][berbl.mixture.Mixture], 
+            [`Mixing`][berbl.mixing.Mixing] and [`Rule`][berbl.rule.Rule] 
+            constructors.
             May be used to override their default parameters. Can be accessed
-            later on via the ``kwargs`` attribute.
+            later on via the `kwargs` attribute.
         """
         super().__init__()
 

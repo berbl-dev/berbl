@@ -14,9 +14,9 @@ from deap import tools
 
 def randseed(random_state: np.random.RandomState):
     """
-    Sometimes we need to generate a new random seed from a ``RandomState`` due
+    Sometimes we need to generate a new random seed from a `RandomState` due
     to different APIs (e.g. NumPy wants the new rng API, scikit-learn uses the
-    legacy NumPy ``RandomState`` API, DEAP uses ``random.random``).
+    legacy NumPy `RandomState` API, DEAP uses `random.random`).
     """
     # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
     return random_state.randint(2**32 - 1)
@@ -24,10 +24,10 @@ def randseed(random_state: np.random.RandomState):
 
 def randseed_legacy():
     """
-    Sometimes we need to generate a new random seed for a ``RandomState`` from
+    Sometimes we need to generate a new random seed for a `RandomState` from
     the standard random library due to different APIs (e.g. NumPy wants the new
-    rng API, scikit-learn uses the legacy NumPy ``RandomState`` API, DEAP uses
-    ``random.random``).
+    rng API, scikit-learn uses the legacy NumPy `RandomState` API, DEAP uses
+    `random.random`).
     """
     # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
     return random.randint(0, 2**32 - 1)
@@ -53,11 +53,17 @@ def logstartstop(f):
 def get_ranges(X: np.ndarray):
     """
     Computes the value range for each dimension.
+    
+    Parameters
+    ----------
+    X : array of shape (N, DX)
+        Input data as an ``(N, DX)`` matrix.
 
-    :param X: input data as an ``(N, DX)`` matrix
-
-    :returns: a ``(DX, 2)`` matrix where each row consists the minimum and
-        maximum in the respective dimension
+    Returns
+    -------
+    a : an array of shape (DX, 2) 
+        Matrix where each row consists the minimum and
+        maximum in the respective dimension.
     """
     return np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
 
@@ -67,10 +73,16 @@ def add_bias(X: np.ndarray):
     Prefixes each input vector (i.e. row) in the given input matrix with 1 for
     fitting the intercept.
 
-    :param X: input data as an ``(N, DX)`` matrix
+    Parameters
+    ----------
+    X : array of shape (N, DX) 
+        Input data as an `(N, DX)` matrix.
 
-    :returns: a ``(N, DX + 1)`` matrix where each row is the corresponding
-        original matrix's row prefixed with 1
+    Returns
+    -------
+    a : array of shape (N, DX plus 1) m
+        Matrix where each row is the corresponding
+        original matrix's row prefixed with 1.
     """
     N, DX = X.shape
     return np.hstack([np.ones((N, 1)), X])
@@ -79,7 +91,7 @@ def add_bias(X: np.ndarray):
 def pr_in_sd1(r=1):
     """
     Expected percentage of examples falling within one standard deviation of a
-    one-dimensional Gaussian distribution. See ``pr_in_sd``.
+    one-dimensional Gaussian distribution. See [`pr_in_sd`][berbl.utils.pr_in_sd].
 
     Parameters
     ----------
@@ -93,7 +105,7 @@ def pr_in_sd1(r=1):
 def pr_in_sd2(r=1):
     """
     Expected percentage of examples falling within one standard deviation of a
-    two-dimensional Gaussian distribution. See ``pr_in_sd``.
+    two-dimensional Gaussian distribution. See [`pr_in_sd`][berbl.utils.pr_in_sd].
 
     Parameters
     ----------
@@ -108,8 +120,7 @@ def pr_in_sd(n=3, r=1):
     Expected percentage of examples falling within multiples of a standard
     deviation of a multivariate Gaussian distribution.
 
-    Reference for the used formulae:
-    https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118537 .
+    [Reference for the used formulae](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118537).
 
     Parameters
     ----------
@@ -176,7 +187,7 @@ def ellipsoid_vol(rs: np.ndarray, n: int):
 
     Parameters
     ----------
-    rs : array of shape ``(n)``
+    rs : array of shape `(n)`
         Radius.
     n : int
         Dimensionality.
@@ -190,24 +201,24 @@ def ranges_vol(ranges):
 
 def space_vol(dim):
     """
-    The volume of an ``[-1, 1]^dim`` space.
+    The volume of an `[-1, 1]^dim` space.
     """
     return 2.**dim
 
 
 def check_phi(phi, X: np.ndarray):
     """
-    Given a mixing feature mapping ``phi``, compute the mixing feature matrix
-    ``Phi``.
+    Given a mixing feature mapping `phi`, compute the mixing feature matrix
+    `Phi`.
 
-    If ``phi`` is ``None``, use the default LCS mixing feature mapping, i.e. a
-    mixing feature vector of ``phi(x) = 1`` for each data point ``x``.
+    If `phi` is `None`, use the default LCS mixing feature mapping, i.e. a
+    mixing feature vector of `phi(x) = 1` for each data point `x`.
 
     Parameters
     ----------
-    phi : callable receiving ``X`` or ``None``
-        Mixing feature extractor (N × DX → N × DV); if ``None`` uses the
-        default LCS mixing feature matrix based on ``phi(x) = 1``.
+    phi : callable receiving `X` or `None`
+        Mixing feature extractor (N × DX → N × DV); if `None` uses the
+        default LCS mixing feature matrix based on `phi(x) = 1`.
     X : array of shape (N, DX)
         Input matrix.
 
@@ -231,10 +242,17 @@ def check_phi(phi, X: np.ndarray):
 
 def matching_matrix(matchs: List, X: np.ndarray):
     """
-    :param ind: an individual for which the matching matrix is returned
-    :param X: input matrix (N × DX)
+    Parameters
+    ----------
+    matchs : list of objects
+        An individual for which the matching matrix is returned.
+    X : array of shape (N, DX)
+        Input matrix.
 
-    :returns: matching matrix (N × K)
+    Returns
+    -------
+    array of shape (N, K) 
+        Matching matrix.
     """
     # TODO Can we maybe vectorize this?
     return np.hstack([m.match(X) for m in matchs])

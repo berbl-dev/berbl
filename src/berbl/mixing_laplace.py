@@ -13,10 +13,11 @@ class MixingLaplace(Mixing):
     Model for the mixing weights of a set of linear regression rules. Fitted
     using Drugowitsch's Laplace approximation.
 
-    Structurally, the main difference to ``Mixing`` is that ``Lambda_V_1`` is a
-    matrix of shape ``(K * DV, K * DV)`` (i.e. the mixing problem is solved
-    for all submodels at once), whereas ``Mixing`` has ``K`` mixing matrices
-    (one for each submodel).
+    Structurally, the main difference to [`Mixing`][berbl.mixing.Mixing] is 
+    that `Lambda_V_1` is a matrix of shape `(K * DV, K * DV)` (i.e. the 
+    mixing problem is solved for all submodels at once), whereas 
+    [`Mixing`][berbl.mixing.Mixing] has `K` mixing matrices (one for each 
+    submodel).
     """
     def __init__(self, DELTA_S_KLRG=10**-8, **kwargs):
         """
@@ -27,12 +28,14 @@ class MixingLaplace(Mixing):
             mixing weight update.
         **kwargs : kwargs
             This is here for two reasons: To be able to provide the parent with
-            all the parameters it uses (we only add ``DELTA_S_KLRG``) and so
-            that we don't need to repeat all the hyperparameters in ``Mixture``
-            etc. ``Mixture`` simply passes through all ``**kwargs`` to both
-            ``Mixing`` and ``Rule``. This means that during implementation, we
-            need to be aware that if there are parameters in those two classes
-            with the same name, they always receive the same value.
+            all the parameters it uses (we only add `DELTA_S_KLRG`) and so
+            that we don't need to repeat all the hyperparameters in 
+            [`Mixture`][berbl.mixture.Mixture] etc. 
+            [`Mixture`][berbl.mixture.Mixture] simply passes through all 
+            `**kwargs` to both [`Mixing`][berbl.mixing.Mixing] and 
+            [`Rule`][berbl.rule.Rule]. This means that during implementation,
+            we need to be aware that if there are parameters in those two 
+            classes with the same name, they always receive the same value.
         """
         self.DELTA_S_KLRG = DELTA_S_KLRG
         super().__init__(**kwargs)
@@ -157,7 +160,7 @@ class MixingLaplace(Mixing):
     def _train_mix_weights(self, M, X, y, Phi, G, R, V, a_beta, b_beta):
         """
         Training routine for mixing weights based on a Laplace approximation
-        (see Drugowitsch's book).
+        (see [Drugowitsch's book](/)).
 
         Parameters
         ----------
@@ -182,8 +185,10 @@ class MixingLaplace(Mixing):
 
         Returns
         -------
-        V, Lambda_V_1 : tuple of arrays of shapes (DV, K) and (K * DV, K * DV)
-            Updated mixing weight matrix and mixing weight covariance matrix.
+        V : array of shape (DV, K) 
+            Updated mixing weight matrix.
+        Lambda_V_1 : array of shape (K DV, K DV)
+            Updated mixing weight covariance matrix.
         """
         # NOTE We don't use the version from literal here because we
         # cache/precompute several values that are computed each time
@@ -193,24 +198,24 @@ class MixingLaplace(Mixing):
         """
         [PDF p. 244]
 
-        TrainMixPriors but only the part concerned with ``b_beta`` since
-        ``a_beta`` is constant.
+        TrainMixPriors but only the part concerned with `b_beta` since
+        `a_beta` is constant.
 
-        Note that we override this because ``Lambda_V_1`` has a different form
-        here than in ``mixing.Mixing`` (where it is a list of ``K`` matrices
-        with shapes ``(DV, DV)``).
+        Note that we override this because `Lambda_V_1` has a different form
+        here than in [`Mixing`][berbl.mixing.Mixing] (where it is a list of 
+        `K` matrices with shapes `(DV, DV)`).
 
         Parameters
         ----------
         V : array of shape (DV, K)
             Mixing weight matrix.
-        Lambda_V_1 : array of shape (K * DV, K * DV)
+        Lambda_V_1 : array of shape (K DV, K DV)
             Mixing weight covariance matrix.
 
         Returns
         -------
         b_beta : array of shape (K,)
-            mixing weight vector prior parameter
+            Mixing weight vector prior parameter.
         """
         DV, K = V.shape
         b_beta = np.repeat(self.B_BETA, (self.K, ))
@@ -256,7 +261,7 @@ class MixingLaplace(Mixing):
             Responsibility matrix.
         V : array of shape (DV, K)
             Mixing weight matrix.
-        Lambda_V_1 : array of shape (K * DV, K * DV)
+        Lambda_V_1 : array of shape (K DV, K DV)
             Mixing weight covariance matrix.
         a_beta : array of shape (K,)
             Mixing weight prior parameter (row vector).

@@ -13,30 +13,31 @@ class RadialMatch1D():
                  # TODO Detect input_bounds automatedly
                  input_bounds=None):
         """
-        ``self.match`` is a radial basis function–based matching function as
-        defined in Drugowitsch's book [PDF p. 256].
+        [`self.match`][berbl.match.radial1d_drugowitsch.RadialMatch1D.match] 
+        is a radial basis function–based matching function as
+        defined in [Drugowitsch's book](/) [PDF p. 256].
 
         Parameters
         ----------
         a : float
             Evolving parameter from which the position of the Gaussian is
-            inferred (``0 <= a <= 100``). [PDF p. 256]
+            inferred (`0 <= a <= 100`). [PDF p. 256]
 
-            Exactly one of ``a`` and ``mu`` has to be given (the other one can
-            be inferred); the same goes for ``b`` and ``sigma_2``.
+            Exactly one of `a` and `mu` has to be given (the other one can
+            be inferred); the same goes for `b` and `sigma_2`.
         b : float
             Evolving parameter from which the standard deviation of the
-            Gaussian is inferred (``0 <= b <= 50``). See ``a``.
+            Gaussian is inferred (`0 <= b <= 50`). See `a`.
         mu : float
-            Position of the Gaussian. See ``a``.
+            Position of the Gaussian. See `a`.
         sigma_2 : float
-            Standard deviation. See ``a``.
+            Standard deviation. See `a`.
         has_bias : bool
             Whether to expect 2D data where we always match the first dimension
             (e.g. because it is all ones as a bias to implicitly fit the
             intercept).
         input_bounds : pair of two floats or None
-            If ``None`` (the default), input is assumed to be standardized.
+            If `None` (the default), input is assumed to be standardized.
             Otherwise, input is assumed to lie within the interval described by
             the two floats. Note that inputs *should* be standardized for
             everything else to work properly.
@@ -101,17 +102,17 @@ class RadialMatch1D():
     def match(self, X: np.ndarray):
         """
         Compute matching vector for given input. Depending on whether the input
-        is expected to have a bias column (see attribute ``self.has_bias``),
+        is expected to have a bias column (see attribute `self.has_bias`),
         remove that beforehand.
 
         Parameters
         ----------
-        X : array of shape ``(N, 1)`` or ``(N, 2)`` if ``self.has_bias``
+        X : array of shape (N, 1) or (N, 2) if self.has_bias
             Input matrix.
 
         Returns
         -------
-        array of shape ``(N)``
+        array of shape (N)
             Matching vector of this matching function for the given input.
         """
 
@@ -127,14 +128,21 @@ class RadialMatch1D():
         Compute matching vector for given input assuming that the input doesn't
         have bias column.
 
-        We vectorize the following (i.e. feed the whole input through at once)::
+        We vectorize the following (i.e. feed the whole input through at once):
 
             for n in range(len(X)):
                 M[n] = np.exp(-0.5 / sigma_2 * (x - mu)**2)
 
-        :param X: input matrix ``(N × D_X)`` with ``D_X == 1``
-        :returns: matching vector ``(N)`` of this matching function (i.e. of
-            this rule)
+        Parameters
+        ----------
+        X : array of shape (N, D_X)
+            Input matrix `(N × D_X)` with `D_X == 1`.
+        
+        Returns
+        -------
+        array of shape (N)
+            Matching vector of this matching function (i.e. of
+            this rule).
         """
         # We have to clip this so we don't return 0 here (0 should never be
         # returned because every match function matches everywhere at least a

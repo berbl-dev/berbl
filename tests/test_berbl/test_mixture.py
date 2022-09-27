@@ -95,7 +95,7 @@ def test_fit_linear_functions(data, random_state):
 def test_fit_non_linear(data, random_state):
     """
     A single rule should behave better or very similar to a
-    ``sklearn.linear_model.LinearRegression`` on random data.
+    `sklearn.linear_model.LinearRegression` on random data.
     """
     X, y = data
 
