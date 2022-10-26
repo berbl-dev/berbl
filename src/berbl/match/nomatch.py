@@ -3,8 +3,8 @@ import numpy as np  # type: ignore
 
 class NoMatch:
     """
-    ``self.match`` is a matching function that doesn't match any of the inputs
-    given to it. `Not matching` meaning here that the smallest positive non-zero
+    `self.match` is a matching function that doesn't match any of the inputs
+    given to it. “Not matching” meaning here that the smallest positive non-zero
     number is returned (i.e. not matching in a fuzzy matching sense).
     """
     def __init__(self):

@@ -36,7 +36,13 @@ class BERBL(BaseEstimator, RegressorMixin):
 
     def fit(self, X, y):
         """
-        Note: Input is assumed to be standardized.
+        Notes
+        -----
+        `X` and `y` are assumed to be standardized. In the default
+        configuration, matching functions are initialized in [-5, 5] which means
+        that a large part of the inputs `X` should lie in this region (which is
+        the case for standardized uniformly distributed inputs as well as
+        standardized normally distributed inputs).
         """
 
         # See SLEP010.

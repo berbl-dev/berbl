@@ -27,7 +27,11 @@ class SoftInterval1D():
             print("Warning: Changed matching function input bounds "
                   f"to {input_bounds}")
         else:
-            self._l, self._u = -1, 1
+            # Since inputs are standardized, there a low probability of an input
+            # lying outside [-5, 5]. If inputs were distributed normally, that
+            # probability would be 1e-6. If inputs were distributed uniformly,
+            # that probability would be 0.
+            self._l, self._u = -5, 5
 
         # Unordered bound representation, we swap if necessary. [PDF p. 261]
         self.l, self.u = tuple(sorted([l, u]))
@@ -52,7 +56,11 @@ class SoftInterval1D():
         if input_bounds is not None:
             _l, _u = input_bounds
         else:
-            _l, _u = -1, 1
+            # Since inputs are standardized, there a low probability of an input
+            # lying outside [-5, 5]. If inputs were distributed normally, that
+            # probability would be 1e-6. If inputs were distributed uniformly,
+            # that probability would be 0.
+            _l, _u = -5, 5
 
         l, u = tuple(random_state.uniform(_l, _u, size=2))
         return SoftInterval1D(l, u, input_bounds=input_bounds)
