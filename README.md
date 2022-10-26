@@ -45,3 +45,13 @@ details).
 ```bash
 pytest tests -k FILTEREXP
 ```
+
+
+## Building the docs
+
+
+In the development shell (i.e. after running `nix develop`):
+
+```
+PYTHONPATH=src:$PYTHONPATH mkdocs serve
+```
