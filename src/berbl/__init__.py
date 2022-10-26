@@ -45,9 +45,6 @@ class BERBL(BaseEstimator, RegressorMixin):
         """
         Fit BERBL to the data.
 
-        Note: Input to this function (each of `X` and `y`) is assumed to be
-        standardized.
-
         Parameters
         ----------
         X : array of shape (N, DX)
@@ -59,6 +56,14 @@ class BERBL(BaseEstimator, RegressorMixin):
         -------
         self : object
             Fitted estimator.
+
+        Notes
+        -----
+        `X` and `y` are assumed to be standardized. In the default
+        configuration, matching functions are initialized in [-5, 5] which means
+        that a large part of the inputs `X` should lie in this region (which is
+        the case for standardized uniformly distributed inputs as well as
+        standardized normally distributed inputs).
         """
         # TODO Link to sklearn Sphinx-generated inventory
 
