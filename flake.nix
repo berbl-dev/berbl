@@ -2,12 +2,10 @@
   description = "The berbl Python library";
 
   inputs = {
-    nixpkgs.url =
-      # 2022-03-29
-      "github:NixOS/nixpkgs/0e3d0d844e89da74081f0e77c1da36a2eb3a8ff7";
+    nixos-config.url = "github:dpaetzel/nixos-config";
 
     overlays.url = "github:dpaetzel/overlays";
-    overlays.inputs.nixpkgs.follows = "nixpkgs";
+    overlays.inputs.nixpkgs.follows = "nixos-config/nixpkgs";
 
     mkdocstringsSrc.url = "github:mkdocstrings/mkdocstrings/0.18.0";
     mkdocstringsSrc.flake = false;
@@ -37,15 +35,16 @@
     griffeSrc.flake = false;
   };
 
-  outputs = inputs@{ self, nixpkgs, overlays, ... }:
+  outputs = inputs@{ self, nixos-config, overlays, ... }:
 
-    with import nixpkgs {
-      system = "x86_64-linux";
-      overlays = with overlays.overlays; [ mlflow ];
-    };
     let
-
-      python = python39;
+      nixpkgs = nixos-config.inputs.nixpkgs;
+      system = "x86_64-linux";
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = with overlays.overlays; [ mlflow ];
+      };
+      python = pkgs.python39;
 
       griffe = python.pkgs.buildPythonPackage rec {
         pname = "griffe";
@@ -245,7 +244,7 @@
 
       };
     in rec {
-      defaultPackage.x86_64-linux = python.pkgs.buildPythonPackage rec {
+      defaultPackage.${system} = python.pkgs.buildPythonPackage rec {
         pname = "berbl";
         version = "0.1.0";
 
@@ -268,16 +267,16 @@
 
         doCheck = false;
 
-        meta = with lib; {
+        meta = with pkgs.lib; {
           description =
             "Implementation of a Bayesian Learning Classifier System";
           license = licenses.gpl3;
         };
       };
 
-      devShell.x86_64-linux = mkShell {
+      devShell.${system} = pkgs.mkShell {
         packages = [
-          mkdocs
+          pkgs.mkdocs
           mkdocstrings
           mkdocs-gen-files
           mkdocs-literate-nav
@@ -286,8 +285,8 @@
           tox
           mkdocs-material-extensions
           mkdocs-material
-        ]) ++ defaultPackage.x86_64-linux.testInputs
-          ++ defaultPackage.x86_64-linux.propagatedBuildInputs;
+        ]) ++ defaultPackage.${system}.testInputs
+          ++ defaultPackage.${system}.propagatedBuildInputs;
       };
     };
 }
