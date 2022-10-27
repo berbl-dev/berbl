@@ -32,7 +32,7 @@ class GADrugowitsch:
                  cxpb=0.4,
                  mupb=0.4,
                  n_iter=250,
-                 add_bias=True):
+                 callback_gen=None):
         """
         Parameters
         ----------
@@ -49,6 +49,10 @@ class GADrugowitsch:
             Mutation probability.
         n_iter : positive int
             Number of iterations to run.
+        callback_gen : callable or None
+            Callable that is called at the end of each generation. Its only
+            argument is the current `GADrugowitsch` object (i.e. it simply gets
+            passed `self`). If `None`, this is ignored.
         """
         self.toolbox = toolbox
         self.pop_size = pop_size
@@ -56,7 +60,7 @@ class GADrugowitsch:
         self.mupb = mupb
         self.n_iter = n_iter
         self.random_state = random_state
-        self.add_bias = add_bias
+        self.callback_gen = callback_gen
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         """
@@ -134,6 +138,9 @@ class GADrugowitsch:
 
             self.pop_[:] = pop_new
             self.elitist_.update(self.pop_)
+
+            if self.callback_gen is not None:
+                self.callback_gen(self)
 
         # TODO Doc those
         self.size_ = [len(i) for i in self.elitist_]
