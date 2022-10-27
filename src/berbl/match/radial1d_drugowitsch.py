@@ -49,11 +49,10 @@ class RadialMatch1D():
             print("Warning: Changed matching function input bounds "
                   f"to {input_bounds}")
         else:
-            # Since inputs are standardized, there a low probability of an input
-            # lying outside [-5, 5]. If inputs were distributed normally, that
-            # probability would be 1e-6. If inputs were distributed uniformly,
-            # that probability would be 0.
-            self._l, self._u = -5, 5
+            # Since inputs are standardized, there is a low probability of an
+            # input lying outside [-2, 2] (especially when assuming inputs
+            # to be distributed uniformly).
+            self._l, self._u = -2, 2
 
         if a is not None and mu is None:
             self.a = a
