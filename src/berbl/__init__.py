@@ -60,10 +60,10 @@ class BERBL(BaseEstimator, RegressorMixin):
         Notes
         -----
         `X` and `y` are assumed to be standardized. In the default
-        configuration, matching functions are initialized in [-5, 5] which means
-        that a large part of the inputs `X` should lie in this region (which is
-        the case for standardized uniformly distributed inputs as well as
-        standardized normally distributed inputs).
+        configuration, matching functions are initialized uniformly at random in
+        [-2, 2] which means that a large part of the inputs `X` should lie in
+        this region (which should be the case for standardized uniformly
+        distributed inputs as well as standardized normally distributed inputs).
         """
         # TODO Link to sklearn Sphinx-generated inventory
 
