@@ -4,7 +4,7 @@ from berbl.literal import mixing
 from berbl.literal.hyperparams import HParams
 from berbl.literal.model import Model
 from berbl.match.allmatch import AllMatch
-from berbl.utils import add_bias, check_phi, matching_matrix
+from berbl.utils import EXP_MIN, LN_MAX, add_bias, check_phi, matching_matrix
 from hypothesis import given, settings  # type: ignore
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
@@ -136,7 +136,7 @@ def test_predict_batch_equals_point(matchs, X, y, X_test, random_state):
     X_test = add_bias(X_test)
     M = matching_matrix(matchs, X_test)
     Phi = check_phi(model.phi, X_test)
-    G = mixing(M=M, Phi=Phi, V=model.V_)
+    G = mixing(M=M, Phi=Phi, V=model.V_, exp_min=EXP_MIN, ln_max=LN_MAX)
 
     y_pred_ = np.zeros((N, Dy))
     for n in range(N):
