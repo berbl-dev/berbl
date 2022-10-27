@@ -1,6 +1,7 @@
 from typing import *
 
 import numpy as np  # type: ignore
+from tqdm import trange  # type: ignore
 
 from .utils import add_bias, check_phi, t
 from .rule import Rule
@@ -74,7 +75,7 @@ class Mixture:
         self.rules_ = list(map(lambda m: Rule(m, **self.__kwargs),
                                self.matchs))
         # TODO Cache trained rules at the GA level.
-        for k in range(self.K_):
+        for k in trange(self.K_, desc="Fit rules", leave=False):
             self.rules_[k].fit(X, y)
 
         # Train mixing model.
