@@ -6,13 +6,14 @@ import numpy as np  # type: ignore
 from deap import creator, tools  # type: ignore
 from mlflow import log_metric  # type: ignore
 from sklearn.utils import check_random_state  # type: ignore
+from tqdm import tqdm, trange  # type: ignore
 
 from ...utils import randseed
 
 
 class GADrugowitsch:
     """
-    A [DEAP](https://github.com/DEAP/deap)-based implementation of the GA 
+    A [DEAP](https://github.com/DEAP/deap)-based implementation of the GA
     algorithm found in [Drugowitsch's book](/).
 
     The genotypes aren't fixed to be of the same form as Drugowitsch's (i.e.
@@ -23,6 +24,7 @@ class GADrugowitsch:
     toolbox object (just as it is the case for the algorithms implementations
     that are part of [DEAP](https://github.com/DEAP/deap)).
     """
+
     def __init__(self,
                  toolbox,
                  random_state,
@@ -70,22 +72,25 @@ class GADrugowitsch:
 
         self.pop_ = self.toolbox.population(n=self.pop_size)
 
-        fitnesses = [self.toolbox.evaluate(i, X, y) for i in self.pop_]
+        fitnesses = [
+            self.toolbox.evaluate(i, X, y)
+            for i in tqdm(self.pop_, desc="Evaluate initial ", leave=True)
+        ]
         for ind, fit in zip(self.pop_, fitnesses):
             ind.fitness.values = fit
 
         self.elitist_ = tools.HallOfFame(1)
         self.elitist_.update(self.pop_)
+        elitist = self.elitist_[0]
 
-        for i in range(self.n_iter):
+        for i in trange(
+                self.n_iter,
+                desc=("GA (best "
+                      f"{len(elitist)}/{elitist.fitness.values[0]:.1})")):
             elitist = self.elitist_[0]
 
             # TODO Consider a more modular setup for logging
             log_metric("elitist.ln_p_M_D", elitist.fitness.values[0], i)
-
-            print(
-                f"Generation {i}. Elitist of size {len(elitist)} with p(M | D) "
-                f"= {elitist.fitness.values[0]:.2}")
 
             pop_new: List = []
             while len(pop_new) < self.pop_size:
@@ -119,7 +124,8 @@ class GADrugowitsch:
 
                 invalids = [ind for ind in offspring if not ind.fitness.valid]
                 fitnesses = [
-                    self.toolbox.evaluate(ind, X, y) for ind in invalids
+                    self.toolbox.evaluate(ind, X, y) for ind in tqdm(
+                        invalids, desc="Eval generation  ", leave=False)
                 ]
                 for ind, fit in zip(invalids, fitnesses):
                     ind.fitness.values = fit

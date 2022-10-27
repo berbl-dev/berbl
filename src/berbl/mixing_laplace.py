@@ -1,5 +1,6 @@
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
+from tqdm import trange # type: ignore
 
 from .literal import hessian, _kl
 from .mixing import Mixing
@@ -78,8 +79,9 @@ class MixingLaplace(Mixing):
         self.L_M_q_ = -np.inf
         delta_L_M_q = self.DELTA_S_L_M_Q + 1
         i = 0
-        while delta_L_M_q > self.DELTA_S_L_M_Q and i < self.MAX_ITER_MIXING:
-            i += 1
+        for i in trange(self.MAX_ITER_MIXING, desc=f"Fit mixing (K={self.K})", leave=False):
+            if delta_L_M_q <= self.DELTA_S_L_M_Q:
+                break
 
             # NOTE We inline TrainMixWeights here for better control of
             # performance optimizations (e.g. precomputing stuff efc.).
