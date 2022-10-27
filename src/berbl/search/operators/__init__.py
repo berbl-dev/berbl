@@ -20,7 +20,7 @@ class Toolbox(base.Toolbox):
     Defines and registers `evaluate` depending on the provided parameters.
     """
     def __init__(self,
-                 random_state,
+                 random_state=None,
                  literal=False,
                  add_bias=True,
                  phi=None,
@@ -29,7 +29,7 @@ class Toolbox(base.Toolbox):
         """
         Parameters
         ----------
-        random_state : int, NumPy (legacy) RandomState object
+        random_state : None, int, NumPy (legacy) RandomState object
             Due to scikit-learn compatibility, we use NumPy's legacy API.
         literal : bool
             Whether to use the literal backend (unoptimized but close to the

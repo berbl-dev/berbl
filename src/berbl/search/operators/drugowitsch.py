@@ -18,8 +18,8 @@ class DefaultToolbox(Toolbox):
     `genotype`, `population`, `select`, `mate` and `mutate`.
     """
     def __init__(self,
-                 random_state,
                  matchcls=SoftInterval1D,
+                 random_state=None,
                  n=100,
                  p=0.5,
                  literal=False,
@@ -37,7 +37,7 @@ class DefaultToolbox(Toolbox):
 
         Parameters
         ----------
-        random_state : int, NumPy (legacy) RandomState object
+        random_state : None, int, NumPy (legacy) RandomState object
             See [berbl.search.operators.Toolbox][].
         matchcls : object
             Matching function class to be used. By default,
