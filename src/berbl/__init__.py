@@ -21,7 +21,7 @@ class BERBL(BaseEstimator, RegressorMixin):
     def __init__(self,
                  toolbox=DefaultToolbox(random_state=None),
                  search="drugowitsch",
-                 n_iter=100):
+                 searchparams: dict= {}):
         """
         Parameters
         ----------
@@ -34,12 +34,12 @@ class BERBL(BaseEstimator, RegressorMixin):
             `toolbox` parameter. For now, only `'drugowitsch'` (denoting the
             simplistic genetic algorithm from [Drugowitsch's book](/)) is
             supported.
-        n_iter : int
-            Number of iterations to run the search.
+        kwargs : kwargs
+            Passed through to the constructor of the search.
         """
         self.toolbox = toolbox
         self.search = search
-        self.n_iter = n_iter
+        self.searchparams = searchparams
 
     def fit(self, X, y):
         """
@@ -72,9 +72,9 @@ class BERBL(BaseEstimator, RegressorMixin):
 
         searchcls = search_methods[self.search]
         self.search_ = searchcls(self.toolbox,
-                                 n_iter=self.n_iter,
                                  random_state=randseed(
-                                     self.toolbox.random_state))
+                                     self.toolbox.random_state),
+                                 **self.searchparams)
 
         self.search_ = self.search_.fit(X, y)
 
