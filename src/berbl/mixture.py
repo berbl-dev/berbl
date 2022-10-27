@@ -9,12 +9,13 @@ from .mixing_laplace import MixingLaplace
 
 
 class Mixture:
+
     def __init__(self,
                  matchs: List,
                  random_state,
                  add_bias=True,
                  phi=None,
-                 fit_mixing="bouchard",
+                 fit_mixing="laplace",
                  **kwargs):
         """
         A model based on mixing linear regression rules using the given model
@@ -34,7 +35,7 @@ class Mixture:
         fit_mixing : str
             Either of "bouchard" or "laplace".
         **kwargs
-            This is passed through unchanged to both 
+            This is passed through unchanged to both
             [`Mixing`][berbl.mixing.Mixing] and [`Rule`][berbl.rule.Rule].
         """
 
@@ -80,6 +81,8 @@ class Mixture:
         #
         # “When fit is called, any previous call to fit should be ignored.”
         if self.fit_mixing == "bouchard":
+            raise NotImplementedError(
+                "Mixing based on Bouchard bound not yet implemented")
             self.mixing_ = Mixing(rules=self.rules_,
                                   phi=self.phi,
                                   random_state=self.random_state,
@@ -128,8 +131,8 @@ class Mixture:
         exists no clear definition for the 95% confidence intervals, but a
         mixture density-related study that deals with this problem can be found
         in [118].  Here, we take the variance as a sufficient indicator of the
-        prediction’s confidence.” [^1] 
-        
+        prediction’s confidence.” [^1]
+
         [^1]: Jan Drugowitsch. 2008. Design and Analysis of Learning Classifier
         Systems - A Probabilistic Approach. [PDF p. 224]
 
@@ -204,7 +207,7 @@ class Mixture:
 
     def predict_vars(self, X):
         """
-        Returns this model's submodel's prediction variances, one by one, 
+        Returns this model's submodel's prediction variances, one by one,
         without mixing them.
 
         Parameters
