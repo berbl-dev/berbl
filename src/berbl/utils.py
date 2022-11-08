@@ -258,7 +258,9 @@ def matching_matrix(matchs: List, X: np.ndarray):
     return np.hstack([m.match(X) for m in matchs])
 
 
-# TODO Expose kmin and kmax in operators.drugowitsch
+# TODO Expose kmax in operators.drugowitsch
+# TODO Expose mean and variance parametrization
+# TODO Compare this with binomial_init from init module
 def initRepeat_binom(container, func, n, p, random_state, kmin=1, kmax=100, args={}):
     """
     Alternative to `deap.tools.initRepeat` that samples individual sizes from a

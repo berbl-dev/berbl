@@ -1,6 +1,6 @@
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
-from berbl.match.hardinterval import HardInterval
+from berbl.match.interval import Interval
 from berbl.match.radial1d_drugowitsch import RadialMatch1D
 from berbl.match.softinterval1d_drugowitsch import SoftInterval1D
 from berbl.utils import add_bias
@@ -44,7 +44,7 @@ def himatchs(draw, has_bias=True):
     # TODO Add other constructor parameters here
     DX = draw(st.integers(min_value=1, max_value=10))
     random_state = draw(random_states())
-    return HardInterval.random(DX=DX,
+    return Interval.random(DX=DX,
                                has_bias=has_bias,
                                random_state=random_state)
 
@@ -102,7 +102,7 @@ def Xs_and_matchs(draw, matchgen, N=10):
     bias_column = draw(st.booleans())
     X = draw(Xs(N=N, DX=DX, bias_column=bias_column))
     random_state = draw(random_states())
-    match = HardInterval.random(DX=DX,
+    match = Interval.random(DX=DX,
                                 has_bias=bias_column,
                                 random_state=random_state)
     return X, match
