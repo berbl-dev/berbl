@@ -1,5 +1,6 @@
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
+from berbl.match.hardinterval import HardInterval
 from berbl.match.radial1d_drugowitsch import RadialMatch1D
 from berbl.match.softinterval1d_drugowitsch import SoftInterval1D
 from berbl.utils import add_bias
@@ -14,6 +15,7 @@ from sklearn.utils import check_random_state  # type: ignore
 def seeds(draw):
     # Highest possible seed is `2**32 - 1` for NumPy legacy generators.
     return draw(st.integers(min_value=0, max_value=2**32 - 1))
+
 
 @st.composite
 def random_states(draw):
@@ -35,6 +37,16 @@ def imatch1ds(draw, has_bias=True):
     l = min(l_, u_)
     u = max(l_, u_)
     return SoftInterval1D(l=l, u=u, has_bias=has_bias)
+
+
+@st.composite
+def himatchs(draw, has_bias=True):
+    # TODO Add other constructor parameters here
+    DX = draw(st.integers(min_value=1, max_value=10))
+    random_state = draw(random_states())
+    return HardInterval.random(DX=DX,
+                               has_bias=has_bias,
+                               random_state=random_state)
 
 
 @st.composite
@@ -64,12 +76,36 @@ def Xs_and_match1ds(draw, matchgen, N=10, DX=1):
     Parameters
     ----------
     matchgen
-        Match function test case generator (probably `rmatch1ds` or `imatch1ds`).
+        Match function test case generator (probably `rmatch1ds`, `imatch1ds` or
+        `himatchs`).
     """
     bias_column = draw(st.booleans())
     X = draw(Xs(N=N, DX=DX, bias_column=bias_column))
     rmatch1d = draw(matchgen(has_bias=bias_column))
     return X, rmatch1d
+
+
+@st.composite
+def Xs_and_matchs(draw, matchgen, N=10):
+    """
+    Generator for input matrices and match functions that respect whether the
+    input matrix contains a bias column or not. The input dimension is drawn at
+    random using a Uniform(1, 10) distribution.
+
+    Parameters
+    ----------
+    matchgen
+        Match function test case generator (probably `rmatch1ds`, `imatch1ds` or
+        `himatchs`).
+    """
+    DX = draw(st.integers(min_value=1, max_value=10))
+    bias_column = draw(st.booleans())
+    X = draw(Xs(N=N, DX=DX, bias_column=bias_column))
+    random_state = draw(random_states())
+    match = HardInterval.random(DX=DX,
+                                has_bias=bias_column,
+                                random_state=random_state)
+    return X, match
 
 
 @st.composite

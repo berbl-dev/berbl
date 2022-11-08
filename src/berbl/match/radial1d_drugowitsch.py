@@ -37,10 +37,10 @@ class RadialMatch1D():
             (e.g. because it is all ones as a bias to implicitly fit the
             intercept).
         input_bounds : pair of two floats or None
-            If `None` (the default), input is assumed to be standardized.
-            Otherwise, input is assumed to lie within the interval described by
-            the two floats. Note that inputs *should* be standardized for
-            everything else to work properly.
+            The expected range of the inputs. If `None` (the default), this is
+            calibrated for standardized uniformly distributed inputs (i.e. an
+            input range of [-2, 2] is assumed which is [`-np.sqrt(3)`,
+            `np.sqrt(3)`] with a little bit of wiggle room).
         """
         self.has_bias = has_bias
 
@@ -82,13 +82,24 @@ class RadialMatch1D():
         return 10**(-self.b / 10)
 
     @classmethod
-    def random(cls, random_state: np.random.RandomState, input_bounds=None):
+    def random(cls, DX: int, random_state: np.random.RandomState, has_bias=True, input_bounds=None):
         """
         [PDF p. 256]
+
+        Parameters
+        ----------
+        DX : int
+            Dimensionality of inputs (including bias columns).
+        input_bounds : pair of two floats or None
+            See constructor documentation.
         """
+        if DX != 1 + has_bias:
+            raise ValueError("RadialMatch1D only supports 1-dimensional inputs")
+
         random_state = check_random_state(random_state)
         return RadialMatch1D(a=random_state.uniform(0, 100),
                              b=random_state.uniform(0, 50),
+                             has_bias=has_bias,
                              input_bounds=input_bounds)
 
     def mutate(self, random_state: np.random.RandomState):
@@ -142,9 +153,8 @@ class RadialMatch1D():
         
         Returns
         -------
-        array of shape (N)
-            Matching vector of this matching function (i.e. of
-            this rule).
+        array of shape (N, 1)
+            Matching vector of this matching function for the given input.
         """
         # We have to clip this so we don't return 0 here (0 should never be
         # returned because every match function matches everywhere at least a

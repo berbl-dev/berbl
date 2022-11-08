@@ -2,9 +2,10 @@ import numpy as np  # type: ignore
 
 
 class SoftInterval1D():
+
     def __init__(self, l: float, u: float, has_bias=True, input_bounds=None):
         """
-        [`self.match`][berbl.match.softinterval1d_drugowitsch.SoftInterval1D.match] 
+        [`self.match`][berbl.match.softinterval1d_drugowitsch.SoftInterval1D.match]
         is a soft interval–based matching function as defined in
         [Drugowitsch's book](/) [PDF p. 260].
 
@@ -19,10 +20,10 @@ class SoftInterval1D():
         Parameters
         ----------
         input_bounds : pair of two floats or None
-            If `None` (the default), input is assumed to be standardized.
-            Otherwise, input is assumed to lie within the interval described by
-            the two floats. Note that inputs *should* be standardized for
-            everything else to work properly.
+            The expected range of the inputs. If `None` (the default), this is
+            calibrated for standardized uniformly distributed inputs (i.e. an
+            input range of [-2, 2] is assumed which is [`-np.sqrt(3)`,
+            `np.sqrt(3)`] with a little bit of wiggle room).
         """
         self.has_bias = has_bias
 
@@ -47,15 +48,25 @@ class SoftInterval1D():
         return (0.0662 * (self.u - self.l))**2
 
     @classmethod
-    def random(cls, random_state: np.random.RandomState, input_bounds=None):
+    def random(cls,
+               DX: int,
+               random_state: np.random.RandomState,
+               has_bias=True,
+               input_bounds=None):
         """
         [PDF p. 260]
 
         Parameters
         ----------
+        DX : int
+            Dimensionality of inputs (including bias columns).
         input_bounds : pair of two floats or None
             See constructor documentation.
         """
+        if DX != 1 + has_bias:
+            raise ValueError(
+                "SoftInterval1D only supports 1-dimensional inputs")
+
         if input_bounds is not None:
             _l, _u = input_bounds
         else:
@@ -65,7 +76,10 @@ class SoftInterval1D():
             _l, _u = -2, 2
 
         l, u = tuple(random_state.uniform(_l, _u, size=2))
-        return SoftInterval1D(l, u, input_bounds=input_bounds)
+        return SoftInterval1D(l,
+                              u,
+                              has_bias=has_bias,
+                              input_bounds=input_bounds)
 
     def mutate(self, random_state: np.random.RandomState):
         """
@@ -117,7 +131,7 @@ class SoftInterval1D():
 
         Returns
         -------
-        array of shape (N,)
+        array of shape (N, 1)
             Matching vector of this matching function for the given input.
         """
         sigma2 = self.sigma2()

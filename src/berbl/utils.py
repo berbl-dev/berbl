@@ -1,5 +1,5 @@
 import random
-from functools import wraps
+from functools import partial, wraps
 from time import asctime, localtime, time
 from typing import *
 
@@ -258,13 +258,19 @@ def matching_matrix(matchs: List, X: np.ndarray):
     return np.hstack([m.match(X) for m in matchs])
 
 
-def initRepeat_binom(container, func, n, p, random_state, kmin=1, kmax=100):
+# TODO Expose kmin and kmax in operators.drugowitsch
+def initRepeat_binom(container, func, n, p, random_state, kmin=1, kmax=100, args={}):
     """
     Alternative to `deap.tools.initRepeat` that samples individual sizes from a
     binomial distribution B(n, p).
+
+    Parameters
+    ----------
+    args : dict
+        kwargs to be passed to `func`.
     """
     size = np.clip(random_state.binomial(n, p), kmin, kmax)
-    return tools.initRepeat(container, func, size)
+    return tools.initRepeat(container, partial(func, **args), size)
 
 
 def known_issue(expl, variables, report=False):
