@@ -1,11 +1,13 @@
 """Search operators as defined in Drugowitsch's book."""
 
+from functools import partial
 from typing import List
 
 import numpy as np  # type: ignore
 from deap import creator, tools  # type: ignore
 
 from ...match.softinterval1d_drugowitsch import SoftInterval1D
+from ...match.hardinterval import HardInterval
 from ...utils import initRepeat_binom
 from . import Toolbox
 
@@ -17,18 +19,20 @@ class DefaultToolbox(Toolbox):
     Extends the base toolbox (containing `evaluate`) by providing `gene`,
     `genotype`, `population`, `select`, `mate` and `mutate`.
     """
-    def __init__(self,
-                 matchcls=SoftInterval1D,
-                 random_state=None,
-                 n=100,
-                 p=0.5,
-                 literal=False,
-                 add_bias=True,
-                 phi=None,
-                 tournsize=5,
-                 fit_mixing="laplace",
-                 match_args={},
-                 **kwargs):
+
+    def __init__(
+            self,
+            matchcls=HardInterval,
+            random_state=None,
+            n=100,
+            p=0.5,
+            literal=False,
+            add_bias=True,
+            phi=None,
+            tournsize=5,
+            fit_mixing="laplace",
+            match_args={},
+            **kwargs):
         """
         Initializes this toolbox by creating and registering operators.
 
@@ -37,11 +41,11 @@ class DefaultToolbox(Toolbox):
 
         Parameters
         ----------
-        random_state : None, int, NumPy (legacy) RandomState object
-            See [berbl.search.operators.Toolbox][].
         matchcls : object
             Matching function class to be used. By default,
             [`SoftInterval1D`][berbl.match.softinterval1d_drugowitsch.SoftInterval1D].
+        random_state : None, int, NumPy (legacy) RandomState object
+            See [berbl.search.operators.Toolbox][].
         n : int, > 0
             n parameter (number of independent experiments) of the binomial
             distribution from which initial individual sizes are drawn.
@@ -70,14 +74,21 @@ class DefaultToolbox(Toolbox):
                       matchcls.random,
                       random_state=self.random_state,
                       **match_args)
-        self.register("genotype",
-                      initRepeat_binom,
-                      creator.Genotype,
-                      self.gene,
-                      n=n,
-                      p=p,
-                      random_state=self.random_state)
-        self.register("population", tools.initRepeat, list, self.genotype)
+
+        def genotype(**args):
+            return initRepeat_binom(creator.Genotype,
+                                    self.gene,
+                                    n=n,
+                                    p=p,
+                                    random_state=self.random_state,
+                                    args=args)
+
+        self.register("genotype", genotype)
+
+        def population(n, **args):
+            return tools.initRepeat(list, partial(self.genotype, **args), n)
+
+        self.register("population", population)
 
         # “We create a new population by selecting two individuals (…) To avoid
         # the influence of fitness scaling, we select individuals from the

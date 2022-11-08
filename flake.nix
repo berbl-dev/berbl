@@ -261,6 +261,9 @@
           pandas
           scipy
           scikitlearn
+          tqdm
+
+          ipython
         ];
 
         testInputs = with python.pkgs; [ hypothesis pytest ];

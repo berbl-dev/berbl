@@ -74,7 +74,20 @@ class GADrugowitsch:
         seed = randseed(random_state)
         random.seed(seed)
 
-        self.pop_ = self.toolbox.population(n=self.pop_size)
+        _, self.DX_ = X.shape
+
+        self.x_min_, self.x_max_ = X.min(axis=0), X.max(axis=0)
+        # Add 5% of input range to each dimension as wiggle room at the borders.
+        # TODO Instead of hardcoding 5% here, make dependent on N (i.e. on
+        # X.shape[0]), I think we could find a formal argument for some value
+        wiggle_room = 0.05 * (self.x_max_ - self.x_min_)
+        self.x_min_ = self.x_min_ - wiggle_room
+        self.x_max_ = self.x_max_ + wiggle_room
+
+        self.pop_ = self.toolbox.population(DX=self.DX_,
+                                            x_min=self.x_min_,
+                                            x_max=self.x_max_,
+                                            n=self.pop_size)
 
         fitnesses = [
             self.toolbox.evaluate(i, X, y)
