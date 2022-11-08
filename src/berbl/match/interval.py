@@ -39,11 +39,11 @@ def mirror(a, a_min, a_max, exclude_min=False, exclude_max=False):
     return np.vectorize(_mirror)(a, a_min, a_max, exclude_min, exclude_max)
 
 
-class HardInterval():
+class Interval():
     """
-    [`self.match`][berbl.match.hardinterval.HardInterval.match] is a hard
-    interval–based matching function which means that its value is 1 within the
-    interval [`l`, `u`) and `np.finfo(None).tiny` anywhere else.
+    [`self.match`][berbl.match.interval.Interval.match] is a hard interval–based
+    matching function which means that its value is 1 within the interval [`l`,
+    `u`) and `np.finfo(None).tiny` anywhere else.
 
     This differs from
     [`SoftInterval1D`][berbl.match.softinterval1d_drugowitsch.SoftInterval1D]
@@ -134,7 +134,7 @@ class HardInterval():
         self.dist_mut_spread = st.norm(loc=0, scale=std_spread)
 
     def __repr__(self):
-        return (f"HardInterval(center={self.center}, "
+        return (f"Interval(center={self.center}, "
                 f"spread={self.spread}, "
                 f"x_min={self.x_min}, "
                 f"x_max={self.x_max}, "
@@ -172,7 +172,7 @@ class HardInterval():
 
         center = random_state.randint(low=0, high=res_center, size=DX)
         spread = random_state.randint(low=0, high=res_spread, size=DX)
-        return HardInterval(center=center,
+        return Interval(center=center,
                             spread=spread,
                             x_min=x_min,
                             x_max=x_max,
@@ -197,7 +197,7 @@ class HardInterval():
         2. Round the values to the nearest int (we use a fixed resolution and
            natural numbers to represent our genes).
         3. Fix out-of-range values using the mirror correction strategy (see
-           [`mirror`][berbl.match.hardinterval.mirror]).
+           [`mirror`][berbl.match.interval.mirror]).
         4. Recompute and cache new lower and upper bounds (for performance
            reasons only).
         """

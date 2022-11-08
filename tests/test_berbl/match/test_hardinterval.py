@@ -1,6 +1,6 @@
 import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
-from berbl.match.hardinterval import HardInterval, mirror
+from berbl.match.interval import Interval, mirror
 from hypothesis import given  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
 from test_berbl import Xs_and_matchs, himatchs, random_states
@@ -29,14 +29,14 @@ def test_match_respect_genotype_space(X_and_match):
 
 
 def test_match_min_max_values():
-    match = HardInterval(center=np.array([0]), spread=np.array([0]))
+    match = Interval(center=np.array([0]), spread=np.array([0]))
 
     assert match.center_phen == np.array(match.x_min)
     assert match.center_phen == np.array(match.x_min)
 
     res_center = 2**8
     res_spread = 2 * 2**8
-    match = HardInterval(center=np.array([res_center]),
+    match = Interval(center=np.array([res_center]),
                          spread=np.array([res_spread]),
                          res_center=res_center,
                          res_spread=res_spread)

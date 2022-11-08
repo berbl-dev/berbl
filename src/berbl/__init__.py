@@ -1,9 +1,10 @@
+import numpy as np  # type: ignore
 from sklearn.base import BaseEstimator, RegressorMixin  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 
-from .utils import randseed
 from .search.ga.drugowitsch import GADrugowitsch
 from .search.operators.drugowitsch import DefaultToolbox
+from .utils import randseed
 
 search_methods = {"drugowitsch": GADrugowitsch}
 

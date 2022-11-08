@@ -7,7 +7,7 @@ import numpy as np  # type: ignore
 from deap import creator, tools  # type: ignore
 
 from ...match.softinterval1d_drugowitsch import SoftInterval1D
-from ...match.hardinterval import HardInterval
+from ...match.interval import Interval
 from ...utils import initRepeat_binom
 from . import Toolbox
 
@@ -22,7 +22,7 @@ class DefaultToolbox(Toolbox):
 
     def __init__(
             self,
-            matchcls=HardInterval,
+            matchcls=Interval,
             random_state=None,
             n=100,
             p=0.5,
