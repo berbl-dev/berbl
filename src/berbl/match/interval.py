@@ -63,7 +63,6 @@ class Interval():
         self,
         center: np.array,
         spread: np.array,
-        has_bias: bool = True,
         x_min: np.array = None,
         x_max: np.array = None,
         # TODO Find good defaults here (2**8 may be too small?)
@@ -82,13 +81,13 @@ class Interval():
         spread : array of shape (DX,)
             Array of natural numbers in [0, `res_spread`]. See `res_spread`.
         x_min, x_max : arrays of shape (DX,)
-            The expected minimum and maximum values of the inputs (excluding
-            bias columns). If `None` (the default), they are set to `-2.0` for
-            `x_min` and `2.0` for `x_max` which corresponds to assuming
-            uniformly distributed inputs which have been standardized (i.e. an
-            input range of [-2, 2] is assumed which is the range [`-np.sqrt(3)`,
-            `np.sqrt(3)`] of a standardized uniform distribution including a
-            little bit of wiggle room).
+            The expected minimum and maximum values of the inputs. If `None`
+            (the default), they are set to `-2.0` for `x_min` and `2.0` for
+            `x_max` which corresponds to assuming uniformly distributed inputs
+            which have been standardized (i.e. an input range of [-2, 2] is
+            assumed which is the range [`-np.sqrt(3)`, `np.sqrt(3)`] of a
+            standardized uniform distribution including a little bit of wiggle
+            room).
         res_center, res_spread : int
             Resolutions. Center (and spread) genes are represented by natural
             numbers in [0, `res_center`] (and [0, `res_spread`]) and transformed
@@ -100,7 +99,6 @@ class Interval():
             res_center` (i.e. a tenth of input space, *not* taking into account
             mirror correction which is applied thereafter).
         """
-        self.has_bias = has_bias
         self.res_center = res_center
         self.res_spread = res_spread
 
@@ -138,26 +136,24 @@ class Interval():
                 f"spread={self.spread}, "
                 f"x_min={self.x_min}, "
                 f"x_max={self.x_max}, "
-                f"has_bias={self.has_bias}, "
                 f"res_center={self.res_center}, "
                 f"res_spread={self.res_spread})")
 
     @classmethod
-    def random(cls,
-               DX: int,
-               random_state: np.random.RandomState,
-               x_min: np.array = None,
-               x_max: np.array = None,
-               res_center: int = int(2**8),
-               res_spread: int = int(2**8),
-               has_bias: bool = True):
+    def random(
+            cls,
+            DX: int,
+            random_state: np.random.RandomState,
+            x_min: np.array = None,
+            x_max: np.array = None,
+            res_center: int = int(2**8),
+            res_spread: int = int(2**8),
+    ):
         """
-        [PDF p. 260]
-
         Parameters
         ----------
         DX : int
-            Dimensionality of inputs (excluding bias columns).
+            Dimensionality of inputs.
         x_min, x_max : arrays of shape (DX,)
             See constructor documentation for `x_min` and `x_max`.
         res_center, res_spread : int
@@ -172,13 +168,55 @@ class Interval():
 
         center = random_state.randint(low=0, high=res_center, size=DX)
         spread = random_state.randint(low=0, high=res_spread, size=DX)
-        return Interval(center=center,
-                            spread=spread,
-                            x_min=x_min,
-                            x_max=x_max,
-                            res_center=res_center,
-                            res_spread=res_spread,
-                            has_bias=has_bias)
+        return Interval(
+            center=center,
+            spread=spread,
+            x_min=x_min,
+            x_max=x_max,
+            res_center=res_center,
+            res_spread=res_spread,
+        )
+
+    @classmethod
+    def random_at(
+            cls,
+            center_phen: np.array,
+            random_state: np.random.RandomState,
+            x_min: np.array = None,
+            x_max: np.array = None,
+            res_center: int = int(2**8),
+            res_spread: int = int(2**8),
+    ):
+        """
+        Parameters
+        ----------
+        center_phen : array
+            Point in input space (i.e. phenotype space) to use as the center of
+            this interval.
+        x_min, x_max : arrays of shape (DX,)
+            See constructor documentation for `x_min` and `x_max`.
+        res_center, res_spread : int
+            Resolutions. Center (and spread) genes are represented by natural
+            numbers in [0, `res_center`] (and [0, `res_spread`]) and transformed
+            to their phenotypes using `x_min` and `x_max`.
+        """
+        DX = center_phen.shape[0]
+
+        if x_min is None:
+            x_min = np.repeat(-2.0, DX)
+        if x_max is None:
+            x_max = np.repeat(2.0, DX)
+
+        center = (center_phen - x_min) * res_center / (x_max - x_min)
+        spread = random_state.randint(low=0, high=res_spread, size=DX)
+        return Interval(
+            center=center,
+            spread=spread,
+            x_min=x_min,
+            x_max=x_max,
+            res_center=res_center,
+            res_spread=res_spread,
+        )
 
     def _recompute_bounds(self):
         self.center_phen = self.x_min + self.center * (
@@ -225,39 +263,14 @@ class Interval():
         return self
 
     # TODO Implement __call__ instead
-    def match(self, X: np.ndarray):
+    def match(self, X: np.ndarray) -> np.ndarray:
         """
-        Compute matching vector for given input. Depending on whether the input
-        is expected to have a bias column (see attribute `self.has_bias`),
-        remove that beforehand.
+        Compute matching vector for given input (assumes that the input doesn't
+        have a bias column which shouldn't take part in matching).
 
         Parameters
         ----------
-        X : array of shape (N, DX)
-            Input matrix.
-
-        Returns
-        -------
-        array of shape (N)
-            Matching vector of this matching function for the given input.
-        """
-
-        if self.has_bias:
-            assert X.shape[1] == self.DX + 1, (
-                f"X should have `DX + 1 = {DX + 1}` columns "
-                f"but has {X.shape[1]}")
-            X = X.T[1:].T
-
-        return self._match_wo_bias(X)
-
-    def _match_wo_bias(self, X: np.ndarray) -> np.ndarray:
-        """
-        Compute matching vector for given input assuming that the input doesn't
-        have a bias column.
-
-        Parameters
-        ----------
-        X : input matrix of shape (N, 1)
+        X : input matrix of shape (N, DX)
 
         Returns
         -------
