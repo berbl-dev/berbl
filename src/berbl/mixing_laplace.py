@@ -42,6 +42,10 @@ class MixingLaplace(Mixing):
         super().__init__(**kwargs)
 
     def fit(self, X, y):
+        """
+        Note that `X`'s first column is assumed to be an all-ones bias column in
+        order to be able to fit the intercept.
+        """
         Phi = check_phi(self.phi, X)
 
         M = np.hstack([rule.m_ for rule in self.rules])

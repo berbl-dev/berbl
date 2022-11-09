@@ -7,7 +7,7 @@ from berbl.match.allmatch import AllMatch
 from berbl.match.nomatch import NoMatch
 from berbl.mixing_laplace import MixingLaplace
 from berbl.rule import Rule
-from berbl.utils import EXP_MIN, LN_MAX, check_phi, matching_matrix
+from berbl.utils import EXP_MIN, LN_MAX, add_bias, check_phi, matching_matrix
 from hypothesis import given, settings  # type: ignore
 
 from test_berbl import (Xs, assert_isclose, noshrinking, random_data,
@@ -35,12 +35,16 @@ def test_no_match_no_weight(X, y, random_state):
     assert np.all(np.isclose(G, [1, 0])), msg
 
 
-@given(st.lists(rmatch1ds(has_bias=True), min_size=1, max_size=10),
+@given(st.lists(rmatch1ds(), min_size=1, max_size=10),
        random_data(N=100), random_states())
 @settings(max_examples=50, deadline=None, phases=noshrinking)
 def test_fit_like_literal(matchs, data, random_state):
 
+    # TODO FIXME
+
     X, y = data
+
+    X = add_bias(X)
 
     rules = [Rule(match).fit(X, y) for match in matchs]
 
@@ -53,7 +57,7 @@ def test_fit_like_literal(matchs, data, random_state):
     a_tau = [rule.a_tau_ for rule in rules]
     b_tau = [rule.b_tau_ for rule in rules]
 
-    M = matching_matrix(matchs, X)
+    M = matching_matrix(matchs, X[:,1:])
     assert_isclose(M, np.hstack([rule.m_ for rule in rules]))
 
     Phi = check_phi(phi, X)

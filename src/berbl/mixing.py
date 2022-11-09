@@ -3,7 +3,7 @@ import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
 
 from .literal import responsibilities
-from .utils import EXP_MIN, LN_MAX, check_phi, known_issue, matching_matrix
+from .utils import check_phi, known_issue, matching_matrix
 
 
 class Mixing:
@@ -176,7 +176,7 @@ class Mixing:
         # calculate M twice, once when matching for each rule and once in
         # mixing (see same comment in Mixture). Add as an optional parameter to
         # Mixing.predict/fit etc.
-        M = matching_matrix([cl.match for cl in self.rules], X)
+        M = matching_matrix([cl.match for cl in self.rules], X[:,1:])
 
         return self._mixing(M, Phi, self.V_)
 

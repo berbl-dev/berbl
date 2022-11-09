@@ -24,33 +24,32 @@ def random_states(draw):
 
 
 @st.composite
-def rmatch1ds(draw, has_bias=True):
+def rmatch1ds(draw):
     a = draw(st.floats(min_value=0, max_value=100))
     b = draw(st.floats(min_value=0, max_value=50))
-    return RadialMatch1D(a=a, b=b, has_bias=has_bias)
+    return RadialMatch1D(a=a, b=b)
 
 
 @st.composite
-def imatch1ds(draw, has_bias=True):
+def imatch1ds(draw):
     l_ = draw(st.floats(min_value=-1, max_value=1))
     u_ = draw(st.floats(min_value=-1, max_value=1).filter(lambda u_: u_ != l_))
     l = min(l_, u_)
     u = max(l_, u_)
-    return SoftInterval1D(l=l, u=u, has_bias=has_bias)
+    return SoftInterval1D(l=l, u=u)
 
 
 @st.composite
-def himatchs(draw, has_bias=True):
+def himatchs(draw):
     # TODO Add other constructor parameters here
     DX = draw(st.integers(min_value=1, max_value=10))
     random_state = draw(random_states())
     return Interval.random(DX=DX,
-                               has_bias=has_bias,
                                random_state=random_state)
 
 
 @st.composite
-def Xs(draw, N=10, DX=1, bias_column=True):
+def Xs(draw, N=10, DX=1, bias_column=False):
     X = draw(
         arrays(np.float64, (N, DX),
                elements=st.floats(min_value=-1, max_value=1),
@@ -68,20 +67,17 @@ def ys(draw, N=10, Dy=1):
 
 
 @st.composite
-def Xs_and_match1ds(draw, matchgen, N=10, DX=1):
+def Xs_and_match1ds(draw, matchgen, N=10):
     """
-    Generator for input matrices and match functions that respect whether the
-    input matrix contains a bias column or not.
+    Generator for input matrices and match functions.
 
     Parameters
     ----------
     matchgen
-        Match function test case generator (probably `rmatch1ds`, `imatch1ds` or
-        `himatchs`).
+        Match function test case generator (probably `rmatch1ds`, `imatch1ds`).
     """
-    bias_column = draw(st.booleans())
-    X = draw(Xs(N=N, DX=DX, bias_column=bias_column))
-    rmatch1d = draw(matchgen(has_bias=bias_column))
+    X = draw(Xs(N=N, DX=1, bias_column=False))
+    rmatch1d = draw(matchgen())
     return X, rmatch1d
 
 
@@ -99,11 +95,9 @@ def Xs_and_matchs(draw, matchgen, N=10):
         `himatchs`).
     """
     DX = draw(st.integers(min_value=1, max_value=10))
-    bias_column = draw(st.booleans())
-    X = draw(Xs(N=N, DX=DX, bias_column=bias_column))
+    X = draw(Xs(N=N, DX=DX))
     random_state = draw(random_states())
     match = Interval.random(DX=DX,
-                                has_bias=bias_column,
                                 random_state=random_state)
     return X, match
 
@@ -131,13 +125,12 @@ def linears(draw, N=10, slope_range=(0, 1), intercept_range=(0, 1)):
                   allow_infinity=False))
 
     y = X * slope + intercept
-    X = add_bias(X)
 
     return (X, y, slope, intercept)
 
 
 @st.composite
-def random_data(draw, N=100, bias_column=True):
+def random_data(draw, N=100):
     """
     Creates a “perfectly” sampled sample for a random (non-smooth) function on
     [-1, 1] in 1 to 10 input or output dimensions.
@@ -152,8 +145,6 @@ def random_data(draw, N=100, bias_column=True):
     y = draw(
         arrays(np.float64, (N, Dy),
                elements=st.floats(min_value=-1, max_value=1)))
-    if bias_column:
-        X = add_bias(X)
 
     return (X, y)
 

@@ -3,7 +3,7 @@ import numpy as np  # type: ignore
 
 class SoftInterval1D():
 
-    def __init__(self, l: float, u: float, has_bias=True, input_bounds=None):
+    def __init__(self, l: float, u: float, input_bounds=None):
         """
         [`self.match`][berbl.match.softinterval1d_drugowitsch.SoftInterval1D.match]
         is a soft interval–based matching function as defined in
@@ -25,8 +25,6 @@ class SoftInterval1D():
             input range of [-2, 2] is assumed which is [`-np.sqrt(3)`,
             `np.sqrt(3)`] with a little bit of wiggle room).
         """
-        self.has_bias = has_bias
-
         if input_bounds is not None:
             self._l, self._u = input_bounds
             print("Warning: Changed matching function input bounds "
@@ -41,17 +39,15 @@ class SoftInterval1D():
         self.l, self.u = tuple(sorted([l, u]))
 
     def __repr__(self):
-        return (f"SoftInterval1D(l={self.l},u={self.u},"
-                f"has_bias={self.has_bias})")
+        return (f"SoftInterval1D(l={self.l},u={self.u})")
 
     def sigma2(self):
         return (0.0662 * (self.u - self.l))**2
 
     @classmethod
     def random(cls,
-               DX: int,
                random_state: np.random.RandomState,
-               has_bias=True,
+               DX: int=1,
                input_bounds=None):
         """
         [PDF p. 260]
@@ -59,11 +55,11 @@ class SoftInterval1D():
         Parameters
         ----------
         DX : int
-            Dimensionality of inputs (including bias columns).
+            Dimensionality of inputs.
         input_bounds : pair of two floats or None
             See constructor documentation.
         """
-        if DX != 1 + has_bias:
+        if DX != 1:
             raise ValueError(
                 "SoftInterval1D only supports 1-dimensional inputs")
 
@@ -78,7 +74,6 @@ class SoftInterval1D():
         l, u = tuple(random_state.uniform(_l, _u, size=2))
         return SoftInterval1D(l,
                               u,
-                              has_bias=has_bias,
                               input_bounds=input_bounds)
 
     def mutate(self, random_state: np.random.RandomState):
@@ -95,35 +90,9 @@ class SoftInterval1D():
                     self._l, self._u)))
         return self
 
-    # TODO Implement __call__ instead
-    def match(self, X: np.ndarray):
+    def match(self, X: np.ndarray) -> np.ndarray:
         """
-        Compute matching vector for given input. Depending on whether the input
-        is expected to have a bias column (see attribute `self.has_bias`),
-        remove that beforehand.
-
-        Parameters
-        ----------
-        X : array of shape (N, 1) or (N, 2) if self.has_bias
-            Input matrix.
-
-        Returns
-        -------
-        array of shape (N)
-            Matching vector of this matching function for the given input.
-        """
-
-        if self.has_bias:
-            assert X.shape[
-                1] == 2, f"X should have 2 columns but has {X.shape[1]}"
-            X = X.T[1:].T
-
-        return self._match_wo_bias(X)
-
-    def _match_wo_bias(self, X: np.ndarray) -> np.ndarray:
-        """
-        Compute matching vector for given input assuming that the input doesn't
-        have a bias column.
+        Compute matching vector for given input.
 
         Parameters
         ----------
@@ -159,6 +128,6 @@ class SoftInterval1D():
 
     def plot(self, l, u, ax, **kwargs):
         X = np.arange(l, u, 0.01)[:, np.newaxis]
-        M = self._match_wo_bias(X)
+        M = self.match(X)
         ax.plot(X, M, **kwargs)
         ax.axvline(self.mu(), color=kwargs["color"])

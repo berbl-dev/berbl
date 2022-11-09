@@ -3,17 +3,18 @@ from sklearn.utils import check_random_state  # type: ignore
 
 
 class RadialMatch1D():
-    def __init__(self,
-                 *,
-                 a: float = None,
-                 b: float = None,
-                 mu: float = None,
-                 sigma_2: float = None,
-                 has_bias=True,
-                 # TODO Detect input_bounds automatedly
-                 input_bounds=None):
+
+    def __init__(
+            self,
+            *,
+            a: float = None,
+            b: float = None,
+            mu: float = None,
+            sigma_2: float = None,
+            # TODO Detect input_bounds automatedly
+            input_bounds=None):
         """
-        [`self.match`][berbl.match.radial1d_drugowitsch.RadialMatch1D.match] 
+        [`self.match`][berbl.match.radial1d_drugowitsch.RadialMatch1D.match]
         is a radial basis function–based matching function as
         defined in [Drugowitsch's book](/) [PDF p. 256].
 
@@ -32,18 +33,12 @@ class RadialMatch1D():
             Position of the Gaussian. See `a`.
         sigma_2 : float
             Standard deviation. See `a`.
-        has_bias : bool
-            Whether to expect 2D data where we always match the first dimension
-            (e.g. because it is all ones as a bias to implicitly fit the
-            intercept).
         input_bounds : pair of two floats or None
             The expected range of the inputs. If `None` (the default), this is
             calibrated for standardized uniformly distributed inputs (i.e. an
             input range of [-2, 2] is assumed which is [`-np.sqrt(3)`,
             `np.sqrt(3)`] with a little bit of wiggle room).
         """
-        self.has_bias = has_bias
-
         if input_bounds is not None:
             self._l, self._u = input_bounds
             print("Warning: Changed matching function input bounds "
@@ -72,8 +67,7 @@ class RadialMatch1D():
             raise ValueError("Exactly one of b and sigma_2 has to be given")
 
     def __repr__(self):
-        return (f"RadialMatch1D(mu={self.mu()},sigma_2={self.sigma_2()},"
-                f"has_bias={self.has_bias})")
+        return (f"RadialMatch1D(mu={self.mu()},sigma_2={self.sigma_2()})")
 
     def mu(self):
         return self._l + (self._u - self._l) * self.a / 100
@@ -82,24 +76,27 @@ class RadialMatch1D():
         return 10**(-self.b / 10)
 
     @classmethod
-    def random(cls, DX: int, random_state: np.random.RandomState, has_bias=True, input_bounds=None):
+    def random(cls,
+               random_state: np.random.RandomState,
+               DX: int = 1,
+               input_bounds=None):
         """
         [PDF p. 256]
 
         Parameters
         ----------
         DX : int
-            Dimensionality of inputs (including bias columns).
+            Dimensionality of inputs.
         input_bounds : pair of two floats or None
             See constructor documentation.
         """
-        if DX != 1 + has_bias:
-            raise ValueError("RadialMatch1D only supports 1-dimensional inputs")
+        if DX != 1:
+            raise ValueError(
+                "RadialMatch1D only supports 1-dimensional inputs")
 
         random_state = check_random_state(random_state)
         return RadialMatch1D(a=random_state.uniform(0, 100),
                              b=random_state.uniform(0, 50),
-                             has_bias=has_bias,
                              input_bounds=input_bounds)
 
     def mutate(self, random_state: np.random.RandomState):
@@ -112,34 +109,9 @@ class RadialMatch1D():
         return self
 
     # TODO Implement __call__ instead
-    def match(self, X: np.ndarray):
+    def match(self, X: np.ndarray) -> np.ndarray:
         """
-        Compute matching vector for given input. Depending on whether the input
-        is expected to have a bias column (see attribute `self.has_bias`),
-        remove that beforehand.
-
-        Parameters
-        ----------
-        X : array of shape (N, 1) or (N, 2) if self.has_bias
-            Input matrix.
-
-        Returns
-        -------
-        array of shape (N)
-            Matching vector of this matching function for the given input.
-        """
-
-        if self.has_bias:
-            assert X.shape[
-                1] == 2, f"X should have 2 columns but has {X.shape[1]}"
-            X = X.T[1:].T
-
-        return self._match_wo_bias(X)
-
-    def _match_wo_bias(self, X: np.ndarray) -> np.ndarray:
-        """
-        Compute matching vector for given input assuming that the input doesn't
-        have bias column.
+        Compute matching vector for given input.
 
         We vectorize the following (i.e. feed the whole input through at once):
 
@@ -150,7 +122,7 @@ class RadialMatch1D():
         ----------
         X : array of shape (N, D_X)
             Input matrix `(N × D_X)` with `D_X == 1`.
-        
+
         Returns
         -------
         array of shape (N, 1)
@@ -171,6 +143,6 @@ class RadialMatch1D():
 
     def plot(self, l, u, ax, **kwargs):
         X = np.arange(l, u, 0.01)[:, np.newaxis]
-        M = self._match_wo_bias(X)
+        M = self.match(X)
         ax.plot(X, M, **kwargs)
         ax.axvline(self.mu(), color=kwargs["color"])

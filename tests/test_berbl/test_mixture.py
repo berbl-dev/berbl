@@ -14,8 +14,8 @@ from test_berbl import (Xs, assert_isclose, linears, noshrinking, random_data,
                         random_states, rmatch1ds, ys)
 
 
-@given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
-       Xs(bias_column=False), ys(), Xs(bias_column=False), random_states())
+@given(st.lists(rmatch1ds(), min_size=2, max_size=10), Xs(bias_column=False),
+       ys(), Xs(bias_column=False), random_states())
 @settings(deadline=None)
 def test_predict_batch_equals_point(matchs, X, y, X_test, random_state):
     """
@@ -102,7 +102,8 @@ def test_fit_non_linear(data, random_state):
     match = AllMatch()
     mixture = Mixture([match],
                       random_state=random_state,
-                      fit_mixing="laplace", MAX_ITER_RULE=200).fit(X, y)
+                      fit_mixing="laplace",
+                      MAX_ITER_RULE=200).fit(X, y)
 
     y_pred = mixture.predict(X)
     score = mean_absolute_error(y_pred, y)
@@ -123,8 +124,7 @@ def test_fit_non_linear(data, random_state):
                 f"linear regression oracle score ({score_oracle})")
 
 
-@given(random_data(N=100),
-       st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
+@given(random_data(N=100), st.lists(rmatch1ds(), min_size=2, max_size=10),
        random_states())
 @settings(deadline=None, phases=noshrinking)
 def test_varbounds_like_literal(data, matchs, random_state):
@@ -133,11 +133,11 @@ def test_varbounds_like_literal(data, matchs, random_state):
 
     mixture = Mixture(matchs,
                       random_state=copy(random_state),
-                      add_bias=False,
                       fit_mixing="laplace").fit(X, y)
-    model = literal.Model(matchs,
-                          random_state=copy(random_state),
-                          add_bias=False).fit(X, y)
+    model = literal.Model(
+        matchs,
+        random_state=copy(random_state),
+    ).fit(X, y)
 
     assert_isclose(np.sum(mixture.L_C_q_),
                    model.L_C_q_,
@@ -145,4 +145,7 @@ def test_varbounds_like_literal(data, matchs, random_state):
                    rtol=0.01)
     assert_isclose(mixture.L_M_q_, model.L_M_q_, label="L_M_q_", rtol=0.01)
     assert_isclose(mixture.L_q_, model.L_q_, label="L_q_", rtol=0.01)
-    assert_isclose(mixture.ln_p_M_D_, model.ln_p_M_D_, label="ln_p_M_D_", rtol=0.01)
+    assert_isclose(mixture.ln_p_M_D_,
+                   model.ln_p_M_D_,
+                   label="ln_p_M_D_",
+                   rtol=0.01)
