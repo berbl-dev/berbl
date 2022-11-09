@@ -71,6 +71,25 @@ class BERBL(BaseEstimator, RegressorMixin):
         # See SLEP010.
         X, y = self._validate_data(X, y, multi_output=True)
 
+        # Let's remind the user to standardize data beforehand.
+        for i, feature in enumerate(X.T):
+            std = feature.std()
+            mean = feature.mean()
+            if not (np.isclose(mean, 0) and np.isclose(std, 1)):
+                warnings.warn("Inputs and outputs should be "
+                              f"standardized but training data input "
+                              f"feature {i}'s "
+                              f"mean is {mean} and "
+                              f"std is {std}")
+
+        std = y.std()
+        mean = y.mean()
+        if not (np.isclose(mean, 0) and np.isclose(std, 1)):
+            warnings.warn("Inputs and outputs should be "
+                          "standardized but training data output "
+                          f"mean is {mean} and "
+                          f"std is {std}")
+
         searchcls = search_methods[self.search]
         self.search_ = searchcls(self.toolbox,
                                  random_state=randseed(
