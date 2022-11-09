@@ -56,12 +56,11 @@ Within the code, comments referring to “LCSBookCode” refer to
 """
 from typing import *
 
+import mlflow  # type: ignore
 import numpy as np  # type: ignore
 import scipy.special as ss  # type: ignore
-import scipy.stats as sstats  # type: ignore
-import mlflow  # type: ignore
 
-from ..utils import known_issue, matching_matrix, EXP_MIN, LN_MAX
+from ..utils import EXP_MIN, LN_MAX, add_bias, known_issue, matching_matrix
 from .hyperparams import HParams
 
 
@@ -111,6 +110,8 @@ def model_probability(matchs: List,
         K = len(matchs)
 
         M = matching_matrix(matchs, X)
+
+        X = add_bias(X)
 
         W = [None] * K
         Lambda_1 = [None] * K

@@ -57,7 +57,7 @@ def test_fit_linear_functions(data, random_state):
 
 # We may need to use more samples here to make sure that the algorithms' scores
 # are really close.
-@given(random_data(N=2000, bias_column=False), random_states())
+@given(random_data(N=2000), random_states())
 # Increase number of tests in order to catch numerical issues that happen
 # seldomly.
 @settings(deadline=None, max_examples=500)
@@ -99,7 +99,7 @@ def test_fit_non_linear(data, random_state):
         assert_isclose(score, score_oracle, atol=atol)
 
 
-@given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
+@given(st.lists(rmatch1ds(), min_size=2, max_size=10),
        Xs(bias_column=False), ys(), seeds())
 @settings(deadline=None)
 def test_model_fit_deterministic(matchs, X, y, seed):
@@ -117,7 +117,7 @@ def test_model_fit_deterministic(matchs, X, y, seed):
     for key in m.params_:
         assert np.array_equal(m.params_[key], m2.params_[key])
 
-@given(st.lists(rmatch1ds(has_bias=True), min_size=2, max_size=10),
+@given(st.lists(rmatch1ds(), min_size=2, max_size=10),
        Xs(bias_column=False), ys(), Xs(bias_column=False), random_states())
 @settings(deadline=None)
 def test_predict_batch_equals_point(matchs, X, y, X_test, random_state):
@@ -134,7 +134,7 @@ def test_predict_batch_equals_point(matchs, X, y, X_test, random_state):
     K = model.K_
 
     X_test = add_bias(X_test)
-    M = matching_matrix(matchs, X_test)
+    M = matching_matrix(matchs, X_test[:,1:])
     Phi = check_phi(model.phi, X_test)
     G = mixing(M=M, Phi=Phi, V=model.V_, exp_min=EXP_MIN, ln_max=LN_MAX)
 

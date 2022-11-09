@@ -20,7 +20,7 @@ class Rule():
         """
         Parameters
         ----------
-        match : object
+        match : callable
             `match.match` is this rule's match function. According to
             Drugowitsch's framework (or mixture of experts), each rule should
             get assigned a responsibility for each data point. However, in order
@@ -64,9 +64,13 @@ class Rule():
         rule matches.
 
         See TrainClassifier [PDF p. 238].
+
+        Note that `X`'s first column is assumed to be an all-ones bias column in
+        order to be able to fit the intercept.
         """
 
-        self.m_ = self.match.match(X)
+        # Matching has to be performed on the data without the bias column.
+        self.m_ = self.match.match(X[:, 1:])
 
         N, self.DX_ = X.shape
         N, self.Dy_ = y.shape

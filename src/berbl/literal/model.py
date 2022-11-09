@@ -18,7 +18,6 @@ class Model:
     def __init__(self,
                  matchs: List,
                  random_state,
-                 add_bias=True,
                  phi=None):
         """
         A model based on mixing localized linear submodels using the given model
@@ -30,8 +29,6 @@ class Model:
             A list of matching functions (i.e. objects implementing a `match`
             attribute) defining the structure of this mixture.
         random_state : RandomState object
-        add_bias : bool
-            Whether to add an all-ones bias column to the input data.
         phi
             mixing feature extractor (N × Dx → N × DV); if `None` uses the
             default LCS mixing feature matrix based on `phi(x) = 1`.
@@ -44,9 +41,6 @@ class Model:
     def fit(self, X: np.ndarray, y: np.ndarray):
 
         y = fix_y_shape(y)
-
-        if self.add_bias:
-            X = add_bias(X)
 
         self.K_ = len(self.matchs)
         _, self.Dx_ = X.shape
@@ -91,6 +85,8 @@ class Model:
         Calculates prediction means and variances of the model for the provided
         inputs.
         """
+        X = add_bias(X)
+
         y = np.zeros((len(X), self.Dy_))
         y_var = np.zeros((len(X), self.Dy_))
         for i in range(len(X)):
@@ -107,13 +103,10 @@ class Model:
         """
         Dy, Dx = self.W_[0].shape
 
-        if self.add_bias:
-            x = np.append(1, x)
-
         X = np.array([x])
 
         Phi = check_phi(self.phi, X)
-        M = matching_matrix(self.matchs, X)
+        M = matching_matrix(self.matchs, X[:,1:])
         G = mixing(M, Phi, self.V_, exp_min=EXP_MIN, ln_max=LN_MAX)  # shape ((N=1), K)
         # assert G.shape == (1, self.K_)
         g = G[0]
@@ -166,8 +159,7 @@ class Model:
         N, _ = X.shape
         Dy, Dx = self.W_[0].shape
 
-        if self.add_bias:
-            X = add_bias(X)
+        X = add_bias(X)
 
         # Collect the independent predictions and variances of each submodel. We
         # use the definitions of those that do neither perform input checking
@@ -177,7 +169,7 @@ class Model:
 
         # Next, mix the predictions.
         Phi = check_phi(self.phi, X)
-        M = matching_matrix(self.matchs, X)
+        M = matching_matrix(self.matchs, X[:,1:])
         # shape: ((N=1), K)
         G_ = mixing(M, Phi, self.V_, exp_min=EXP_MIN, ln_max=LN_MAX)
 
@@ -200,8 +192,7 @@ class Model:
         array of shape (K, N, Dy)
             Mean output vectors of each submodel.
         """
-        if self.add_bias:
-            X = add_bias(X)
+        X = add_bias(X)
 
         return self._predicts(X)
 
@@ -228,8 +219,7 @@ class Model:
         array of shape (K, N)
             Prediction variances of each submodel.
         """
-        if self.add_bias:
-            X = add_bias(X)
+        X = add_bias(X)
 
         return self._predict_vars(X)
 

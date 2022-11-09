@@ -27,7 +27,6 @@ class DefaultToolbox(Toolbox):
             n=100,
             p=0.5,
             literal=False,
-            add_bias=True,
             phi=None,
             tournsize=5,
             fit_mixing="laplace",
@@ -54,8 +53,6 @@ class DefaultToolbox(Toolbox):
             initial individual sizes are drawn.
         literal : bool
             See [berbl.search.operators.Toolbox][].
-        add_bias : bool
-            See [berbl.search.operators.Toolbox][].
         phi : callable
             See [berbl.search.operators.Toolbox][].
         tournsize : int, > 1
@@ -64,7 +61,6 @@ class DefaultToolbox(Toolbox):
             See [berbl.search.operators.Toolbox][].
         """
         super().__init__(literal=literal,
-                         add_bias=add_bias,
                          phi=phi,
                          fit_mixing=fit_mixing,
                          random_state=random_state,

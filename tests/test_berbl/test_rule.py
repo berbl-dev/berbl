@@ -3,10 +3,12 @@ import hypothesis.strategies as st  # type: ignore
 import numpy as np  # type: ignore
 from berbl.match.allmatch import AllMatch
 from berbl.rule import Rule
+from berbl.utils import add_bias
 from hypothesis import given, settings  # type: ignore
 from hypothesis.extra.numpy import arrays  # type: ignore
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
+
 from test_berbl import (Xs, assert_isclose, linears, noshrinking, random_data,
                         ys)
 
@@ -43,6 +45,8 @@ def test_fit_linear_functions(data):
     """
     X, y, slope, intercept = data
 
+    X = add_bias(X)
+
     match = AllMatch()
 
     cl = Rule(match, MAX_ITER=100).fit(X, y)
@@ -73,6 +77,8 @@ def test_fit_non_linear(data):
     `sklearn.linear_model.LinearRegression` on random data.
     """
     X, y = data
+
+    X = add_bias(X)
 
     match = AllMatch()
 

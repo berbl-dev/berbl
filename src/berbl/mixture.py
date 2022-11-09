@@ -14,7 +14,6 @@ class Mixture:
     def __init__(self,
                  matchs: List,
                  random_state,
-                 add_bias=True,
                  phi=None,
                  fit_mixing="laplace",
                  **kwargs):
@@ -28,8 +27,6 @@ class Mixture:
             A list of matching functions (i.e. objects implementing a `match`
             attribute) defining the structure of this mixture.
         random_state : RandomState object
-        add_bias : bool
-            Whether to add an all-ones bias column to the input data.
         phi : callable
             Mixing feature extractor (N × DX → N × DV); if `None` uses the
             default LCS mixing feature matrix based on `phi(x) = 1`.
@@ -41,7 +38,6 @@ class Mixture:
         """
 
         self.matchs = matchs
-        self.add_bias = add_bias
         self.phi = phi
         self.fit_mixing = fit_mixing
         self.random_state = random_state
@@ -61,8 +57,8 @@ class Mixture:
             Output matrix.
         """
 
-        if self.add_bias:
-            X = add_bias(X)
+        # Add a bias column to be able to fit the intercept.
+        X = add_bias(X)
 
         self.K_ = len(self.matchs)
         _, self.DX_ = X.shape
@@ -72,8 +68,7 @@ class Mixture:
         # Train submodels.
         #
         # “When fit is called, any previous call to fit should be ignored.”
-        self.rules_ = list(map(lambda m: Rule(m, **self.__kwargs),
-                               self.matchs))
+        self.rules_ = [Rule(m, **self.__kwargs) for m in self.matchs]
         # TODO Cache trained rules at the GA level.
         for k in trange(self.K_, desc="Fit rules", leave=False):
             self.rules_[k].fit(X, y)
@@ -152,10 +147,7 @@ class Mixture:
 
         Phi = check_phi(self.phi, X)
 
-        # After having called ``predicts``, add the bias term (``predicts`` also
-        # adds the bias term internally).
-        if self.add_bias:
-            X = add_bias(X)
+        X = add_bias(X)
 
         # Collect the independent predictions and variances of each submodel. We
         # use the implementations of those that do neither perform input
@@ -190,8 +182,7 @@ class Mixture:
         array of shape (K, N, Dy)
             Mean output vectors of each submodel.
         """
-        if self.add_bias:
-            X = add_bias(X)
+        X = add_bias(X)
 
         return self._predicts(X)
 
@@ -221,8 +212,7 @@ class Mixture:
         array of shape (K, N, Dy)
             Prediction variances of each submodel.
         """
-        if self.add_bias:
-            X = add_bias(X)
+        X = add_bias(X)
 
         return self._predict_vars(X)
 
@@ -246,9 +236,7 @@ class Mixture:
             A function expecting a `y` and returning the values of the
             predictive distributions at positions `X`.
         """
-
-        if self.add_bias:
-            X = add_bias(X)
+        X = add_bias(X)
 
         G = self.mixing_.mixing(X).T  # (K, N)
         W = self._predicts(X)  # (K, N, Dy)

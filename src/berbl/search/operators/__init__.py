@@ -22,7 +22,6 @@ class Toolbox(base.Toolbox):
     def __init__(self,
                  random_state=None,
                  literal=False,
-                 add_bias=True,
                  phi=None,
                  fit_mixing="laplace",
                  **kwargs):
@@ -37,8 +36,6 @@ class Toolbox(base.Toolbox):
             training). May be used to check whether a new
             implementation's/idea's behaviour is still close to the original
             reference.
-        add_bias : bool
-            Whether to add an all-ones bias column to the input data.
         phi : callable
             Mixing feature extractor (N × D_X → N × DV); if `None` uses the
             default LCS mixing feature matrix based on `phi(x) = 1`.
@@ -66,7 +63,6 @@ class Toolbox(base.Toolbox):
             def _evaluate(genotype, X, y):
                 genotype.phenotype = Model(matchs=genotype,
                                            random_state=self.random_state,
-                                           add_bias=add_bias,
                                            phi=phi).fit(X, y)
                 return (genotype.phenotype.ln_p_M_D_, )
         else:
@@ -74,7 +70,6 @@ class Toolbox(base.Toolbox):
             def _evaluate(genotype, X, y):
                 genotype.phenotype = Mixture(matchs=genotype,
                                              random_state=self.random_state,
-                                             add_bias=add_bias,
                                              phi=phi,
                                              fit_mixing=fit_mixing,
                                              **self.kwargs).fit(X, y)
