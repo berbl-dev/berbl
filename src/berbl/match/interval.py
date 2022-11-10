@@ -280,3 +280,8 @@ class Interval():
         return np.where(
             np.all(self.l <= X, axis=1) & np.all(X < self.u, axis=1), 1.0,
             np.finfo(None).tiny).reshape(-1, 1)
+
+    def plot(self, ax):
+        import matplotlib.pyplot as plt
+        X = np.linspace(self.x_min, self.x_max, 100)
+        ax.plot(X, self.match(X))
