@@ -22,7 +22,7 @@ class DefaultToolbox(Toolbox):
 
     def __init__(
             self,
-            matchcls=Interval,
+            matchcls=SoftInterval1D,
             random_state=None,
             n=100,
             p=0.5,
