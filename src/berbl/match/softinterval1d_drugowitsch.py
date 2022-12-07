@@ -25,7 +25,7 @@ class SoftInterval1D():
             input range of [-2, 2] is assumed which is [`-np.sqrt(3)`,
             `np.sqrt(3)`] with a little bit of wiggle room).
         """
-        if input_bounds is not None:
+        if input_bounds is not None and input_bounds != (-2.0, 2.0):
             self._l, self._u = input_bounds
             print("Warning: Changed matching function input bounds "
                   f"to {input_bounds}")
@@ -33,7 +33,7 @@ class SoftInterval1D():
             # Since inputs are standardized, there is a low probability of an
             # input lying outside [-2, 2] (especially when assuming inputs
             # to be distributed uniformly).
-            self._l, self._u = -2, 2
+            self._l, self._u = -2.0, 2.0
 
         # Unordered bound representation, we swap if necessary. [PDF p. 261]
         self.l, self.u = tuple(sorted([l, u]))
