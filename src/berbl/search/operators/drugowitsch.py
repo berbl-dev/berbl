@@ -7,7 +7,7 @@ import numpy as np  # type: ignore
 from deap import creator, tools  # type: ignore
 
 from ...match.softinterval1d_drugowitsch import SoftInterval1D
-from ...match.radialmatch1d_drugowitsch import RadialMatch1D
+from ...match.radial1d_drugowitsch import RadialMatch1D
 from ...match.interval import Interval
 from ...utils import initRepeat_binom
 from . import Toolbox
