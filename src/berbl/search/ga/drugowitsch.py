@@ -102,8 +102,7 @@ class GADrugowitsch:
 
         for i in trange(
                 self.n_iter,
-                desc=("GA (best "
-                      f"{len(elitist)}/{elitist.fitness.values[0]:.1})")):
+                desc=("GA")):
             elitist = self.elitist_[0]
 
             # TODO Consider a more modular setup for logging
