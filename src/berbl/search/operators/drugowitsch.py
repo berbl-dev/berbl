@@ -7,6 +7,7 @@ import numpy as np  # type: ignore
 from deap import creator, tools  # type: ignore
 
 from ...match.softinterval1d_drugowitsch import SoftInterval1D
+from ...match.radialmatch1d_drugowitsch import RadialMatch1D
 from ...match.interval import Interval
 from ...utils import initRepeat_binom
 from . import Toolbox
@@ -22,7 +23,7 @@ class DefaultToolbox(Toolbox):
 
     def __init__(
             self,
-            matchcls=SoftInterval1D,
+            matchcls=None,
             random_state=None,
             n=100,
             p=0.5,
@@ -40,9 +41,11 @@ class DefaultToolbox(Toolbox):
 
         Parameters
         ----------
-        matchcls : object
-            Matching function class to be used. By default,
-            [`SoftInterval1D`][berbl.match.softinterval1d_drugowitsch.SoftInterval1D].
+        matchcls : str or object
+            Matching function class to be used, either given as a string (one of
+            `"radial"`, `"softint"`, `"interval"`) or as a class supporting the
+            necessary operations. By default, `None` which corresponds to using
+            [`Interval`][berbl.match.interval.Interval].
         random_state : None, int, NumPy (legacy) RandomState object
             See [berbl.search.operators.Toolbox][].
         n : int, > 0
@@ -65,6 +68,15 @@ class DefaultToolbox(Toolbox):
                          fit_mixing=fit_mixing,
                          random_state=random_state,
                          **kwargs)
+
+        if matchcls is None or matchcls == "interval":
+            matchcls = Interval
+        elif matchcls == "radial":
+            matchcls = RadialMatch1D
+        elif matchcls == "softint":
+            matchcls = SoftInterval1D
+        elif type(matchcls) is str:
+            print(f"Unsupported match function family: {matchcls}")
 
         self.register("gene",
                       matchcls.random,
