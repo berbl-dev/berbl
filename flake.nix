@@ -4,9 +4,6 @@
   inputs = {
     nixos-config.url = "github:dpaetzel/nixos-config";
 
-    overlays.url = "github:dpaetzel/overlays";
-    overlays.inputs.nixpkgs.follows = "nixos-config/nixpkgs";
-
     mkdocstringsSrc.url = "github:mkdocstrings/mkdocstrings/0.18.0";
     mkdocstringsSrc.flake = false;
 
@@ -35,16 +32,15 @@
     griffeSrc.flake = false;
   };
 
-  outputs = inputs@{ self, nixos-config, overlays, ... }:
+  outputs = inputs@{ self, nixos-config, ... }:
 
     let
       nixpkgs = nixos-config.inputs.nixpkgs;
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
-        overlays = with overlays.overlays; [ mlflow ];
       };
-      python = pkgs.python39;
+      python = pkgs.python310;
 
       griffe = python.pkgs.buildPythonPackage rec {
         pname = "griffe";
